@@ -1,16 +1,12 @@
 package com.team3.otboo.ootd.entity;
 
+import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 @Entity
-public class AttributeOption {
-    @Id
-    @GeneratedValue
-    private Long id;
+public class AttributeOption extends BaseEntity {
 
     private String value; // 예: 블랙, S, 캐주얼
 
