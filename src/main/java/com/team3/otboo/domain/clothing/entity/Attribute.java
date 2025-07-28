@@ -1,4 +1,4 @@
-package com.team3.otboo.ootd.entity;
+package com.team3.otboo.domain.clothing.entity;
 
 import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Entity;
