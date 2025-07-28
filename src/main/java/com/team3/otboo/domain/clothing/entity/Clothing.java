@@ -8,6 +8,7 @@ import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.CascadeType;
+import com.team3.otboo.domain.user.entity.User;
 
 @Entity
 public class Clothing extends BaseEntity {
