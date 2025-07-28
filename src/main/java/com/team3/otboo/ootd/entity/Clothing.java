@@ -1,5 +1,6 @@
 package com.team3.otboo.ootd.entity;
 
+import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -11,10 +12,7 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 
 @Entity
-public class Clothing {
-    @Id
-    @GeneratedValue
-    private Long id;
+public class Clothing extends BaseEntity {
 
     private String name; // 의상 이름
     private String imageUrl; // 이미지 저장 경로 or 외부 링크

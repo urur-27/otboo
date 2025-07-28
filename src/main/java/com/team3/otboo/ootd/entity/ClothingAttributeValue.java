@@ -1,5 +1,6 @@
 package com.team3.otboo.ootd.entity;
 
+import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -7,10 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 @Entity
-public class ClothingAttributeValue {
-    @Id
-    @GeneratedValue
-    private Long id;
+public class ClothingAttributeValue extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Clothing clothing; // 어떤 의상에 대한 값인가?
