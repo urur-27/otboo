@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class RecommendationService {
+
   private final ProfileService profileService;
   private final ClothingService clothesService;
   private final WeatherService weatherService;
