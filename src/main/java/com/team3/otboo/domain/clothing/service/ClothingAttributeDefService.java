@@ -18,4 +18,6 @@ public interface ClothingAttributeDefService {
     );
 
     void deleteAttribute(UUID definitionId);
+
+    ClothingAttributeDefDto updateAttribute(UUID definitionId, ClothingAttributeDefCreateRequest request);
 }

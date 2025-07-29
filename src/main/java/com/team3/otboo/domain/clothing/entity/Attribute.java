@@ -33,14 +33,12 @@ public class Attribute extends BaseEntity {
         this.options.add(option);
     }
 
-    public void removeOption(UUID optionId) {
-        this.options.removeIf(option -> option.getId().equals(optionId));
+    public void updateName(String newName) {
+        this.name = newName;
     }
 
-    public void updateOptionValue(UUID optionId, String newValue) {
-        this.options.stream()
-                .filter(option -> option.getId().equals(optionId))
-                .findFirst()
-                .ifPresent(option -> option.updateValue(newValue));
+    public void replaceOptions(List<String> newValues) {
+        this.options.clear(); // 기존 옵션 모두 제거됨 (orphanRemoval)
+        newValues.forEach(this::addOption);
     }
 }

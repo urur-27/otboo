@@ -22,6 +22,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
     private final ClothingAttributeDefMapper mapper;
 
     @Override
+    @Transactional
     public ClothingAttributeDefDto create(ClothingAttributeDefCreateRequest request) {
         Attribute attribute = mapper.toEntity(request);
         Attribute saved = attributeRepository.save(attribute);
@@ -51,8 +52,8 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
         );
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void deleteAttribute(UUID definitionId) {
         Attribute attribute = attributeRepository.findById(definitionId)
                 .orElseThrow(() -> new NoSuchElementException("해당 속성을 찾을 수 없습니다."));
@@ -60,4 +61,17 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
         attributeRepository.delete(attribute);
     }
 
+    @Override
+    @Transactional
+    public ClothingAttributeDefDto updateAttribute(UUID definitionId,
+            ClothingAttributeDefCreateRequest request) {
+        Attribute attribute = attributeRepository.findById(definitionId)
+                .orElseThrow(() -> new NoSuchElementException("해당 속성을 찾을 수 없습니다."));
+
+        // 이름 변경
+        attribute.updateName(request.name());
+        attribute.replaceOptions(request.selectableValues());
+
+        return mapper.toDto(attribute);
+    }
 }
