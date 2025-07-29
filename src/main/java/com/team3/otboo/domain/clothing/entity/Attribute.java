@@ -1,16 +1,28 @@
 package com.team3.otboo.domain.clothing.entity;
 
 import com.team3.otboo.domain.base.entity.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
+import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.CascadeType;
 
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Attribute extends BaseEntity {
-    private String name; // 예: 스타일, 컬러, 촉감 등
+    @Column(nullable = false, unique = true)
+    private String name;
 
     @OneToMany(mappedBy = "attribute", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AttributeOption> options = new ArrayList<>();
+
+    @Builder
+    public Attribute(String name) {
+        this.name = name;
+    }
+
+    public void addAttributeOption(AttributeOption option) {
+        this.options.add(option);
+        option.setAttribute(this);
+    }
 }
