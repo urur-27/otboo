@@ -1,5 +1,6 @@
 package com.team3.otboo.domain.dm.dto;
 
+import com.team3.otboo.domain.user.dto.UserSummary;
 import java.time.LocalDateTime;
 import java.util.UUID;
 

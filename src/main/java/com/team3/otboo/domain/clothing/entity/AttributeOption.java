@@ -4,10 +4,13 @@ import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AttributeOption extends BaseEntity {
 
     private String value; // 예: 블랙, S, 캐주얼

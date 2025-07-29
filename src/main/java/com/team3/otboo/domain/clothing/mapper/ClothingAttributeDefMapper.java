@@ -25,4 +25,8 @@ public class ClothingAttributeDefMapper {
                 values
         );
     }
+
+    public List<ClothingAttributeDefDto> toDtoList(List<Attribute> attributes) {
+        return attributes.stream().map(this::toDto).toList();
+    }
 }

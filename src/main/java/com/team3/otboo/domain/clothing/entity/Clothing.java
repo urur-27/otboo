@@ -9,8 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.CascadeType;
 import com.team3.otboo.domain.user.entity.User;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 @Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Clothing extends BaseEntity {
 
     private String name; // 의상 이름
