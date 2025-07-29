@@ -29,9 +29,6 @@ public class Follow {
 	@CreatedDate
 	private LocalDateTime createdAt;
 
-	@LastModifiedDate
-	private LocalDateTime updatedAt;
-
 	@Column(nullable =false)
 	private UUID followeeId;
 
