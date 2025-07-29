@@ -1,37 +1,28 @@
 package com.team3.otboo.domain.clothing.entity;
 
 import com.team3.otboo.domain.base.entity.BaseEntity;
-import com.team3.otboo.domain.user.entity.User;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.CascadeType;
+import com.team3.otboo.domain.user.entity.User;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Clothing extends BaseEntity {
 
-    @Column(nullable = false)
-    private String name;
-    private String imageUrl;
-    private String purchaseUrl;
+    private String name; // 의상 이름
+    private String imageUrl; // 이미지 저장 경로 or 외부 링크
+    private String purchaseUrl; // 구매 링크
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id")
-    private User owner;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User owner; // 의상을 등록한 사용자
 
     @OneToMany(mappedBy = "clothing", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ClothingAttributeValue> attributeValues = new ArrayList<>();
-
-    @Builder
-    public Clothing(String name, User owner) {
-        this.name = name;
-        this.owner = owner;
-    }
-
-    public void addAttributeValue(ClothingAttributeValue attributeValue) {
-        this.attributeValues.add(attributeValue);
-        attributeValue.setClothing(this);
-    }
+    private List<ClothingAttributeValue> attributeValues = new ArrayList<>(); // 의상 속성
 }
