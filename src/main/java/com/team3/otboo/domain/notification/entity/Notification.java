@@ -1,7 +1,6 @@
 package com.team3.otboo.domain.notification.entity;
 
 import com.team3.otboo.domain.base.entity.BaseEntity;
-import com.team3.otboo.domain.notification.common.NotificationLevel;
 import com.team3.otboo.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
