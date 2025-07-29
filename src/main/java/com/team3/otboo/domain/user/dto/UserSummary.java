@@ -1,8 +1,19 @@
 package com.team3.otboo.domain.user.dto;
 
+import com.team3.otboo.domain.user.entity.User;
+import java.util.UUID;
+
 public record UserSummary(
-    String userId,
-    String name,
-    String profileImageUrl
+	UUID userId,
+	String name,
+	String profileImageUrl
 ) {
+
+	public static UserSummary from(User user) {
+		return new UserSummary(
+			user.getId(),
+			user.getUsername(),
+			user.getProfileImageUrl()
+		);
+	}
 }
