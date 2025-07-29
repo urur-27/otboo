@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.notification.common;
+package com.team3.otboo.domain.notification.entity;
 
 public enum NotificationLevel {
   INFO,
