@@ -36,11 +36,23 @@ public class User extends BaseEntity {
     boolean locked;
 
     @Builder
-    private User(String username, String email, String password, Role role, Set<OAuthProvider> linkedOAuthProviders) {
+    public User(String username, String email, String password, Role role, Set<OAuthProvider> linkedOAuthProviders) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.role = role;
         this.linkedOAuthProviders = linkedOAuthProviders;
+    }
+
+    public void updatePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
+    public void updateLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    public void updateRole(Role role) {
+        this.role = role;
     }
 }

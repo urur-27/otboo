@@ -1,15 +1,20 @@
 package com.team3.otboo.domain.user.dto;
 
+import com.team3.otboo.domain.user.enums.OAuthProvider;
+import com.team3.otboo.domain.user.enums.Role;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 public record UserDto (
-    Long id,
-    LocalDateTime createdAt,
+    UUID id,
+    Instant createdAt,
     String email,
     String name,
-    String role,
-    Set<String> linkedOAuthProviders,
+    Role role,
+    Set<OAuthProvider> linkedOAuthProviders,
     boolean locked
 ){
 
