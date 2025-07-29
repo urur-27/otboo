@@ -3,6 +3,7 @@ package com.team3.otboo.domain.feed.dto;
 
 import com.team3.otboo.domain.weather.dto.WeatherDto;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record FeedDto(
@@ -11,7 +12,7 @@ public record FeedDto(
 	LocalDateTime updatedAt,
 	AuthorDto author,
 	WeatherDto weather,
-	List<OotodDto> ootds,
+	List<OotdDto> ootds,
 	String content,
 	Long likeCount,
 	Integer CommentCount,
