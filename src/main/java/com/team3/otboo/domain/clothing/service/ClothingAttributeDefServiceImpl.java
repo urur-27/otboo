@@ -6,7 +6,10 @@ import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.mapper.ClothingAttributeDefMapper;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
+import jakarta.transaction.Transactional;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -47,4 +50,14 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
                 result.totalCount()
         );
     }
+
+    @Transactional
+    @Override
+    public void deleteAttribute(UUID definitionId) {
+        Attribute attribute = attributeRepository.findById(definitionId)
+                .orElseThrow(() -> new NoSuchElementException("해당 속성을 찾을 수 없습니다."));
+
+        attributeRepository.delete(attribute);
+    }
+
 }
