@@ -10,9 +10,11 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import com.team3.otboo.domain.user.entity.User;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Clothing extends BaseEntity {
 
@@ -25,4 +27,15 @@ public class Clothing extends BaseEntity {
 
     @OneToMany(mappedBy = "clothing", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClothingAttributeValue> attributeValues = new ArrayList<>(); // 의상 속성
+
+    public static Clothing of(String name, User owner) {
+        Clothing clothing = new Clothing();
+        clothing.name = name;
+        clothing.owner = owner;
+        return clothing;
+    }
+
+    public void addAttributeValue(ClothingAttributeValue attributeValue) {
+        this.attributeValues.add(attributeValue);
+    }
 }

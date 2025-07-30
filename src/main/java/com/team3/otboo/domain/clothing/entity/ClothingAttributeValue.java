@@ -5,9 +5,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ClothingAttributeValue extends BaseEntity {
 
@@ -19,4 +21,15 @@ public class ClothingAttributeValue extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private AttributeOption option; // 상세옵션 - 검은색, L
+
+    public static ClothingAttributeValue of(Clothing clothing, Attribute attribute, AttributeOption option) {
+        ClothingAttributeValue value = new ClothingAttributeValue();
+        value.attribute = attribute;
+        value.option = option;
+
+        clothing.addAttributeValue(value);
+        value.clothing = clothing;
+
+        return value;
+    }
 }
