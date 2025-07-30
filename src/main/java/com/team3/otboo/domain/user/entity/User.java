@@ -3,15 +3,8 @@ package com.team3.otboo.domain.user.entity;
 import com.team3.otboo.domain.base.entity.BaseEntity;
 import com.team3.otboo.domain.user.enums.OAuthProvider;
 import com.team3.otboo.domain.user.enums.Role;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -44,6 +37,13 @@ public class User extends BaseEntity {
 
 	boolean locked;
 
+    // mappedBy - 연관관계 주인 = user
+    // fetch - user 조회할 때 profile 지연로딩(실제 사용시에만),
+    // cascade - user의 저장, 삭제 등의 상태 변화를 profile에도 동일 적용
+    // orphanRemoval - User와의 연관관계가 끊어진 profile은 자동 삭제
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Profile profile;
+
     @Builder
     public User(String username, String email, String password, Role role, Set<OAuthProvider> linkedOAuthProviders) {
         this.username = username;
@@ -63,5 +63,14 @@ public class User extends BaseEntity {
 
     public void updateRole(Role role) {
         this.role = role;
+    }
+
+    public void setProfile(Profile profile) {
+        // 1. User -> Profile 참조 설정
+        this.profile = profile;
+        if (profile != null) {
+            // 2. Profile -> User 참조도 함께 설정 (양방향 일관성 유지)
+            profile.setUser(this);
+        }
     }
 }

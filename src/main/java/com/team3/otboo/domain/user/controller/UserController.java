@@ -12,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
 public class UserController {
@@ -32,16 +30,16 @@ public class UserController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDtoCursorResponse> getUsers(
-            // --- 페이지네이션 파라미터 ---
+            // 페이지네이션 파라미터
             @RequestParam(required = false) String cursor,
             @RequestParam(name = "idAfter", required = false) String idAfter,
             @RequestParam(name = "limit") int limit, // 필수 값
 
-            // --- 정렬 파라미터 ---
-            @RequestParam(name = "sortBy") String sortBy, // 필수 값
-            @RequestParam(name = "sortDirection") String sortDirection, // 필수 값
+            // 정렬 파라미터
+            @RequestParam(name = "sortBy") String sortBy,
+            @RequestParam(name = "sortDirection") String sortDirection,
 
-            // --- 필터링 파라미터 ---
+            // 필터링 파라미터
             @RequestParam(required = false) String emailLike,
             @RequestParam(required = false) String roleEqual,
             @RequestParam(required = false) Boolean locked

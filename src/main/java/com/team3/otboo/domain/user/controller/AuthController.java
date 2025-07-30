@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-//
-//    @PostMapping("/sign-in")
-//    public ResponseEntity<UserDto> signIn(@RequestParam String email, @RequestParam String password) {
-//        log.info("로그인 시작: {}", email);
-//        user
-//        log.info("로그인 종료: {}", email);
-//        return
-//    }
+
+    @PostMapping("/sign-in")
+    public ResponseEntity<UserDto> signIn(@RequestParam String email, @RequestParam String password) {
+        log.info("로그인 시작: {}", email);
+
+        log.info("로그인 종료: {}", email);
+        return null;
+    }
 
 }
