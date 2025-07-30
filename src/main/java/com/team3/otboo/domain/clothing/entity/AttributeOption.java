@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AttributeOption extends BaseEntity {
 
     private String value; // 예: 블랙, S, 캐주얼
