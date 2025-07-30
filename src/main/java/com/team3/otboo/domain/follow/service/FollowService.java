@@ -3,8 +3,12 @@ package com.team3.otboo.domain.follow.service;
 import com.team3.otboo.domain.follow.dto.FollowDto;
 import com.team3.otboo.domain.follow.dto.FollowSummaryDto;
 import com.team3.otboo.domain.follow.entity.Follow;
+import com.team3.otboo.domain.follow.entity.UserFollowerCount;
+import com.team3.otboo.domain.follow.entity.UserFollowingCount;
 import com.team3.otboo.domain.follow.mapper.FollowMapper;
 import com.team3.otboo.domain.follow.repository.FollowRepository;
+import com.team3.otboo.domain.follow.repository.UserFollowerCountRepository;
+import com.team3.otboo.domain.follow.repository.UserFollowingCountRepository;
 import com.team3.otboo.domain.follow.service.request.FollowCreateRequest;
 import com.team3.otboo.domain.follow.service.response.FollowListResponse;
 import com.team3.otboo.domain.user.dto.UserSummary;
@@ -27,6 +31,9 @@ public class FollowService {
 	private final FollowRepository followRepository;
 	private final FollowMapper followMapper;
 
+	private final UserFollowerCountRepository userFollowerCountRepository;
+	private final UserFollowingCountRepository userFollowingCountRepository;
+
 	@Transactional
 	public FollowDto create(FollowCreateRequest request) {
 		User follower = userRepository.findById(request.followerId()).orElseThrow(
@@ -36,6 +43,7 @@ public class FollowService {
 			() -> new EntityNotFoundException("해당 user가 존재하지 않습니다.")
 		);
 
+		// unique index 를 만들어서 동시성 문제 해결 .
 		if (followRepository.existsByFollowerIdAndFolloweeId(request.followerId(),
 			request.followeeId())) {
 			throw new IllegalArgumentException("같은 사람을 두번 팔로우 할 수 없습니다.");
@@ -43,6 +51,21 @@ public class FollowService {
 
 		Follow follow = followRepository.save(
 			Follow.create(request.followeeId(), request.followerId()));
+
+		// follower 의 following 카운트 증가 + followee 의 follower 카운트 증가 .
+		int followingResult = userFollowingCountRepository.increase(follower.getId());
+		if (followingResult == 0) { // 만약에 해당 row 가 없으면 0이 반환됨 . 없으면 객체 만들어서 save
+			userFollowingCountRepository.save(
+				UserFollowingCount.init(follower.getId(), 1L)
+			);
+		}
+
+		int followerCount = userFollowerCountRepository.increase(followee.getId());
+		if (followerCount == 0) {
+			userFollowerCountRepository.save(
+				UserFollowerCount.init(followee.getId(), 1L)
+			);
+		}
 
 		return new FollowDto(
 			follow.getId(),
@@ -57,10 +80,10 @@ public class FollowService {
 			() -> new EntityNotFoundException("해당 follow가 존재하지 않습니다.")
 		);
 
-		UUID followeeId = follow.getFolloweeId(); // 해당 followee 에게 알림 전송
-		UUID followerId = follow.getFollowerId(); // 해당 follower 에게 알림 전송 .
-
 		followRepository.deleteById(followId);
+
+		userFollowerCountRepository.decrease(follow.getFolloweeId());
+		userFollowingCountRepository.decrease(follow.getFollowerId());
 	}
 
 	// 팔로우 하는 사람의 ID 를 주면 follow 하고 있는 사람들의 목록을 준다.
