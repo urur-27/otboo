@@ -25,9 +25,9 @@ public class FollowMapper {
 		return new FollowDto(
 			follow.getId(),
 			new UserSummary(followee.getId(), followee.getUsername(),
-				followee.getProfileImageUrl()),
+				followee.getProfile().getProfileImageUrl()),
 			new UserSummary(follower.getId(), follower.getUsername(),
-				follower.getProfileImageUrl())
+				follower.getProfile().getProfileImageUrl())
 		);
 	}
 }
