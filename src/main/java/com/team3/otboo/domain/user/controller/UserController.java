@@ -1,17 +1,20 @@
 package com.team3.otboo.domain.user.controller;
 
-import com.team3.otboo.domain.user.dto.UserCreateRequest;
+import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
 import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.dto.UserDtoCursorResponse;
 import com.team3.otboo.domain.user.dto.UserSearchCondition;
+import com.team3.otboo.domain.user.dto.response.UserCreateResponse;
 import com.team3.otboo.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
 public class UserController {
@@ -19,9 +22,9 @@ public class UserController {
     private final UserService userService;
 
     // 회원가입 -> 권한 상관없이 누구나 호출 가능
-    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<UserDto> signUp(@RequestBody UserCreateRequest userCreateRequest) {
-        UserDto userDto = userService.createUser(userCreateRequest);
+    @PostMapping
+    public ResponseEntity<UserCreateResponse> signUp(@RequestBody UserCreateRequest userCreateRequest) {
+        UserCreateResponse userDto = userService.createUser(userCreateRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
     }
 
