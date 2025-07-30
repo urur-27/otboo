@@ -23,25 +23,43 @@ public class Profile extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Column
     private LocalDate birthDate;
 
     @Embedded
     private Location location;
 
+    @Column
     private Integer temperatureSensitivity;
 
+    @Column
     private String profileImageUrl;
 
     @Builder
-    private Profile (Gender gender, LocalDate birthDate, Location location, Integer temperatureSensitivity, String profileImageUrl) {
+    private Profile (Gender gender, LocalDate birthDate, Location location, Integer temperatureSensitivity, String profileImageUrl, User user) {
         this.gender = gender;
         this.birthDate = birthDate;
         this.location = location;
         this.temperatureSensitivity = temperatureSensitivity;
         this.profileImageUrl = profileImageUrl;
+        this.user = user;
+    }
+
+    public static Profile of(Gender gender, LocalDate birthDate, Location location, Integer temperatureSensitivity, String profileImageUrl, User user) {
+        return Profile.builder()
+                .gender(gender)
+                .birthDate(birthDate)
+                .location(location)
+                .temperatureSensitivity(temperatureSensitivity)
+                .profileImageUrl(profileImageUrl)
+                .user(user)
+                .build();
     }
 
     public void setUser(User user) {
         this.user = user;
+        if (user != null && user.getProfile() != this) {
+            user.setProfile(this);
+        }
     }
 }

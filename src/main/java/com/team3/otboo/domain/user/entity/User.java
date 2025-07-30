@@ -35,8 +35,7 @@ public class User extends BaseEntity {
 	@Column(name = "provider")
 	private Set<OAuthProvider> linkedOAuthProviders;
 
-	private String profileImageUrl;
-
+    @Column
 	boolean locked;
 
     // mappedBy - 연관관계 주인 = user
@@ -68,10 +67,8 @@ public class User extends BaseEntity {
     }
 
     public void setProfile(Profile profile) {
-        // 1. User -> Profile 참조 설정
         this.profile = profile;
-        if (profile != null) {
-            // 2. Profile -> User 참조도 함께 설정 (양방향 일관성 유지)
+        if (profile != null && profile.getUser() != this) {
             profile.setUser(this);
         }
     }
