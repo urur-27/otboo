@@ -10,6 +10,7 @@ import com.team3.otboo.domain.user.repository.UserRepository;
 import com.team3.otboo.domain.user.service.ProfileService;
 import com.team3.otboo.domain.weather.dto.WeatherDto;
 import com.team3.otboo.domain.weather.service.WeatherService;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class RecommendationService {
 
   public RecommendationDto recommend(UUID userId) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        .orElseThrow(UserNotFoundException::new);
 
     ProfileDto profile = profileService.getProfile(userId);
     List<Clothing> clothes = clothesService.getClothesByOwner(user);
