@@ -1,7 +1,7 @@
 package com.team3.otboo.domain.follow.repository;
 
 import com.team3.otboo.domain.follow.entity.Follow;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,7 +14,6 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
 
 	boolean existsByFollowerIdAndFolloweeId(UUID followerId, UUID followeeId);
 
-	// TODO: 인덱스 써서 쿼리 최적화 하기 .
 	@Query(
 		value = "select count(*) from follows where follower_id = :userId",
 		nativeQuery = true
@@ -49,7 +48,7 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
 	)
 	List<Follow> getFollowings(
 		@Param("followerId") UUID followerId,
-		@Param("createdAt") LocalDateTime createdAt, // cursor
+		@Param("createdAt") Instant createdAt, // cursor
 		@Param("cursorId") UUID cursorId, // cursorId
 		@Param("limit") Integer limit,
 		@Param("nameLike") String nameLike
@@ -90,7 +89,7 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
 	)
 	List<Follow> getFollowers(
 		@Param("followeeId") UUID followeeId,
-		@Param("createdAt") LocalDateTime createdAt,
+		@Param("createdAt") Instant createdAt,
 		@Param("cursorId") UUID cursorId,
 		@Param("limit") Integer limit,
 		@Param("nameLike") String nameLike

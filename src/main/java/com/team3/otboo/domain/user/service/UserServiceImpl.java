@@ -1,6 +1,8 @@
 package com.team3.otboo.domain.user.service;
 
 import com.team3.otboo.domain.user.dto.*;
+import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
+import com.team3.otboo.domain.user.dto.response.UserCreateResponse;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
 import com.team3.otboo.domain.user.mapper.UserMapper;
@@ -9,15 +11,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -26,7 +31,8 @@ public class UserServiceImpl implements UserService {
 
     // 회원가입
     @Override
-    public UserDto createUser(UserCreateRequest request) {
+    @Transactional
+    public UserCreateResponse createUser(UserCreateRequest request) {
         log.debug("사용자 생성 시작: {}", request.name());
 
         if(userRepository.existsByEmail(request.email())){
@@ -41,7 +47,8 @@ public class UserServiceImpl implements UserService {
         User user = new User(request.name(), request.email(), encodedPassword, Role.USER, null);
         userRepository.save(user);
         log.info("사용자 생성 완료: {}", user.getUsername());
-        return userMapper.toDto(user);
+
+        return UserCreateResponse.of(user);
     }
 
     @Override
