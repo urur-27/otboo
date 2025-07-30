@@ -16,7 +16,16 @@ import java.time.LocalDate;
 @Entity
 public class Profile extends BaseEntity {
 
-    private String name;
+    // BaseEntity의 상속을 받지 않음
+    // user PK를 profile PK로 사용하도록 설정
+    @Id
+    @Column(name = "user_id")
+    private Long id;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId                             // User Id를 Profile Id에 매핑
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
@@ -31,8 +40,7 @@ public class Profile extends BaseEntity {
     private String profileImageUrl;
 
     @Builder
-    private Profile (String name, Gender gender, LocalDate birthDate, Location location, Integer temperatureSensitivity, String profileImageUrl) {
-        this.name = name;
+    private Profile (Gender gender, LocalDate birthDate, Location location, Integer temperatureSensitivity, String profileImageUrl) {
         this.gender = gender;
         this.birthDate = birthDate;
         this.location = location;
@@ -40,4 +48,7 @@ public class Profile extends BaseEntity {
         this.profileImageUrl = profileImageUrl;
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
 }
