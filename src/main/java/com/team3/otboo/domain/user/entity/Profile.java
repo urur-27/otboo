@@ -4,6 +4,7 @@ import com.team3.otboo.domain.base.entity.BaseEntity;
 import com.team3.otboo.domain.user.enums.Gender;
 import com.team3.otboo.domain.user.enums.Location;
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,12 +19,12 @@ public class Profile extends BaseEntity {
 
     // BaseEntity의 상속을 받지 않음
     // user PK를 profile PK로 사용하도록 설정
-    @Id
-    @Column(name = "user_id")
-    private Long id;
+//    @Id
+//    @Column(name = "user_id")
+//    private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @MapsId                             // User Id를 Profile Id에 매핑
+//    @MapsId                             // User Id를 Profile Id에 매핑
     @JoinColumn(name = "user_id")
     private User user;
 

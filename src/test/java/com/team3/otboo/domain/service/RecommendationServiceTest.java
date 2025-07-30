@@ -1,11 +1,8 @@
 package com.team3.otboo.domain.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.team3.otboo.domain.clothing.entity.Attribute;
-import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import com.team3.otboo.domain.clothing.entity.Clothing;
 import com.team3.otboo.domain.clothing.service.ClothingService;
 import com.team3.otboo.domain.recommendation.dto.RecommendationDto;
@@ -13,6 +10,7 @@ import com.team3.otboo.domain.recommendation.service.RecommendationService;
 import com.team3.otboo.domain.recommendation.service.strategy.RecommendationStrategy;
 import com.team3.otboo.domain.user.dto.ProfileDto;
 import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.domain.user.repository.UserRepository;
 import com.team3.otboo.domain.user.service.ProfileService;
 import com.team3.otboo.domain.weather.dto.TemperatureDto;
 import com.team3.otboo.domain.weather.dto.WeatherDto;
@@ -20,6 +18,7 @@ import com.team3.otboo.domain.weather.service.WeatherService;
 import com.team3.otboo.fixture.ClothingFixture;
 import com.team3.otboo.fixture.UserFixture;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +33,8 @@ class RecommendationServiceTest {
   private RecommendationService recommendationService;
 
   @Mock
+  private UserRepository userRepository;
+  @Mock
   private ProfileService profileService;
   @Mock
   private ClothingService clothesService;
@@ -44,37 +45,33 @@ class RecommendationServiceTest {
 
   @Test
   void 맑고_더운_날에는_반팔과_반바지를_추천한다() {
+    // given:
     User mockOwner = UserFixture.createDefaultUser();
+    UUID userId = mockOwner.getId();
+
+    when(userRepository.findById(userId)).thenReturn(Optional.of(mockOwner));
+
     Clothing tshirt = ClothingFixture.createTshirt(mockOwner);
     Clothing shorts = ClothingFixture.createShorts(mockOwner);
-    Clothing knit = ClothingFixture.createKnit(mockOwner);
+    List<Clothing> mockClothesList = List.of(tshirt, shorts);
+    when(clothesService.getClothesByOwner(mockOwner)).thenReturn(mockClothesList);
 
-    List<Clothing> mockClothesList = List.of(tshirt, shorts, knit);
-    when(clothesService.getClothesByOwner(any(User.class))).thenReturn(mockClothesList);
+    ProfileDto mockProfile = ProfileDto.builder().userId(userId).temperatureSensitivity(5).build();
+    when(profileService.getProfile(userId)).thenReturn(mockProfile);
 
-    ProfileDto mockProfile = ProfileDto.builder()
-        .temperatureSensitivity(5)
-        .build();
-    TemperatureDto mockTemp = TemperatureDto.builder()
-        .current(28.0)
-        .build();
     WeatherDto mockWeather = WeatherDto.builder()
-        .skyStatus("맑음")
-        .temperature(mockTemp)
+        .id(UUID.randomUUID())
+        .temperature(TemperatureDto.builder().current(28.0).build())
         .build();
-    when(profileService.getProfile(any(UUID.class))).thenReturn(mockProfile);
-    when(weatherService.getWeatherForUser(any(UUID.class))).thenReturn(mockWeather);
+    when(weatherService.getWeatherForUser(userId)).thenReturn(mockWeather);
 
-    List<Clothing> recommendedItems = List.of(tshirt, shorts);
-    RecommendationDto expectedResult = new RecommendationDto(recommendedItems, "더운 날씨에 딱 맞네요!");
+    RecommendationDto expectedResult = new RecommendationDto(mockWeather.getId(), userId, List.of(/* OotdDto list */));
     when(recommendationStrategy.recommend(mockProfile, mockWeather, mockClothesList)).thenReturn(expectedResult);
 
-    RecommendationDto actualResult = recommendationService.recommend(mockOwner.getId());
+    // when:
+    RecommendationDto actualResult = recommendationService.recommend(userId);
 
+    // then:
     assertThat(actualResult).isEqualTo(expectedResult);
-    assertThat(actualResult.recommendedItems())
-        .hasSize(2)
-        .extracting(Clothing::getName)
-        .containsExactlyInAnyOrder("검은색 반팔티", "청반바지");
   }
 }
