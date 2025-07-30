@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserFollowerCountRepository extends JpaRepository<UserFollowerCount, UUID> {
 
+	// 대규모 트래픽이 예상되는 상황에서 팔로워, 팔로잉 수를 세는데 count 쿼리를 사용하면 너무 오래결럼 UserFollowerCount, UserFollowingCount 라는 객체를 따로 저장
 	@Query(
 		value = "update user_follower_count set follower_count = follower_count + 1 where userId = :userId",
 		nativeQuery = true
