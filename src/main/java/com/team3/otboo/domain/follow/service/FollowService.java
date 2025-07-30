@@ -15,7 +15,7 @@ import com.team3.otboo.domain.user.dto.UserSummary;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -90,15 +90,20 @@ public class FollowService {
 	@Transactional(readOnly = true)
 	public FollowListResponse getFollowings(UUID followerId, String cursor, UUID idAfter,
 		Integer limit, String nameLike) {
-		Integer followingCount = followRepository.countFollowings(followerId);
+
+		Long count = userFollowingCountRepository.findById(followerId)
+			.map(UserFollowingCount::getFollowingCount)
+			.orElse(0L);
+
+		int followingCount = count.intValue();
 
 		// has next 의 판단을 위해 limit + 1 개를 가져옴 .
-		// cursor -> LocalDateTime, idAfter -> 같은 시간에 만들어졌을 경우 id 로 정렬 ..
+		// cursor -> Instant, idAfter -> 같은 시간에 만들어졌을 경우 id 로 정렬 ..
 		// TODO 인덱스 만들기 .
 
-		LocalDateTime lastCreatedAt = null;
+		Instant lastCreatedAt = null;
 		if (cursor != null) {
-			lastCreatedAt = LocalDateTime.parse(cursor);
+			lastCreatedAt = Instant.parse(cursor);
 		}
 
 		List<Follow> follows = cursor == null || idAfter == null ?
@@ -129,11 +134,15 @@ public class FollowService {
 	public FollowListResponse getFollowers(UUID followeeId, String cursor,
 		UUID idAfter, int limit, String nameLike) {
 
-		Integer followerCount = followRepository.countFollowers(followeeId);
+		Long count = userFollowerCountRepository.findById(followeeId)
+			.map(UserFollowerCount::getFollowerCount)
+			.orElse(0L);
 
-		LocalDateTime lastCreatedAt = null;
+		int followerCount = count.intValue();
+
+		Instant lastCreatedAt = null;
 		if (cursor != null) {
-			lastCreatedAt = LocalDateTime.parse(cursor);
+			lastCreatedAt = Instant.parse(cursor);
 		}
 
 		List<Follow> follows = cursor == null || idAfter == null ?
