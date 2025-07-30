@@ -25,6 +25,8 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
     @Transactional
     public ClothingAttributeDefDto create(ClothingAttributeDefCreateRequest request) {
         Attribute attribute = mapper.toEntity(request);
+        // 연관관계 보완
+        attribute.getOptions().forEach(option -> option.assignAttribute(attribute));
         Attribute saved = attributeRepository.save(attribute);
         return mapper.toDto(saved);
     }
