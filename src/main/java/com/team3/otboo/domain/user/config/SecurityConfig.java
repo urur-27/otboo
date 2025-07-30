@@ -2,17 +2,15 @@ package com.team3.otboo.domain.user.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 
 @Slf4j
 @Configuration
@@ -20,13 +18,8 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 @EnableMethodSecurity // (Secured, PreAuthorize) 보안 어노테이션 활성화
 public class SecurityConfig {
 
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            ObjectMapper mapper,
-            DaoAuthenticationProvider daoAuthenticationProvider,
-            SessionRegistry sessionRegistry,
-            PersistentTokenBasedRememberMeServices rememberMeServices
-    ) throws Exception {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectMapper mapper) throws Exception {
         // 인증 -> DaoAuthenticationProvider
         // 인가 -> 일부 URL은 허용, 나머지는 ADMIN 권한 필요
         // CSRF -> 기본 활성화, 로그아웃은 예외처리
@@ -37,21 +30,24 @@ public class SecurityConfig {
         http
                 // 사용자 인증 처리 provider 등록
                 // 직접 설정한 dao~ 를 통해 사용자 인증을 수행
-                .authenticationProvider(daoAuthenticationProvider)
+                .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .httpBasic(httpBasic -> httpBasic.disable())
                 // 인가 정책 설정
                 .authorizeHttpRequests(authorize -> authorize
-                        // permitAll -> 인증 없이 접근 허용
+
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                        .requestMatchers(HttpMethod.GET, "api/auth/csrf-token").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/refresh").permitAll()
+
+                        .anyRequest().authenticated()
                 );
-//                // 기본적으로 활성화되지만, logout 요청은 csrf 토큰 없이도 요청할 수 있도록 예외처리
-//                .csrf(csrf -> csrf
-//                        .ignoringRequestMatchers(HttpMethod.POST, "/api/auth/sign-out"))
+
         return http.build();
     }
 
+    @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }

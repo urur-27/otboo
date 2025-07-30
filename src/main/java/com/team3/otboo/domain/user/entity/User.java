@@ -17,11 +17,13 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 public class User extends BaseEntity {
 
-	@Column(length = 20, unique = true, nullable = false)
+	@Column
 	private String username;
-	@Column(length = 50, unique = true, nullable = false)
+
+	@Column
 	private String email;
-	@Column(length = 50, nullable = false)
+
+	@Column
 	private String password;
 
 	@Enumerated(EnumType.STRING)
