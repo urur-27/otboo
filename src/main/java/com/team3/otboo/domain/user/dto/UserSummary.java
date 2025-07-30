@@ -13,7 +13,7 @@ public record UserSummary(
 		return new UserSummary(
 			user.getId(),
 			user.getUsername(),
-			user.getProfileImageUrl()
+			user.getProfile().getProfileImageUrl()
 		);
 	}
 }
