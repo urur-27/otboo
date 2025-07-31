@@ -2,13 +2,16 @@ package com.team3.otboo.domain.user.service;
 
 import com.team3.otboo.domain.user.dto.*;
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
-import com.team3.otboo.domain.user.dto.response.UserCreateResponse;
+import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
+import com.team3.otboo.domain.user.dto.response.UserResponse;
 import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
 import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.ProfileRepository;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.global.exception.user.RoleNotFoundException;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,6 +23,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static com.team3.otboo.global.exception.ErrorCode.ROLE_NOT_FOUND;
 
 @Slf4j
 @Service
@@ -36,7 +41,7 @@ public class UserServiceImpl implements UserService {
     // 회원가입
     @Override
     @Transactional
-    public UserCreateResponse createUser(UserCreateRequest request) {
+    public UserResponse createUser(UserCreateRequest request) {
         log.debug("사용자 생성 시작: {}", request.name());
 
         if(userRepository.existsByEmail(request.email())){
@@ -58,7 +63,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("사용자 생성 완료: {}", user.getUsername());
 
-        return UserCreateResponse.of(user);
+        return UserResponse.of(user);
     }
 
     @Override
@@ -93,8 +98,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserRole(UserRoleUpdateRequest request){
-        // todo: 사용자의 권한을 변경할 때 사용, 변경 시 자동 로그아웃
+    public UserResponse updateUserRole(UserRoleUpdateRequest request, UUID userId){
+        // TODO 업데이트시 로그아웃 기능 추가 필요
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if(!Role.contains(request.newRole())){
+            throw new RoleNotFoundException();
+        }
+
+        user.updateRole(request.newRole());
+
+        return UserResponse.of(user);
     }
 
     @Override
