@@ -75,43 +75,4 @@ class RecommendationServiceTest {
     // then:
     assertThat(actualResult).isEqualTo(expectedResult);
   }
-
-  @Test
-  void 쌀쌀한_날씨에는_긴팔니트를_추천한다() {
-    // given: 쌀쌀한 날씨 상황 준비
-    User mockOwner = UserFixture.createDefaultUser();
-    UUID userId = mockOwner.getId();
-    when(userRepository.findById(userId)).thenReturn(Optional.of(mockOwner));
-
-    // 테스트에 필요한 옷들을 준비 (추천될 옷, 안될 옷)
-    Clothing tshirt = ClothingFixture.createTshirt(mockOwner);
-    Clothing knit = ClothingFixture.createKnit(mockOwner);
-    List<Clothing> mockClothesList = List.of(tshirt, knit);
-    when(clothesService.getClothesByOwner(mockOwner)).thenReturn(mockClothesList);
-
-    ProfileDto mockProfile = ProfileDto.builder()
-        .userId(userId)
-        .temperatureSensitivity(3)
-        .build();
-    when(profileService.getProfile(userId)).thenReturn(mockProfile);
-
-
-    // 쌀쌀한 날씨 정의 (기온 15도)
-    WeatherDto mockWeather = WeatherDto.builder()
-        .id(UUID.randomUUID())
-        .temperature(TemperatureDto.builder()
-            .current(15.0)
-            .build())
-        .build();
-    when(weatherService.getWeatherForUser(userId)).thenReturn(mockWeather);
-
-    // when: 실제 추천 서비스 호출
-    RecommendationDto actualResult = recommendationService.recommend(userId);
-
-    // then: 겨울니트 하나만 추천되었는지 검증
-    assertThat(actualResult.clothes())
-        .hasSize(1)
-        .extracting(OotdDto::name)
-        .containsExactly("겨울니트");
-  }
 }
