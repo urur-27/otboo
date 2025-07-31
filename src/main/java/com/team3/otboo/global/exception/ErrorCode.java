@@ -18,7 +18,16 @@ public enum ErrorCode {
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "해당 사용자를 찾을 수 없습니다."),
 
   // Roles Errors (Rxxx)
-  ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "해당 권한은 존재하지 않습니다.");
+  ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "해당 권한은 존재하지 않습니다."),
+
+  // Clothing Errors
+  CLOTHING_NOT_FOUND(HttpStatus.NOT_FOUND, "CL001", "해당 의상을 찾을 수 없습니다."),
+
+  // Attribute Errors
+  ATTRIBUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "A001", "해당 속성을 찾을 수 없습니다."),
+
+  // AttributeOption Errors
+  ATTRIBUTEOPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "AO001", "해당 속성 값을 찾을 수 없습니다.");
 
   private final HttpStatus status;
   private final String code;
