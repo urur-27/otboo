@@ -44,6 +44,10 @@ public class Clothing extends BaseEntity {
         this.owner = owner;
     }
 
+    public void updateName(String name) { this.name = name; }
+
+    public void updateType(String type) { this.type = type; }
+
     public void addAttributeValue(ClothingAttributeValue attributeValue) {
         this.attributeValues.add(attributeValue);
     }

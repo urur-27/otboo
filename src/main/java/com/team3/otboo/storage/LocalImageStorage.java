@@ -30,4 +30,23 @@ public class LocalImageStorage implements ImageStorage {
             throw new RuntimeException("Failed to upload image", e);
         }
     }
+
+    @Override
+    public void delete(String imageUrl) {
+        try {
+            // "/uploads/xxx.jpg" → "xxx.jpg" 추출
+            String filename = Paths.get(imageUrl).getFileName().toString();
+            Path filePath = rootPath.resolve(filename);
+
+            // uploads 디렉토리 내 파일만 삭제하도록 제한
+            if (!filePath.normalize().startsWith(rootPath.normalize())) {
+                throw new SecurityException("Invalid image path");
+            }
+
+            Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete image: " + imageUrl, e);
+        }
+    }
+
 }

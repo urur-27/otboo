@@ -2,6 +2,7 @@ package com.team3.otboo.domain.clothing.controller;
 
 import com.team3.otboo.domain.clothing.dto.ClothingDto;
 import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
+import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
 import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.service.ClothingService;
 import com.team3.otboo.domain.user.entity.User;
@@ -16,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -77,4 +79,13 @@ public class ClothingController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping(value = "/{clothesId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ClothingDto> updateClothing(
+            @PathVariable UUID clothesId,
+            @RequestPart("request") ClothingUpdateRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        ClothingDto response = clothingService.updateClothing(clothesId, request, image);
+        return ResponseEntity.ok(response);
+    }
 }

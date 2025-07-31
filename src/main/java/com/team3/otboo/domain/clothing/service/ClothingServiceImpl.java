@@ -3,6 +3,7 @@ package com.team3.otboo.domain.clothing.service;
 import com.team3.otboo.domain.clothing.dto.ClothingAttributeDto;
 import com.team3.otboo.domain.clothing.dto.ClothingDto;
 import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
+import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
 import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
@@ -16,6 +17,9 @@ import com.team3.otboo.domain.clothing.repository.ClothingRepository;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.global.exception.BusinessException;
 import com.team3.otboo.global.exception.ErrorCode;
+import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
+import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
+import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -101,10 +105,48 @@ public class ClothingServiceImpl implements ClothingService {
     );
   }
 
+  @Override
   @Transactional
   public void deleteClothing(UUID clothesId) {
     Clothing clothing = clothingRepository.findById(clothesId)
             .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "해당 의상이 존재하지 않습니다."));
     clothingRepository.delete(clothing);
+  }
+
+  @Override
+  @Transactional
+  public ClothingDto updateClothing(UUID id, ClothingUpdateRequest req, MultipartFile image){
+    Clothing clothing = clothingRepository.findById(id)
+            .orElseThrow(ClothingNotFoundException::new);
+
+    // 기본 정보 업데이트
+    if (req.name() != null) clothing.updateName(req.name());
+    if (req.type() != null) clothing.updateType(req.type());
+
+    if(image != null && !image.isEmpty()){
+      // 기존 이미지 삭제
+      if (clothing.getImageUrl() != null) {
+        imageStorage.delete(clothing.getImageUrl());
+      }
+      String imageUrl = imageStorage.upload(image);
+      clothing.updateImageUrl(imageUrl);
+    }
+
+    // 속성 업데이트(전체 교체)
+    if (req.attributes() != null) {
+      clothing.getAttributeValues().clear();
+
+      for (ClothingAttributeDto attrDto : req.attributes()) {
+        Attribute attribute = attributeRepository.findById(attrDto.definitionId())
+                .orElseThrow(AttributeNotFoundException::new);
+        AttributeOption option = attributeOptionRepository.findByAttributeAndValue(attribute, attrDto.value())
+                .orElseThrow(AttributeOptionNotFoundException::new);
+
+        ClothingAttributeValue value = ClothingAttributeValue.of(clothing, attribute, option);
+        clothing.addAttributeValue(value);
+      }
+    }
+
+    return clothingMapper.toDto(clothing);
   }
 }

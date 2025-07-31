@@ -2,6 +2,7 @@ package com.team3.otboo.domain.clothing.service;
 
 import com.team3.otboo.domain.clothing.dto.ClothingDto;
 import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
+import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
 import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.entity.Clothing;
 import com.team3.otboo.domain.user.entity.User;
@@ -26,4 +27,6 @@ public interface ClothingService {
   );
 
   void deleteClothing(UUID clothesId);
+
+  ClothingDto updateClothing(UUID id, ClothingUpdateRequest req, MultipartFile image);
 }

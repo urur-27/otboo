@@ -15,4 +15,9 @@ public class S3ImageStorage implements ImageStorage{
         // TODO: S3 업로드 구현 예정
         throw new UnsupportedOperationException("S3 업로드는 아직 구현되지 않았습니다.");
     }
+
+    @Override
+    public void delete(String imageUrl) {
+        throw new UnsupportedOperationException("S3 삭제는 아직 구현되지 않았습니다.");
+    }
 }
