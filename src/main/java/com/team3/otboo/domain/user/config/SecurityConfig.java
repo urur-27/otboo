@@ -3,8 +3,8 @@ package com.team3.otboo.domain.user.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.domain.user.enums.Role;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -53,19 +53,21 @@ public class SecurityConfig {
         http
                 // 사용자 인증 처리 provider 등록
                 // 직접 설정한 dao~ 를 통해 사용자 인증을 수행
-                .authenticationProvider(daoAuthenticationProvider)
+                .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .httpBasic(httpBasic -> httpBasic.disable())
                 // 인가 정책 설정
                 .authorizeHttpRequests(authorize -> authorize
                         // permitAll -> 인증 없이 접근 허용
                         // 회원가입
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         // csrf token을 get방식으로 요청하는 경우
-                        .requestMatchers(HttpMethod.GET, "api/auth/csrf-token").permitAll()
-                        //
+                        .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
-                        //
                         .requestMatchers(HttpMethod.GET, "/api/auth/refresh").permitAll()
-                )
+
+                        .anyRequest().authenticated()
+                );
                 // 기본적으로 활성화되지만, logout 요청은 csrf 토큰 없이도 요청할 수 있도록 예외처리
 //                .csrf(csrf -> csrf
 //                        // logout 패턴 지정
@@ -79,9 +81,7 @@ public class SecurityConfig {
 //                                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
 //                                .addLogoutHandler(new SessionRegistry)
 //                )
-                .csrf(csrf -> csrf.disable())
-                .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable());
+
         // HttpSecurity 설정 후 SecurityFilterChain 반환
         return http.build();
     }

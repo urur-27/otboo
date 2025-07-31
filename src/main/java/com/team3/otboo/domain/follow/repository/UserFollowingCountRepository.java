@@ -22,6 +22,4 @@ public interface UserFollowingCountRepository extends JpaRepository<UserFollowin
 	)
 	@Modifying
 	int decrease(@Param("userId") UUID userId);
-
-
 }

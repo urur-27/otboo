@@ -10,46 +10,56 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class Profile extends BaseEntity {
 
-    // BaseEntity의 상속을 받지 않음
-    // user PK를 profile PK로 사용하도록 설정
-    @Id
-    @Column(name = "user_id")
-    private UUID id;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId                             // User Id를 Profile Id에 매핑
+    @OneToOne(fetch = FetchType.LAZY)     // User Id를 Profile Id에 매핑
     @JoinColumn(name = "user_id")
     private User user;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Column
     private LocalDate birthDate;
 
     @Embedded
     private Location location;
 
+    @Column
     private Integer temperatureSensitivity;
 
+    @Column
     private String profileImageUrl;
 
     @Builder
-    private Profile (Gender gender, LocalDate birthDate, Location location, Integer temperatureSensitivity, String profileImageUrl) {
+    private Profile (Gender gender, LocalDate birthDate, Location location, Integer temperatureSensitivity, String profileImageUrl, User user) {
         this.gender = gender;
         this.birthDate = birthDate;
         this.location = location;
         this.temperatureSensitivity = temperatureSensitivity;
         this.profileImageUrl = profileImageUrl;
+        this.user = user;
+    }
+
+    public static Profile of(Gender gender, LocalDate birthDate, Location location, Integer temperatureSensitivity, String profileImageUrl, User user) {
+        return Profile.builder()
+                .gender(gender)
+                .birthDate(birthDate)
+                .location(location)
+                .temperatureSensitivity(temperatureSensitivity)
+                .profileImageUrl(profileImageUrl)
+                .user(user)
+                .build();
     }
 
     public void setUser(User user) {
         this.user = user;
+        if (user != null && user.getProfile() != this) {
+            user.setProfile(this);
+        }
     }
 }
