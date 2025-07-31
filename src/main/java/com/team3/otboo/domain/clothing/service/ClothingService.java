@@ -24,4 +24,6 @@ public interface ClothingService {
           String typeEqual,
           Sort.Direction direction
   );
+
+  void deleteClothing(UUID clothesId);
 }

@@ -14,6 +14,8 @@ import com.team3.otboo.domain.clothing.repository.AttributeOptionRepository;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.domain.clothing.repository.ClothingRepository;
 import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.global.exception.BusinessException;
+import com.team3.otboo.global.exception.ErrorCode;
 import com.team3.otboo.storage.ImageStorage;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -97,5 +99,12 @@ public class ClothingServiceImpl implements ClothingService {
             page.sortBy(),
             page.sortDirection()
     );
+  }
+
+  @Transactional
+  public void deleteClothing(UUID clothesId) {
+    Clothing clothing = clothingRepository.findById(clothesId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "해당 의상이 존재하지 않습니다."));
+    clothingRepository.delete(clothing);
   }
 }
