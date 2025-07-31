@@ -2,7 +2,6 @@ package com.team3.otboo.domain.user.entity;
 
 import com.team3.otboo.domain.base.entity.BaseEntity;
 import com.team3.otboo.domain.user.enums.Gender;
-import com.team3.otboo.domain.user.enums.Location;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

@@ -1,7 +1,7 @@
 package com.team3.otboo.domain.weather.entity;
 
 import com.team3.otboo.domain.base.entity.BaseEntity;
-import com.team3.otboo.domain.user.enums.Location;
+import com.team3.otboo.domain.user.entity.Location;
 import com.team3.otboo.domain.weather.enums.*;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
