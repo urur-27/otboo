@@ -21,6 +21,7 @@ import com.team3.otboo.fixture.UserFixture;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -45,7 +46,8 @@ class RecommendationServiceTest {
   private RecommendationStrategy recommendationStrategy;
 
   @Test
-  void 맑고_더운_날에는_반팔과_반바지를_추천한다() {
+  @DisplayName("맑고 더운 날에는 반팔과 반바지를 추천한다")
+  void recommendTshirtAndShortsOnHotWeather() {
     // given: 더운 날씨 상황 준비
     User mockOwner = UserFixture.createDefaultUser();
     UUID userId = mockOwner.getId();
