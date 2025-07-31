@@ -1,6 +1,7 @@
 package com.team3.otboo.domain.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.team3.otboo.domain.clothing.entity.Clothing;
@@ -76,5 +77,44 @@ class RecommendationServiceTest {
 
     // then:
     assertThat(actualResult).isEqualTo(expectedResult);
+  }
+
+  @Test
+  @DisplayName("16~24도의 적당한 날씨에는 맨투맨을 추천해야 한다")
+  void recommendSweatshirtOnMildWeather() {
+    // given: 적당한 날씨 준비
+    User mockOwner = UserFixture.createDefaultUser();
+    UUID userId = mockOwner.getId();
+    when(userRepository.findById(userId)).thenReturn(Optional.of(mockOwner));
+
+    // 추천 옷
+    Clothing sweatshirt = ClothingFixture.createSweatshirt(mockOwner);
+    Clothing tshirt = ClothingFixture.createTshirt(mockOwner);
+    List<Clothing> mockClothingList = List.of(tshirt, sweatshirt);
+    when(clothesService.getClothesByOwner(mockOwner)).thenReturn(mockClothingList);
+
+    ProfileDto mockProfile = ProfileDto.builder()
+        .userId(userId)
+        .temperatureSensitivity(3)
+        .build();
+    when(profileService.getProfile(userId)).thenReturn(mockProfile);
+
+    // "적당한 날씨" 정의 (20도)
+    WeatherDto mockWeather = WeatherDto.builder()
+        .id(mockOwner.getId())
+        .temperature(TemperatureDto.builder()
+            .current(20.0)
+            .build())
+        .build();
+    when(weatherService.getWeatherForUser(userId)).thenReturn(mockWeather);
+
+    // when: 서비스 호출
+    RecommendationDto actualResult = recommendationService.recommend(userId);
+
+    // then: 검증
+    assertThat(actualResult.clothes())
+        .hasSize(1)
+        .extracting(OotdDto::name)
+        .containsExactly("곰돌이 맨투맨");
   }
 }
