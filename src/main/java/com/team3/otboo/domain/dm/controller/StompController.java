@@ -22,7 +22,7 @@ public class StompController {
 	public void sendDirectMessage(
 		@Payload DirectMessageCreateRequest request, Principal principal
 	) {
-		// 저장하고 레디스로 뿌려줌 .
+		// 저장하고 레디스로 전달
 		DirectMessageSendPayload payload = directMessageService.save(request);
 		publishService.publish(payload);
 	}

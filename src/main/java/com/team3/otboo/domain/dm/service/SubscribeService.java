@@ -26,7 +26,7 @@ public class SubscribeService implements MessageListener {
 				.readValue(publishMessage, DirectMessageSendPayload.class);
 
 			messageTemplate.convertAndSend(
-				"/sub/direct-messages_" + payload.dmKey(),
+				"/sub/direct-messages_" + payload.dmKey(), // 수신 엔드포인트
 				payload);
 		} catch (Exception e) {
 			log.error("[SubscribeService.onMessage]json 역직렬화 중 오류 발생");

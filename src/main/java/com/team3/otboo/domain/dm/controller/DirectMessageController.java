@@ -18,7 +18,7 @@ public class DirectMessageController {
 	public DirectMessageDtoCursorResponse getMessages(
 		@RequestParam UUID userId
 	) {
-		// CustomUserDetails 구현 이후에 구현 ..
+		// CustomUserDetails 구현 이후에 구현
 		return null;
 	}
 }
