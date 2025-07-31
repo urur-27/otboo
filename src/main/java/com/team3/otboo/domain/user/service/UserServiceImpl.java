@@ -2,6 +2,7 @@ package com.team3.otboo.domain.user.service;
 
 import com.team3.otboo.domain.user.dto.*;
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
+import com.team3.otboo.domain.user.dto.Request.UserPasswordUpdateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
 import com.team3.otboo.domain.user.dto.response.UserResponse;
 import com.team3.otboo.domain.user.entity.Profile;
@@ -110,6 +111,16 @@ public class UserServiceImpl implements UserService {
         user.updateRole(request.newRole());
 
         return UserResponse.of(user);
+    }
+
+    @Override
+    public void updateUserPassword(UserPasswordUpdateRequest request, UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        String encodedPassword = passwordEncoder.encode(request.newPassword());
+        user.updatePassword(encodedPassword);
+
     }
 
     @Override

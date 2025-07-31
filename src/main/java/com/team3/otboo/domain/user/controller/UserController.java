@@ -1,6 +1,7 @@
 package com.team3.otboo.domain.user.controller;
 
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
+import com.team3.otboo.domain.user.dto.Request.UserPasswordUpdateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
 import com.team3.otboo.domain.user.dto.UserDtoCursorResponse;
 import com.team3.otboo.domain.user.dto.UserSearchCondition;
@@ -38,6 +39,16 @@ public class UserController {
     ){
         UserResponse userDto = userService.updateUserRole(userRoleUpdateRequest, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
+    }
+
+    @PatchMapping("/{userId}/password")
+    public ResponseEntity<Void> updatePassword(
+            @PathVariable("userId") UUID userId,
+            @RequestBody UserPasswordUpdateRequest userRoleUpdateRequest
+    ){
+        userService.updateUserPassword(userRoleUpdateRequest, userId);
+
+        return ResponseEntity.noContent().build();
     }
 
     // 목록 조회
