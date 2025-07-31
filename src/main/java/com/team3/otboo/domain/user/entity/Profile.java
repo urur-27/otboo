@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -20,7 +21,7 @@ public class Profile extends BaseEntity {
     // user PK를 profile PK로 사용하도록 설정
     @Id
     @Column(name = "user_id")
-    private Long id;
+    private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId                             // User Id를 Profile Id에 매핑

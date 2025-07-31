@@ -33,7 +33,7 @@ public class UserController {
             // 페이지네이션 파라미터
             @RequestParam(required = false) String cursor,
             @RequestParam(name = "idAfter", required = false) String idAfter,
-            @RequestParam(name = "limit") int limit, // 필수 값
+            @RequestParam(name = "limit") int limit,
 
             // 정렬 파라미터
             @RequestParam(name = "sortBy") String sortBy,
