@@ -3,6 +3,8 @@ package com.team3.otboo.domain.clothing.service;
 import com.team3.otboo.domain.clothing.dto.ClothingAttributeDto;
 import com.team3.otboo.domain.clothing.dto.ClothingDto;
 import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
+import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
+import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import com.team3.otboo.domain.clothing.entity.Clothing;
@@ -15,8 +17,10 @@ import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.storage.ImageStorage;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -64,5 +68,34 @@ public class ClothingServiceImpl implements ClothingService {
 
     clothingRepository.save(clothing);
       return clothingMapper.toDto(clothing);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public ClothingDtoCursorResponse getClothesByCursor(
+          UUID ownerId,
+          String cursor,
+          UUID idAfter,
+          int limit,
+          String typeEqual,
+          Sort.Direction direction
+  ) {
+    CursorPageResponse<Clothing> page = clothingRepository.findAllByCursor(
+            ownerId, cursor, idAfter, limit, typeEqual, direction
+    );
+    // 엔티티 → DTO 변환
+    List<ClothingDto> data = page.data().stream()
+            .map(clothingMapper::toDto)
+            .toList();
+
+    return new ClothingDtoCursorResponse(
+            data,
+            page.nextCursor(),
+            page.nextIdAfter(),
+            page.hasNext(),
+            page.totalCount(),
+            page.sortBy(),
+            page.sortDirection()
+    );
   }
 }

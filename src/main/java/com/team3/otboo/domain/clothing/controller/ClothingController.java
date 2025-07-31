@@ -2,17 +2,22 @@ package com.team3.otboo.domain.clothing.controller;
 
 import com.team3.otboo.domain.clothing.dto.ClothingDto;
 import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
+import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.service.ClothingService;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
 import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class ClothingController {
 
     private final ClothingService clothingService;
-
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClothingDto> createClothing(
@@ -46,4 +50,23 @@ public class ClothingController {
         log.info("의상 등록 완료");
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
+
+    @GetMapping
+    public ResponseEntity<ClothingDtoCursorResponse> getClothes(
+            @RequestParam UUID ownerId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) UUID idAfter,
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) String typeEqual,
+            @RequestParam(defaultValue = "DESC") String sortDirection
+    ) {
+        int pageSize = (limit == null) ? 20 : limit;
+        Sort.Direction direction = Sort.Direction.fromString(sortDirection);
+
+        ClothingDtoCursorResponse response = clothingService.getClothesByCursor(
+                ownerId, cursor, idAfter, pageSize, typeEqual, direction
+        );
+        return ResponseEntity.ok(response);
+    }
+
 }
