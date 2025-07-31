@@ -2,13 +2,18 @@ package com.team3.otboo.domain.user.service;
 
 import com.team3.otboo.domain.user.dto.*;
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
-import com.team3.otboo.domain.user.dto.response.UserCreateResponse;
+import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
+import com.team3.otboo.domain.user.dto.Request.UserPasswordUpdateRequest;
+import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
+import com.team3.otboo.domain.user.dto.response.UserResponse;
 import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
 import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.ProfileRepository;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.global.exception.user.RoleNotFoundException;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -36,7 +41,8 @@ public class UserServiceImpl implements UserService {
     // 회원가입
     @Override
     @Transactional
-    public UserCreateResponse createUser(UserCreateRequest request) {
+    public UserResponse createUser(UserCreateRequest request) {
+        // TODO AUTH 회원가입 기능 추가 필요
         log.debug("사용자 생성 시작: {}", request.name());
 
         if(userRepository.existsByEmail(request.email())){
@@ -58,7 +64,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("사용자 생성 완료: {}", user.getUsername());
 
-        return UserCreateResponse.of(user);
+        return UserResponse.of(user);
     }
 
     @Override
@@ -88,16 +94,45 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserLock(UserLockUpdateRequest request){
-        // todo: 사용자 계정을 잠글 경우 사용
+    @Transactional
+    public UUID updateUserLock(UserLockUpdateRequest request, UUID userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.updateLocked(request.locked());
+
+        return user.getId();
     }
 
     @Override
-    public void updateUserRole(UserRoleUpdateRequest request){
-        // todo: 사용자의 권한을 변경할 때 사용, 변경 시 자동 로그아웃
+    @Transactional
+    public UserResponse updateUserRole(UserRoleUpdateRequest request, UUID userId){
+        // TODO 업데이트시 로그아웃 기능 추가 필요
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if(!Role.contains(request.newRole())){
+            throw new RoleNotFoundException();
+        }
+
+        user.updateRole(request.newRole());
+
+        return UserResponse.of(user);
     }
 
     @Override
+    @Transactional
+    public void updateUserPassword(UserPasswordUpdateRequest request, UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        String encodedPassword = passwordEncoder.encode(request.newPassword());
+        user.updatePassword(encodedPassword);
+
+    }
+
+    @Override
+    @Transactional
     public void deleteUser(UUID id) {
         log.debug("사용자 삭제 시작: {}", id);
         if(!userRepository.existsById(id)){

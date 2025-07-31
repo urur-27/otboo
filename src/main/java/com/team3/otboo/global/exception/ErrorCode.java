@@ -17,6 +17,9 @@ public enum ErrorCode {
   // User Errors (Uxxx)
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "해당 사용자를 찾을 수 없습니다."),
 
+  // Roles Errors (Rxxx)
+  ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "해당 권한은 존재하지 않습니다."),
+
   // Clothing Errors
   CLOTHING_NOT_FOUND(HttpStatus.NOT_FOUND, "CL001", "해당 의상을 찾을 수 없습니다."),
 

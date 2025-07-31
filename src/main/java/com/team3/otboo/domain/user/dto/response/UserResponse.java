@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Getter
-public class UserCreateResponse {
+public class UserResponse {
     private UUID id;
 
     private Instant createdAt;
@@ -27,7 +27,7 @@ public class UserCreateResponse {
     private boolean locked;
 
     @Builder
-    private UserCreateResponse(UUID id, Instant createdAt, String email, String name, Role role, Set<OAuthProvider> linkedOAuthProviders, boolean locked) {
+    private UserResponse(UUID id, Instant createdAt, String email, String name, Role role, Set<OAuthProvider> linkedOAuthProviders, boolean locked) {
         this.id = id;
         this.createdAt = createdAt;
         this.email = email;
@@ -37,8 +37,8 @@ public class UserCreateResponse {
         this.locked = locked;
     }
 
-    public static UserCreateResponse of(User user) {
-        return UserCreateResponse.builder()
+    public static UserResponse of(User user) {
+        return UserResponse.builder()
                 .id(user.getId())
                 .createdAt(user.getCreatedAt())
                 .email(user.getEmail())
