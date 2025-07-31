@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
     // 회원가입
     @Override
     @Transactional
-    public UserCreateResponse createUser(UserCreateRequest request) {
+    public UserResponse createUser(UserCreateRequest request) {
         log.debug("사용자 생성 시작: {}", request.name());
 
         if(userRepository.existsByEmail(request.email())){
@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("사용자 생성 완료: {}", user.getUsername());
 
-        return UserCreateResponse.of(user);
+        return UserResponse.of(user);
     }
 
     @Override
@@ -95,6 +95,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUserRole(UserRoleUpdateRequest request){
         // todo: 사용자의 권한을 변경할 때 사용, 변경 시 자동 로그아웃
+    public UserResponse updateUserRole(UserRoleUpdateRequest request, UUID userId){
     }
 
     @Override
