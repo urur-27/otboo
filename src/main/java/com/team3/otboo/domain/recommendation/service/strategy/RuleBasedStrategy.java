@@ -16,6 +16,7 @@ public class RuleBasedStrategy implements RecommendationStrategy {
 
   private final ClothingMapper clothingMapper;
 
+  //TODO Clothing repository가 완성되고 나면 테이블에서 attribute나 option들 정보를 가져와야함
   private static final double HOT_WEATHER_THRESHOLD = 25.0;
   private static final double COLD_WEATHER_THRESHOLD = 15.0;
   private static final String ATTRIBUTE_TYPE = "종류";
