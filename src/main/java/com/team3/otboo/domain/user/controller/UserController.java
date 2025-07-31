@@ -1,6 +1,7 @@
 package com.team3.otboo.domain.user.controller;
 
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
+import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserPasswordUpdateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
 import com.team3.otboo.domain.user.dto.UserDtoCursorResponse;
@@ -49,6 +50,17 @@ public class UserController {
         userService.updateUserPassword(userRoleUpdateRequest, userId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{userId}/lock")
+//    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UUID> updateLock(
+            @PathVariable("userId") UUID userId,
+            @RequestBody UserLockUpdateRequest userLockUpdateRequest
+    ){
+        UUID userUpdateId = userService.updateUserLock(userLockUpdateRequest, userId);
+
+        return ResponseEntity.ok(userUpdateId);
     }
 
     // 목록 조회
