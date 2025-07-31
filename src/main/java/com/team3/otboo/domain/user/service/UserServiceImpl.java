@@ -2,6 +2,7 @@ package com.team3.otboo.domain.user.service;
 
 import com.team3.otboo.domain.user.dto.*;
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
+import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserPasswordUpdateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
 import com.team3.otboo.domain.user.dto.response.UserResponse;
@@ -25,8 +26,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.team3.otboo.global.exception.ErrorCode.ROLE_NOT_FOUND;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -43,6 +42,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
+        // TODO AUTH 회원가입 기능 추가 필요
         log.debug("사용자 생성 시작: {}", request.name());
 
         if(userRepository.existsByEmail(request.email())){
@@ -94,11 +94,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserLock(UserLockUpdateRequest request){
-        // todo: 사용자 계정을 잠글 경우 사용
+    @Transactional
+    public UUID updateUserLock(UserLockUpdateRequest request, UUID userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.updateLocked(request.locked());
+
+        return user.getId();
     }
 
     @Override
+    @Transactional
     public UserResponse updateUserRole(UserRoleUpdateRequest request, UUID userId){
         // TODO 업데이트시 로그아웃 기능 추가 필요
         User user = userRepository.findById(userId)
@@ -114,6 +121,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateUserPassword(UserPasswordUpdateRequest request, UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
@@ -124,6 +132,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(UUID id) {
         log.debug("사용자 삭제 시작: {}", id);
         if(!userRepository.existsById(id)){
