@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import com.team3.otboo.domain.clothing.entity.Clothing;
 import com.team3.otboo.domain.clothing.service.ClothingService;
+import com.team3.otboo.domain.feed.dto.OotdDto;
 import com.team3.otboo.domain.recommendation.dto.RecommendationDto;
 import com.team3.otboo.domain.recommendation.service.RecommendationService;
 import com.team3.otboo.domain.recommendation.service.strategy.RecommendationStrategy;
@@ -45,12 +46,12 @@ class RecommendationServiceTest {
 
   @Test
   void 맑고_더운_날에는_반팔과_반바지를_추천한다() {
-    // given:
+    // given: 더운 날씨 상황 준비
     User mockOwner = UserFixture.createDefaultUser();
     UUID userId = mockOwner.getId();
-
     when(userRepository.findById(userId)).thenReturn(Optional.of(mockOwner));
 
+    // 테스트에 필요한 옷들 준비
     Clothing tshirt = ClothingFixture.createTshirt(mockOwner);
     Clothing shorts = ClothingFixture.createShorts(mockOwner);
     List<Clothing> mockClothesList = List.of(tshirt, shorts);
