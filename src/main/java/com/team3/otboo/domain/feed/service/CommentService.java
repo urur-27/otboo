@@ -120,4 +120,23 @@ public class CommentService {
 		return new CommentDtoCursorResponse(commentDtoList, nextCursor, nextIdAfter, hasNext,
 			commentCount, "createdAt", SortDirection.ASCENDING);
 	}
+
+	// 테스트 데이터 생성용 ..
+	@Transactional
+	public Comment createBulk(CommentCreateRequest request) {
+		Comment comment = commentRepository.save(Comment.create(
+			request.feedId(),
+			request.authorId(),
+			request.content()
+		));
+
+		int result = feedCommentCountRepository.increase(request.feedId());
+		if (result == 0) {
+			feedCommentCountRepository.save(
+				FeedCommentCount.init(request.feedId(), 1L)
+			);
+		}
+
+		return comment;
+	}
 }
