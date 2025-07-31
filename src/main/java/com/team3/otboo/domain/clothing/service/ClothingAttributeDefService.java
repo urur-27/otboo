@@ -11,9 +11,10 @@ public interface ClothingAttributeDefService {
 
     CursorPageResponse<ClothingAttributeDefDto> getAttributes(
             String cursor,
+            UUID idAfter,
             int limit,
             String sortBy,
-            String sortDirection,
+            Direction direction,
             String keyword
     );
 

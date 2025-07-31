@@ -4,6 +4,7 @@ import com.team3.otboo.domain.clothing.dto.ClothingAttributeDefDto;
 import com.team3.otboo.domain.clothing.dto.request.ClothingAttributeDefCreateRequest;
 import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.service.ClothingAttributeDefService;
+import com.team3.otboo.domain.clothing.service.Direction;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -44,12 +45,11 @@ public class ClothingAttributeDefController {
             @RequestParam(required = false, defaultValue = "DESCENDING") String sortDirection,
             @RequestParam(required = false) String keywordLike
     ) {
-        // 커서가 없는 경우 idAfter로 대체
-        String effectiveCursor = (cursor != null) ? cursor :
-                (idAfter != null) ? idAfter.toString() : null;
+        // "ASCENDING"/"DESCENDING" → Enum으로 변환
+        Direction direction = Direction.fromApi(sortDirection);
 
         return ResponseEntity.ok(
-                service.getAttributes(effectiveCursor, limit, sortBy, sortDirection, keywordLike)
+                service.getAttributes(cursor, idAfter, limit, sortBy, direction, keywordLike)
         );
     }
 

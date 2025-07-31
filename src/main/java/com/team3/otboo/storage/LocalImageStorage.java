@@ -5,12 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
-@Profile("local")
+// 현재는 프로필 설정이 적용되어 있지 않음
+//@Profile("local")
 public class LocalImageStorage implements ImageStorage {
 
     private final Path rootPath = Paths.get("uploads");

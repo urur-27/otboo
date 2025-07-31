@@ -34,13 +34,16 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
     @Override
     public CursorPageResponse<ClothingAttributeDefDto> getAttributes(
             String cursor,
+            UUID idAfter,
             int limit,
             String sortBy,
-            String sortDirection,
+            Direction direction,
             String keyword
     ) {
-        Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.DESC);
-        CursorPageResponse<Attribute> result = attributeRepository.findAllByCursor(cursor, limit, sortBy, direction, keyword);
+        CursorPageResponse<Attribute> result = attributeRepository.findAllByCursor(
+                cursor, idAfter, limit, sortBy, direction, keyword
+        );
+
         List<ClothingAttributeDefDto> dtoList = result.data().stream()
                 .map(mapper::toDto)
                 .toList();
@@ -48,9 +51,11 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
         return new CursorPageResponse<>(
                 dtoList,
                 result.nextCursor(),
+                result.nextIdAfter(),
                 result.sortBy(),
                 result.sortDirection(),
-                result.totalCount()
+                result.totalCount(),
+                result.hasNext()
         );
     }
 
