@@ -3,6 +3,7 @@ package com.team3.otboo.domain.follow.repository;
 import com.team3.otboo.domain.follow.entity.Follow;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Repository;
 public interface FollowRepository extends JpaRepository<Follow, UUID> {
 
 	boolean existsByFollowerIdAndFolloweeId(UUID followerId, UUID followeeId);
+
+	Optional<Follow> findByFollowerIdAndFolloweeId(UUID followerId, UUID followeeId);
 
 	@Query(
 		value = "select count(*) from follows where follower_id = :userId",
@@ -35,7 +38,7 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
 		@Param("nameLike") String nameLike
 	);
 
-
+	// TODO: nameLike 쓰지말고 나중에 elastic search
 	@Query(
 		value = "select f.id, f.created_at, f.followee_id, f.follower_id "
 			+ "from follows f "
