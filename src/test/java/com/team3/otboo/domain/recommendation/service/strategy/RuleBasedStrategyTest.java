@@ -1,8 +1,6 @@
-package com.team3.otboo.domain.service;
+package com.team3.otboo.domain.recommendation.service.strategy;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
@@ -10,7 +8,6 @@ import com.team3.otboo.domain.clothing.entity.Clothing;
 import com.team3.otboo.domain.clothing.mapper.ClothingMapper;
 import com.team3.otboo.domain.feed.dto.OotdDto;
 import com.team3.otboo.domain.recommendation.dto.RecommendationDto;
-import com.team3.otboo.domain.recommendation.service.strategy.RuleBasedStrategy;
 import com.team3.otboo.domain.user.dto.ProfileDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.weather.dto.TemperatureDto;
@@ -18,7 +15,6 @@ import com.team3.otboo.domain.weather.dto.WeatherDto;
 import com.team3.otboo.fixture.ClothingFixture;
 import com.team3.otboo.fixture.UserFixture;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
