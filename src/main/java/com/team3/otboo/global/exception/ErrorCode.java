@@ -13,6 +13,7 @@ public enum ErrorCode {
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C003", "서버 내부 오류가 발생했습니다."),
   INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "C004", "요청 값의 타입이 올바르지 않습니다."),
   ACCESS_DENIED(HttpStatus.FORBIDDEN, "C005", "접근 권한이 없습니다."),
+  INVALID_SORT_FIELD(HttpStatus.BAD_REQUEST, "C006", "지원하지 않는 정렬 기준입니다."),
 
   // User Errors (Uxxx)
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "해당 사용자를 찾을 수 없습니다."),
@@ -24,7 +25,9 @@ public enum ErrorCode {
   CLOTHING_NOT_FOUND(HttpStatus.NOT_FOUND, "CL001", "해당 의상을 찾을 수 없습니다."),
 
   // Attribute Errors
-  ATTRIBUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "A001", "해당 속성을 찾을 수 없습니다."),
+  ATTRIBUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "ATTR001", "해당 속성을 찾을 수 없습니다."),
+  ATTRIBUTE_NAME_DUPLICATED(HttpStatus.CONFLICT, "ATTR002", "이미 존재하는 속성명입니다."),
+  ATTRIBUTE_OPTION_EMPTY(HttpStatus.BAD_REQUEST, "ATTR003", "옵션 값은 최소 1개 이상이어야 합니다."),
 
   // AttributeOption Errors
   ATTRIBUTEOPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "AO001", "해당 속성 값을 찾을 수 없습니다.");

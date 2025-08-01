@@ -15,14 +15,11 @@ import com.team3.otboo.domain.clothing.repository.AttributeOptionRepository;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.domain.clothing.repository.ClothingRepository;
 import com.team3.otboo.domain.user.entity.User;
-import com.team3.otboo.global.exception.BusinessException;
-import com.team3.otboo.global.exception.ErrorCode;
 import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
 import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,9 +61,9 @@ public class ClothingServiceImpl implements ClothingService {
     // attributeValues 직접 생성 및 연관관계 연결
     for (ClothingAttributeDto attrReq : request.attributes()) {
       Attribute attribute = attributeRepository.findById(attrReq.definitionId())
-              .orElseThrow(() -> new NoSuchElementException("해당 속성이 없습니다."));
+              .orElseThrow(AttributeNotFoundException::new);
       AttributeOption option = attributeOptionRepository.findByAttributeIdAndValue(attribute.getId(), attrReq.value())
-              .orElseThrow(() -> new NoSuchElementException("해당 옵션이 없습니다."));
+              .orElseThrow(AttributeOptionNotFoundException::new);
 
       ClothingAttributeValue cav = ClothingAttributeValue.of(clothing, attribute, option);
       clothing.addAttributeValue(cav);
@@ -109,7 +106,7 @@ public class ClothingServiceImpl implements ClothingService {
   @Transactional
   public void deleteClothing(UUID clothesId) {
     Clothing clothing = clothingRepository.findById(clothesId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "해당 의상이 존재하지 않습니다."));
+            .orElseThrow(ClothingNotFoundException::new);
     clothingRepository.delete(clothing);
   }
 
