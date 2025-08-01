@@ -1,11 +1,7 @@
 package com.team3.otboo.domain.user.controller;
 
-import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
-import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
-import com.team3.otboo.domain.user.dto.Request.UserPasswordUpdateRequest;
-import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
-import com.team3.otboo.domain.user.dto.UserDtoCursorResponse;
-import com.team3.otboo.domain.user.dto.UserSearchCondition;
+import com.team3.otboo.domain.user.dto.Request.*;
+import com.team3.otboo.domain.user.dto.response.UserDtoCursorResponse;
 import com.team3.otboo.domain.user.dto.response.UserResponse;
 import com.team3.otboo.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +49,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/lock")
-//    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UUID> updateLock(
             @PathVariable("userId") UUID userId,
             @RequestBody UserLockUpdateRequest userLockUpdateRequest
@@ -63,29 +59,11 @@ public class UserController {
         return ResponseEntity.ok(userUpdateId);
     }
 
-    // 목록 조회
-    // ADMIN 권한 필요
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDtoCursorResponse> getUsers(
-            // 페이지네이션 파라미터
-            @RequestParam(required = false) String cursor,
-            @RequestParam(name = "idAfter", required = false) String idAfter,
-            @RequestParam(name = "limit") int limit, // 필수 값
-
-            // 정렬 파라미터
-            @RequestParam(name = "sortBy") String sortBy,
-            @RequestParam(name = "sortDirection") String sortDirection,
-
-            // 필터링 파라미터
-            @RequestParam(required = false) String emailLike,
-            @RequestParam(required = false) String roleEqual,
-            @RequestParam(required = false) Boolean locked
+    public ResponseEntity<UserDtoCursorResponse> listUsers(
+            @ModelAttribute UserSearchParams params
     ) {
-        UserSearchCondition condition = new UserSearchCondition(
-                cursor, idAfter, limit, sortBy, sortDirection, emailLike, roleEqual, locked
-        );
-        UserDtoCursorResponse response = userService.getUsers(condition);
-        return ResponseEntity.ok(response);
-     }
+        return ResponseEntity.ok(userService.getUsers(params));
+    }
 }
