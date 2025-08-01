@@ -1,7 +1,6 @@
 package com.team3.otboo.domain.feed.like.data;
 
 import com.team3.otboo.domain.feed.entity.Like;
-import com.team3.otboo.domain.feed.service.LikeService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.util.UUID;
@@ -21,9 +20,6 @@ public class DataInitializer {
 
 	@Autowired
 	TransactionTemplate transactionTemplate;
-
-	@Autowired
-	LikeService likeService;
 
 	CountDownLatch latch = new CountDownLatch(EXECUTE_COUNT);
 
