@@ -3,20 +3,25 @@ package com.team3.otboo.domain.dm.entity;
 import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
-@Table(name = "direct_messages")
+@Table(name = "direct_messages",
+	indexes = {
+		@Index(
+			name = "idx_dm_users_created_id_asc",
+			columnList = "sender_id, receiver_id, created_at, id"
+		),
+		@Index(
+			name = "idx_dm_users_reverse_created_id_asc",
+			columnList = "receiver_id, sender_id, created_at, id"
+		)
+	})
 @Entity
 @Getter
 @ToString
@@ -32,7 +37,7 @@ public class DirectMessage extends BaseEntity {
 	@Column(nullable = false)
 	private String content;
 
-	public static DirectMessage create(UUID senderId, UUID receiverId, String content){
+	public static DirectMessage create(UUID senderId, UUID receiverId, String content) {
 		DirectMessage directMessage = new DirectMessage();
 		directMessage.senderId = senderId;
 		directMessage.receiverId = receiverId;

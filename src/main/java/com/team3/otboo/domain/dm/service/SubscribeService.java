@@ -21,7 +21,6 @@ public class SubscribeService implements MessageListener {
 	public void onMessage(Message message, byte[] pattern) {
 		try {
 			String publishMessage = new String(message.getBody());
-
 			DirectMessageSendPayload payload = objectMapper
 				.readValue(publishMessage, DirectMessageSendPayload.class);
 
