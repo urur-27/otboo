@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.service;
+package com.team3.otboo.domain.recommendation.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
