@@ -1,14 +1,13 @@
 package com.team3.otboo.domain.user.service;
 
 import com.team3.otboo.domain.user.dto.*;
-import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
-import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
-import com.team3.otboo.domain.user.dto.Request.UserPasswordUpdateRequest;
-import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
+import com.team3.otboo.domain.user.dto.Request.*;
+import com.team3.otboo.domain.user.dto.response.UserDtoCursorResponse;
 import com.team3.otboo.domain.user.dto.response.UserResponse;
 import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
+import com.team3.otboo.domain.user.enums.SortBy;
 import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.ProfileRepository;
 import com.team3.otboo.domain.user.repository.UserRepository;
@@ -22,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -88,9 +89,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDtoCursorResponse getUsers(UserSearchCondition condition){
-        // todo: 음....
-        return null;
+    public UserDtoCursorResponse getUsers(UserSearchParams userSearchParams){
+        List<User> users = userRepository.findByFilterUser(
+                userSearchParams.cursor(),
+                userSearchParams.idAfter(), userSearchParams.limit() + 1,
+                userSearchParams.sortBy(), userSearchParams.sortDirection(),
+                userSearchParams.emailLike(), userSearchParams.roleEqual(), userSearchParams.locked()
+        );
+
+        boolean hasNext = getHasNext(users, userSearchParams.limit());
+        UUID  nextIdAfter = getNextIdAfter(users, userSearchParams.limit());
+        String nextCursor  = getNextCursor(users, userSearchParams.limit(), userSearchParams.sortBy());
+
+        Long totalCount = userRepository.totalCount(userSearchParams.emailLike(), userSearchParams.roleEqual(), userSearchParams.locked());
+
+        List<User> page = hasNext ? users.subList(0, userSearchParams.limit()) : users;
+        List<UserDto> userDtos = page.stream().map(userMapper::toDto).collect(Collectors.toList());
+
+        return UserDtoCursorResponse.of(userDtos, nextCursor, nextIdAfter, hasNext, totalCount, userSearchParams.sortBy(), userSearchParams.sortDirection());
     }
 
     @Override
@@ -140,5 +156,28 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.deleteById(id);
         log.info("사용자 삭제 완료");
+    }
+
+    public static boolean getHasNext(List<?> items, int limit) {
+        return items.size() > limit;
+    }
+
+    public static UUID getNextIdAfter(List<User> users, int limit) {
+        if (!getHasNext(users, limit)) {
+            return null;
+        }
+        return users.get(limit - 1).getId();
+    }
+
+    public static String getNextCursor(List<User> users, int limit, SortBy sortBy){
+        if (!getHasNext(users, limit)) {
+            return null;
+        }
+        User next = users.get(limit - 1);
+        if (SortBy.email.equals(sortBy)) {
+            return URLEncoder.encode(next.getEmail(), StandardCharsets.UTF_8);
+        } else {
+            return next.getId().toString();
+        }
     }
 }
