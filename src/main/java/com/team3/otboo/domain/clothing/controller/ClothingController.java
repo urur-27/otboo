@@ -89,9 +89,9 @@ public class ClothingController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/extractions")
-    public ResponseEntity<ClothingDto> extractClothingInfo(@RequestParam String url){
-        ClothingDto dto = extractionsService.extractAndSave(url);
-        return ResponseEntity.ok(dto);
-    }
+//    @GetMapping("/extractions")
+//    public ResponseEntity<ClothingDto> extractClothingInfo(@RequestParam String url){
+//        ClothingDto dto = extractionsService.extractAndSave(url);
+//        return ResponseEntity.ok(dto);
+//    }
 }
