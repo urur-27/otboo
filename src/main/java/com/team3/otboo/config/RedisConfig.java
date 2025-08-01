@@ -61,8 +61,7 @@ public class RedisConfig {
 	}
 
 	@Bean
-	public MessageListenerAdapter messageListenerAdapter(SubscribeService redisPubSubService,
-		SubscribeService subscribeService) {
+	public MessageListenerAdapter messageListenerAdapter(SubscribeService subscribeService) {
 		return new MessageListenerAdapter(subscribeService, "onMessage");
 
 	}
