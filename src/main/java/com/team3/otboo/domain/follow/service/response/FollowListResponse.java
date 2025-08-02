@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.hibernate.query.SortDirection;
 
 public record FollowListResponse(
-	List<FollowDto> data,
+	List<FollowDto> data, // 그냥 follow dto 를 보냄 .
 	String nextCursor,
 	UUID nextIdAfter,
 	boolean hasNext,
