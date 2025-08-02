@@ -4,6 +4,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
+import java.util.UUID;
+
 @Component
 @Profile("prod")
 public class S3ImageStorage implements ImageStorage{
@@ -19,5 +22,20 @@ public class S3ImageStorage implements ImageStorage{
     @Override
     public void delete(String imageUrl) {
         throw new UnsupportedOperationException("S3 삭제는 아직 구현되지 않았습니다.");
+    }
+
+    @Override
+    public UUID put(UUID binaryContentId, byte[] bytes) {
+        return null;
+    }
+
+    @Override
+    public InputStream get(UUID binaryContentId) {
+        return null;
+    }
+
+    @Override
+    public String getPatch(UUID binaryContentId, String extension) {
+        return "";
     }
 }
