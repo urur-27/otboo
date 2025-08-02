@@ -15,6 +15,6 @@ public interface ImageStorage {
 
     InputStream get(UUID binaryContentId);
 
-    String getPatch(UUID binaryContentId, String extension);
+    String getPatch(UUID binaryContentId, String contentType);
 
 }
