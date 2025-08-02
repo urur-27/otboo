@@ -1,12 +1,12 @@
 package com.team3.otboo.domain.dm.dto;
 
 import com.team3.otboo.domain.user.dto.UserSummary;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record DirectMessageDto(
 	UUID id,
-	LocalDateTime createdAt,
+	Instant createdAt,
 	UserSummary sender,
 	UserSummary receiver,
 	String content

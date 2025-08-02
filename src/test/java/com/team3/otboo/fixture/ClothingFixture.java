@@ -38,6 +38,14 @@ public class ClothingFixture {
     return clothing;
   }
 
+  public static Clothing createSweatshirt(User owner) {
+    Attribute typeAttr = Attribute.of("종류", List.of("맨투맨"));
+    AttributeOption option = typeAttr.getOptions().getFirst();
+    Clothing clothing = Clothing.of("곰돌이 맨투맨", owner);
+    ClothingAttributeValue.of(clothing, typeAttr, option);
+    return clothing;
+  }
+
   public static ClothingCreateRequest sampleCreateRequest(UUID attrId) {
     return new ClothingCreateRequest(
             UUID.randomUUID(),
