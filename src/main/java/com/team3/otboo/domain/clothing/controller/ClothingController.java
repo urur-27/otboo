@@ -60,7 +60,7 @@ public class ClothingController {
             @RequestParam UUID ownerId,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) UUID idAfter,
-            @RequestParam(required = false) Integer limit,
+            @RequestParam Integer limit,
             @RequestParam(required = false) String typeEqual,
             @RequestParam(defaultValue = "DESC") String sortDirection
     ) {

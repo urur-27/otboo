@@ -15,6 +15,8 @@ import com.team3.otboo.domain.clothing.repository.AttributeOptionRepository;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.domain.clothing.repository.ClothingRepository;
 import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.global.exception.BusinessException;
+import com.team3.otboo.global.exception.ErrorCode;
 import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
 import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
@@ -88,7 +90,13 @@ public class ClothingServiceImpl implements ClothingService {
     );
     // 엔티티 → DTO 변환
     List<ClothingDto> data = page.data().stream()
-            .map(clothingMapper::toDto)
+            .map(clothing -> {
+              ClothingDto dto = clothingMapper.toDto(clothing);
+              if (dto == null) {
+                throw new BusinessException(ErrorCode.CLOTHING_MAPPER_CONVERSION_FAILED, "Clothing → DTO 변환 실패");
+              }
+              return dto;
+            })
             .toList();
 
     return new ClothingDtoCursorResponse(

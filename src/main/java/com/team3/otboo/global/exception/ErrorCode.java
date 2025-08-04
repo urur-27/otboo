@@ -24,13 +24,21 @@ public enum ErrorCode {
   // Clothing Errors
   CLOTHING_NOT_FOUND(HttpStatus.NOT_FOUND, "CL001", "해당 의상을 찾을 수 없습니다."),
 
+  // Clothing Mapper Errors
+  CLOTHING_MAPPER_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CL_M001", "DTO 변환에 실패했습니다."),
+
   // Attribute Errors
   ATTRIBUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "ATTR001", "해당 속성을 찾을 수 없습니다."),
   ATTRIBUTE_NAME_DUPLICATED(HttpStatus.CONFLICT, "ATTR002", "이미 존재하는 속성명입니다."),
   ATTRIBUTE_OPTION_EMPTY(HttpStatus.BAD_REQUEST, "ATTR003", "옵션 값은 최소 1개 이상이어야 합니다."),
 
   // AttributeOption Errors
-  ATTRIBUTEOPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "AO001", "해당 속성 값을 찾을 수 없습니다.");
+  ATTRIBUTEOPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "AO001", "해당 속성 값을 찾을 수 없습니다."),
+
+  // Image Errors
+  IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "IMG001", "이미지 업로드에 실패했습니다."),
+  IMAGE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "IMG002", "이미지 삭제에 실패했습니다."),
+  INVALID_IMAGE_PATH(HttpStatus.FORBIDDEN, "IMG003", "유효하지 않은 이미지 경로입니다.");
 
   private final HttpStatus status;
   private final String code;
