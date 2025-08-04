@@ -11,7 +11,7 @@ public class AuthorMapper {
 		return new AuthorDto(
 			user.getId(),
 			user.getUsername(),
-			user.getProfile().getProfileImageUrl()
+			user.getProfile().getBinaryContent().getImageUrl()
 		);
 	}
 }
