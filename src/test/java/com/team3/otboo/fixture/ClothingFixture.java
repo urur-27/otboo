@@ -3,6 +3,7 @@ package com.team3.otboo.fixture;
 import com.team3.otboo.domain.clothing.dto.ClothingAttributeDto;
 import com.team3.otboo.domain.clothing.dto.ClothingAttributeWithDefDto;
 import com.team3.otboo.domain.clothing.dto.ClothingDto;
+import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import com.team3.otboo.domain.clothing.entity.Clothing;
@@ -46,6 +47,7 @@ public class ClothingFixture {
     return clothing;
   }
 
+  // 생성 요청용 dto
   public static ClothingCreateRequest sampleCreateRequest(UUID attrId) {
     return new ClothingCreateRequest(
             UUID.randomUUID(),
@@ -55,6 +57,7 @@ public class ClothingFixture {
     );
   }
 
+  // 생성 응답 dto
   public static ClothingDto sampleExpectedDto(UUID clothingId, UUID userId, UUID attrId, String imageUrl) {
     ClothingAttributeWithDefDto attrDto = new ClothingAttributeWithDefDto(
             attrId,
@@ -71,4 +74,32 @@ public class ClothingFixture {
             List.of(attrDto)
     );
   }
+
+  // 수정 요청용 DTO
+  public static ClothingUpdateRequest sampleUpdateRequest(UUID attrId) {
+    return new ClothingUpdateRequest(
+            "셔츠",
+            "TOP",
+            List.of(new ClothingAttributeDto(attrId, "흰색"))
+    );
+  }
+
+  // 수정 후 기대되는 응답 DTO
+  public static ClothingDto sampleUpdatedDto(UUID clothingId, UUID userId, UUID attrId, String imageUrl) {
+    ClothingAttributeWithDefDto attrDto = new ClothingAttributeWithDefDto(
+            attrId,
+            "색상",
+            List.of("흰색", "검정색"),
+            "흰색"
+    );
+    return new ClothingDto(
+            clothingId,
+            userId,
+            "셔츠",
+            imageUrl,
+            "TOP",
+            List.of(attrDto)
+    );
+  }
+
 }

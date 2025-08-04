@@ -1,7 +1,9 @@
 package com.team3.otboo.domain.clothing.service;
 
+import com.team3.otboo.domain.clothing.dto.ClothingAttributeDto;
 import com.team3.otboo.domain.clothing.dto.ClothingDto;
 import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
+import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
 import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
@@ -27,6 +29,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import com.team3.otboo.fixture.ClothingFixture;
 
@@ -320,12 +323,189 @@ public class ClothingServiceTest {
         }
     }
 
-    //    @Nested
-//    @DisplayName("의상 수정 테스트")
-//    class UpdateClothingTest {
-//
-//    }
-//
+    @Nested
+    @DisplayName("의상 수정 테스트")
+    class UpdateClothingTest {
+        @DisplayName("updateClothing 성공 테스트")
+        @Test
+        void updateClothing_success() {
+            // given
+            UUID clothingId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            UUID attributeId = UUID.randomUUID();
+
+            Clothing clothing = mock(Clothing.class);
+            Attribute attribute = mock(Attribute.class);
+            AttributeOption option = mock(AttributeOption.class);
+            MultipartFile image = new MockMultipartFile("image", "shirt.jpg", "image/jpeg", "data".getBytes());
+
+            ClothingUpdateRequest request = ClothingFixture.sampleUpdateRequest(attributeId);
+            ClothingDto expectedDto = ClothingFixture.sampleUpdatedDto(clothingId, userId, attributeId, "/uploads/shirt.jpg");
+
+            when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
+            when(imageStorage.upload(any())).thenReturn("/uploads/shirt.jpg");
+            when(attributeRepository.findById(attributeId)).thenReturn(Optional.of(attribute));
+            when(attributeOptionRepository.findByAttributeAndValue(attribute, "흰색")).thenReturn(Optional.of(option));
+            when(clothingMapper.toDto(clothing)).thenReturn(expectedDto);
+
+            // when
+            ClothingDto result = clothingService.updateClothing(clothingId, request, image);
+
+            // then
+            assertThat(result).isEqualTo(expectedDto);
+            verify(clothing).updateName("셔츠");
+            verify(clothing).updateType("TOP");
+            verify(clothing).updateImageUrl("/uploads/shirt.jpg");
+            verify(clothingRepository).findById(clothingId);
+            verify(imageStorage).upload(image);
+        }
+
+        @DisplayName("updateClothing 성공 테스트 - 이미지와 속성 없이 이름과 타입만 수정")
+        @Test
+        void updateClothing_onlyNameAndTypeChanged() {
+            // given
+            UUID clothingId = UUID.randomUUID();
+            Clothing clothing = mock(Clothing.class);
+
+            ClothingUpdateRequest request = new ClothingUpdateRequest("셔츠", "TOP", null);
+            MultipartFile image = null;
+
+            when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
+            when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothingDto.class));
+
+            // when
+            ClothingDto result = clothingService.updateClothing(clothingId, request, image);
+
+            // then
+            verify(clothing).updateName("셔츠");
+            verify(clothing).updateType("TOP");
+            verifyNoInteractions(imageStorage);
+            verify(clothingMapper).toDto(clothing);
+        }
+
+        @DisplayName("updateClothing 성공 테스트 - 이미지만 수정 (기존 이미지 존재)")
+        @Test
+        void updateClothing_onlyImageChanged_withOldImage() {
+            // given
+            UUID clothingId = UUID.randomUUID();
+            Clothing clothing = mock(Clothing.class);
+            MultipartFile image = new MockMultipartFile("image", "shirt.jpg", "image/jpeg", "data".getBytes());
+
+            when(clothing.getImageUrl()).thenReturn("/uploads/old.jpg");
+
+            when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
+            when(imageStorage.upload(any())).thenReturn("/uploads/shirt.jpg");
+            when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothingDto.class));
+
+            // when
+            ClothingDto result = clothingService.updateClothing(clothingId, new ClothingUpdateRequest(null, null, null), image);
+
+            // then
+            verify(imageStorage).delete("/uploads/old.jpg");
+            verify(imageStorage).upload(image);
+            verify(clothing).updateImageUrl("/uploads/shirt.jpg");
+        }
+
+        @DisplayName("updateClothing 성공 테스트 - 이미지 파일이 비어 있을 때 이미지 변경 무시")
+        @Test
+        void updateClothing_skipImageUpdateWhenEmpty() {
+            // given
+            UUID clothingId = UUID.randomUUID();
+            Clothing clothing = mock(Clothing.class);
+
+            MultipartFile emptyImage = new MockMultipartFile("image", "", "image/jpeg", new byte[0]); // isEmpty = true
+
+            when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
+            when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothingDto.class));
+
+            // when
+            ClothingDto result = clothingService.updateClothing(clothingId, new ClothingUpdateRequest(null, null, null), emptyImage);
+
+            // then
+            verify(imageStorage, never()).upload(any());
+            verify(clothingMapper).toDto(clothing);
+        }
+
+        @DisplayName("updateClothing 실패 테스트 - 존재하지 않는 의상 ID로 수정 시 예외 발생")
+        @Test
+        void updateClothing_fail_whenClothingNotFound() {
+            // given
+            UUID clothingId = UUID.randomUUID();
+            when(clothingRepository.findById(clothingId)).thenReturn(Optional.empty());
+
+            // when
+            Throwable thrown = catchThrowable(() ->
+                    clothingService.updateClothing(clothingId, mock(ClothingUpdateRequest.class), null)
+            );
+
+            // then
+            assertThat(thrown)
+                    .isInstanceOf(ClothingNotFoundException.class)
+                    .hasMessage("해당 의상을 찾을 수 없습니다.");
+        }
+
+        @DisplayName("updateClothing 실패 - 존재하지 않는 속성 ID로 수정 시 예외 발생")
+        @Test
+        void updateClothing_fail_whenAttributeNotFound() {
+            // given
+            UUID clothingId = UUID.randomUUID();
+            Clothing clothing = mock(Clothing.class);
+            when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
+
+            UUID attributeId = UUID.randomUUID();
+            ClothingUpdateRequest request = new ClothingUpdateRequest(
+                    "셔츠", "TOP",
+                    List.of(new ClothingAttributeDto(attributeId, "청색"))
+            );
+
+            when(attributeRepository.findById(attributeId)).thenReturn(Optional.empty());
+
+            // when
+            Throwable thrown = catchThrowable(() ->
+                    clothingService.updateClothing(clothingId, request, null)
+            );
+
+            // then
+            assertThat(thrown)
+                    .isInstanceOf(AttributeNotFoundException.class)
+                    .hasMessage("해당 속성을 찾을 수 없습니다.");
+        }
+
+        @DisplayName("updateClothing 실패 테스트 - 존재하지 않는 옵션 값으로 수정 시 예외 발생")
+        @Test
+        void updateClothing_fail_whenAttributeOptionNotFound() {
+            // given
+            UUID clothingId = UUID.randomUUID();
+            Clothing clothing = mock(Clothing.class);
+            when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
+
+            UUID attributeId = UUID.randomUUID();
+            Attribute attribute = mock(Attribute.class);
+            when(attributeRepository.findById(attributeId)).thenReturn(Optional.of(attribute));
+
+            when(attributeOptionRepository.findByAttributeAndValue(attribute, "청색"))
+                    .thenReturn(Optional.empty());
+
+            ClothingUpdateRequest request = new ClothingUpdateRequest(
+                    "셔츠", "TOP",
+                    List.of(new ClothingAttributeDto(attributeId, "청색"))
+            );
+
+            // when
+            Throwable thrown = catchThrowable(() ->
+                    clothingService.updateClothing(clothingId, request, null)
+            );
+
+            // then
+            assertThat(thrown)
+                    .isInstanceOf(AttributeOptionNotFoundException.class)
+                    .hasMessage("해당 속성 값을 찾을 수 없습니다.");
+        }
+
+
+
+    }
+
     @Nested
     @DisplayName("의상 삭제 테스트")
     class DeleteClothingTest {
