@@ -17,6 +17,7 @@ import com.team3.otboo.global.exception.BusinessException;
 import com.team3.otboo.global.exception.ErrorCode;
 import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
+import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,6 +36,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -318,15 +320,44 @@ public class ClothingServiceTest {
         }
     }
 
-//    @Nested
+    //    @Nested
 //    @DisplayName("의상 수정 테스트")
 //    class UpdateClothingTest {
 //
 //    }
 //
-//    @Nested
-//    @DisplayName("의상 삭제 테스트")
-//    class DeleteClothingTest {
-//}
+    @Nested
+    @DisplayName("의상 삭제 테스트")
+    class DeleteClothingTest {
+        @Test
+        @DisplayName("deleteClothing 성공 테스트")
+        void deleteClothing_success() {
+            // given
+            UUID clothingId = UUID.randomUUID();
+            Clothing mockClothing = mock(Clothing.class);
 
+            when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(mockClothing));
+
+            // when
+            clothingService.deleteClothing(clothingId);
+
+            // then
+            verify(clothingRepository).findById(clothingId);
+            verify(clothingRepository).delete(mockClothing);
+        }
+
+        @Test
+        @DisplayName("deleteClothing 실패 테스트 - 존재하지 않는 의상 ID")
+        void deleteClothing_fail_whenClothingNotFound() {
+            // given
+            UUID clothingId = UUID.randomUUID();
+            when(clothingRepository.findById(clothingId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> clothingService.deleteClothing(clothingId)).
+                    isInstanceOf(ClothingNotFoundException.class);
+            verify(clothingRepository).findById(clothingId);
+            verify(clothingRepository, never()).delete(any());
+        }
+    }
 }
