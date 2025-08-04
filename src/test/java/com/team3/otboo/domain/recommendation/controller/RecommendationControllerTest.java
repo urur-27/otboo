@@ -4,7 +4,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
 import com.team3.otboo.domain.recommendation.dto.RecommendationDto;
 import com.team3.otboo.domain.recommendation.service.RecommendationService;
 import java.util.List;
