@@ -61,7 +61,7 @@ public class LocalImageStorage implements ImageStorage {
             Path filePath = root.resolve(filename);
 
             // uploads 디렉토리 내 파일만 삭제하도록 제한
-            if (!filePath.normalize().startsWith(rootPath.normalize())) {
+            if (!filePath.normalize().startsWith(root.normalize())) {
                 throw new BusinessException(ErrorCode.INVALID_IMAGE_PATH);
             }
 
