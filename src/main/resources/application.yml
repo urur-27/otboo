@@ -19,7 +19,7 @@ spring:
   data:
     redis:
       port: 6379
-      host: localhost
+      host: redis
 
 server:
   port: 8080

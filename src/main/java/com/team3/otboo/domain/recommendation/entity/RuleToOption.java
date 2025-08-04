@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RuleOption extends BaseEntity {
+public class RuleToOption extends BaseEntity {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "rule_id")
@@ -25,7 +25,7 @@ public class RuleOption extends BaseEntity {
   private AttributeOption option;
 
   @Builder
-  public RuleOption(RecommendationRule rule, AttributeOption option) {
+  public RuleToOption(RecommendationRule rule, AttributeOption option) {
     this.rule = rule;
     this.option = option;
   }
