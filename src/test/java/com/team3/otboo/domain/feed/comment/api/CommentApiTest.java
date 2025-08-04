@@ -3,6 +3,7 @@ package com.team3.otboo.domain.feed.comment.api;
 import com.team3.otboo.domain.feed.dto.CommentDto;
 import java.util.List;
 import java.util.UUID;
+import lombok.Data;
 import org.hibernate.query.SortDirection;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
