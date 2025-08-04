@@ -50,7 +50,7 @@ public class DataInitializer {
 				.birthDate(LocalDate.of(2025, 8, 4))
 				.location(null)
 				.temperatureSensitivity(null)
-				.profileImageUrl(null)
+				.binaryContent(null)
 				.build();
 
 			user.setProfile(profile);
