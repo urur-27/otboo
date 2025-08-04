@@ -338,7 +338,7 @@ public class ClothingServiceTest {
             Attribute attribute = mock(Attribute.class);
             AttributeOption option = mock(AttributeOption.class);
             MultipartFile image = new MockMultipartFile("image", "shirt.jpg", "image/jpeg", "data".getBytes());
-
+          
             ClothingUpdateRequest request = ClothingDtoFixture.sampleUpdateRequest(attributeId);
             ClothingDto expectedDto = ClothingDtoFixture.sampleUpdatedDto(clothingId, userId, attributeId, "/uploads/shirt.jpg");
 
