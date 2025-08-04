@@ -13,6 +13,7 @@ import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.weather.dto.TemperatureDto;
 import com.team3.otboo.domain.weather.dto.WeatherDto;
 import com.team3.otboo.fixture.ClothingFixture;
+import com.team3.otboo.fixture.ClothingFixture.CreatedClothing;
 import com.team3.otboo.fixture.UserFixture;
 import java.util.List;
 import java.util.UUID;
@@ -39,9 +40,9 @@ public class RuleBasedStrategyTest {
     User mockOwner = UserFixture.createDefaultUser();
 
     // 니트를 추천하고, 반팔티는 추천x
-    Clothing tshirt = ClothingFixture.createTshirt(mockOwner);
-    Clothing knit = ClothingFixture.createKnit(mockOwner);
-    List<Clothing> userClothes = List.of(tshirt, knit);
+    CreatedClothing tshirt = ClothingFixture.createTshirt(mockOwner);
+    CreatedClothing knit = ClothingFixture.createKnit(mockOwner);
+    List<Clothing> userClothes = List.of(tshirt.clothing(), knit.clothing());
 
     ProfileDto profile = ProfileDto.builder()
         .userId(mockOwner.getId())

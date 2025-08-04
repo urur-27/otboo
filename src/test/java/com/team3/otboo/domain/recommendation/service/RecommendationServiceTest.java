@@ -18,6 +18,7 @@ import com.team3.otboo.domain.weather.dto.TemperatureDto;
 import com.team3.otboo.domain.weather.dto.WeatherDto;
 import com.team3.otboo.domain.weather.service.WeatherService;
 import com.team3.otboo.fixture.ClothingFixture;
+import com.team3.otboo.fixture.ClothingFixture.CreatedClothing;
 import com.team3.otboo.fixture.UserFixture;
 import java.util.List;
 import java.util.Optional;
@@ -55,9 +56,9 @@ class RecommendationServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(mockOwner));
 
     // 테스트에 필요한 옷들 준비
-    Clothing tshirt = ClothingFixture.createTshirt(mockOwner);
-    Clothing shorts = ClothingFixture.createShorts(mockOwner);
-    List<Clothing> mockClothesList = List.of(tshirt, shorts);
+    CreatedClothing tshirt = ClothingFixture.createTshirt(mockOwner);
+    CreatedClothing shorts = ClothingFixture.createShorts(mockOwner);
+    List<Clothing> mockClothesList = List.of(tshirt.clothing(), shorts.clothing());
     when(clothesService.getClothesByOwner(mockOwner)).thenReturn(mockClothesList);
 
     ProfileDto mockProfile = ProfileDto.builder().userId(userId).temperatureSensitivity(5).build();
@@ -88,9 +89,9 @@ class RecommendationServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(mockOwner));
 
     // 추천 옷
-    Clothing sweatshirt = ClothingFixture.createSweatshirt(mockOwner);
-    Clothing tshirt = ClothingFixture.createTshirt(mockOwner);
-    List<Clothing> mockClothingList = List.of(tshirt, sweatshirt);
+    CreatedClothing sweatshirt = ClothingFixture.createSweatshirt(mockOwner);
+    CreatedClothing tshirt = ClothingFixture.createTshirt(mockOwner);
+    List<Clothing> mockClothingList = List.of(tshirt.clothing(), sweatshirt.clothing());
     when(clothesService.getClothesByOwner(mockOwner)).thenReturn(mockClothingList);
 
     ProfileDto mockProfile = ProfileDto.builder()

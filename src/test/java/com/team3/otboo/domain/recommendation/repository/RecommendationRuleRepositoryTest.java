@@ -5,6 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.team3.otboo.config.QuerydslConfig;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.domain.recommendation.entity.RecommendationRule;
+import com.team3.otboo.domain.weather.dto.PrecipitationDto;
+import com.team3.otboo.domain.weather.dto.TemperatureDto;
+import com.team3.otboo.domain.weather.dto.WeatherDto;
+import com.team3.otboo.domain.weather.enums.PrecipitationType;
 import com.team3.otboo.domain.weather.enums.SkyStatus;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -24,27 +28,34 @@ public class RecommendationRuleRepositoryTest {
   private AttributeRepository attributeRepository;
 
   @Test
-  @DisplayName("현재 기온이 규칙의 범위 안에 있을 때 해당 규칙을 올바르게 찾아낸다")
-  void findingMatchRules_Success() {
+  @DisplayName("온도, 습도, 하늘 상태 등 복합적인 조건에 맞는 규칙을 정확히 찾아낸다")
+  void findMatchingRules_withComplexConditions() {
     //given: DB에 규칙을 미리 저장
-    RecommendationRule hotRule = RecommendationRule.builder()
-        .ruleName("더운 날")
+    RecommendationRule hotAndClearRule = RecommendationRule.builder()
+        .ruleName("덥고 맑은 날")
         .minTemp(25.0)
-        .maxTemp(null)
         .skyStatus(SkyStatus.CLEAR)
         .build();
-    RecommendationRule coolRule = RecommendationRule.builder()
-        .ruleName("쌀쌀한 날")
-        .minTemp(10.0)
-        .maxTemp(15.9)
-        .skyStatus(SkyStatus.CLOUDY)
+
+    RecommendationRule coolAndSnowRule = RecommendationRule.builder()
+        .ruleName("춥고 눈 오는 날")
+        .maxTemp(0.0)
+        .precipitationType(PrecipitationType.SNOW)
         .build();
-    recommendationRuleRepository.saveAll(List.of(hotRule, coolRule));
 
-    // when: 12도의 날씨에 맞는 규칙 조회
-    List<RecommendationRule> result = recommendationRuleRepository.findMatchingRules(12.0, SkyStatus.CLOUDY);
+    recommendationRuleRepository.saveAll(List.of(hotAndClearRule, coolAndSnowRule));
 
-    // then: "쌀쌀한 날" 규칙 하나만 조회 되어야함
-    assertThat(result.getFirst().getRuleName()).isEqualTo("쌀쌀한 날");
+    // when: 춥고 눈 오는 날에 해당하는 날씨로 규칙을 조회
+    WeatherDto snowyWeather = WeatherDto.builder()
+        .temperature(TemperatureDto.builder().current(-2.0).build())
+        .precipitation(PrecipitationDto.builder().type(PrecipitationType.SNOW.name()).build())
+        .skyStatus(SkyStatus.CLOUDY.name())
+        .build();
+
+    List<RecommendationRule> result = recommendationRuleRepository.findMatchingRules(snowyWeather);
+
+    // then: '춥고 눈 오는 날' 규칙 하나만 조회되어야 함
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().getRuleName()).isEqualTo("춥고 눈 오는 날");
   }
 }

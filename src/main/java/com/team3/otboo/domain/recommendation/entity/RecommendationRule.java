@@ -1,7 +1,9 @@
 package com.team3.otboo.domain.recommendation.entity;
 
 import com.team3.otboo.domain.base.entity.BaseEntity;
+import com.team3.otboo.domain.weather.enums.PrecipitationType;
 import com.team3.otboo.domain.weather.enums.SkyStatus;
+import com.team3.otboo.domain.weather.enums.WindSpeedLevel;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,17 +28,32 @@ public class RecommendationRule extends BaseEntity {
   private Double minTemp;
   private Double maxTemp;
 
+  private Double minHumidity;
+  private Double maxHumidity;
+
   @Enumerated(EnumType.STRING)
   private SkyStatus skyStatus;
 
+  @Enumerated(EnumType.STRING)
+  private PrecipitationType precipitationType;
+
+  @Enumerated(EnumType.STRING)
+  private WindSpeedLevel windSpeedLevel;
+
   @OneToMany(mappedBy = "rule", cascade = CascadeType.ALL, orphanRemoval = true)
-  private final List<RuleOption> recommendedOptions = new ArrayList<>();
+  private final List<RuleToOption> recommendedOptions = new ArrayList<>();
 
   @Builder
-  public RecommendationRule(String ruleName, Double minTemp, Double maxTemp, SkyStatus skyStatus) {
+  public RecommendationRule(String ruleName, Double minTemp, Double maxTemp, Double minHumidity,
+      Double maxHumidity, SkyStatus skyStatus, PrecipitationType precipitationType,
+      WindSpeedLevel windSpeedLevel) {
     this.ruleName = ruleName;
     this.minTemp = minTemp;
     this.maxTemp = maxTemp;
+    this.minHumidity = minHumidity;
+    this.maxHumidity = maxHumidity;
     this.skyStatus = skyStatus;
+    this.precipitationType = precipitationType;
+    this.windSpeedLevel = windSpeedLevel;
   }
 }
