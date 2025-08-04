@@ -31,7 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import com.team3.otboo.fixture.ClothingFixture;
+import com.team3.otboo.fixture.ClothingDtoFixture;
 
 import java.util.List;
 import java.util.Optional;
@@ -80,12 +80,12 @@ public class ClothingServiceTest {
             UUID clothingId = UUID.randomUUID();
 
             User mockUser = mock(User.class);
-            ClothingCreateRequest request = ClothingFixture.sampleCreateRequest(attributeId);
+            ClothingCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
             Attribute mockAttribute = mock(Attribute.class);
             when(mockAttribute.getId()).thenReturn(attributeId);
             AttributeOption mockOption = mock(AttributeOption.class);
             Clothing mockClothing = mock(Clothing.class);
-            ClothingDto expectedDto = ClothingFixture.sampleExpectedDto(clothingId, userId, attributeId, imageUrl);
+            ClothingDto expectedDto = ClothingDtoFixture.sampleExpectedDto(clothingId, userId, attributeId, imageUrl);
 
             // stub 정의
             when(imageStorage.upload(image)).thenReturn(imageUrl);
@@ -121,7 +121,7 @@ public class ClothingServiceTest {
         void registerClothing_fail_whenImageUploadFails() {
             // given
             MultipartFile image = mock(MultipartFile.class);
-            ClothingCreateRequest request = ClothingFixture.sampleCreateRequest(UUID.randomUUID());
+            ClothingCreateRequest request = ClothingDtoFixture.sampleCreateRequest(UUID.randomUUID());
             User user = mock(User.class);
 
             when(imageStorage.upload(image)).thenThrow(new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED));
@@ -141,7 +141,7 @@ public class ClothingServiceTest {
             // given
             MultipartFile image = mock(MultipartFile.class);
             UUID attributeId = UUID.randomUUID();
-            ClothingCreateRequest request = ClothingFixture.sampleCreateRequest(attributeId);
+            ClothingCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
             User user = mock(User.class);
 
             String imageUrl = "http://mocked-image-url.com";
@@ -168,7 +168,7 @@ public class ClothingServiceTest {
             MultipartFile image = mock(MultipartFile.class);
             UUID attributeId = UUID.randomUUID();
             User user = mock(User.class);
-            ClothingCreateRequest request = ClothingFixture.sampleCreateRequest(attributeId);
+            ClothingCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
 
             Attribute mockAttribute = mock(Attribute.class);
             when(mockAttribute.getId()).thenReturn(attributeId);
@@ -339,8 +339,8 @@ public class ClothingServiceTest {
             AttributeOption option = mock(AttributeOption.class);
             MultipartFile image = new MockMultipartFile("image", "shirt.jpg", "image/jpeg", "data".getBytes());
 
-            ClothingUpdateRequest request = ClothingFixture.sampleUpdateRequest(attributeId);
-            ClothingDto expectedDto = ClothingFixture.sampleUpdatedDto(clothingId, userId, attributeId, "/uploads/shirt.jpg");
+            ClothingUpdateRequest request = ClothingDtoFixture.sampleUpdateRequest(attributeId);
+            ClothingDto expectedDto = ClothingDtoFixture.sampleUpdatedDto(clothingId, userId, attributeId, "/uploads/shirt.jpg");
 
             when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
             when(imageStorage.upload(any())).thenReturn("/uploads/shirt.jpg");
