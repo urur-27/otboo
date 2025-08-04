@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -40,5 +41,14 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
 		@Param("createdAt") Instant createdAt, // cursor
 		@Param("idAfter") UUID idAfter, // lastCommentId,
 		@Param("limit") Integer limit
+	);
+
+	@Query(
+		value = "delete from comments where feed_id = :feedId",
+		nativeQuery = true
+	)
+	@Modifying
+	void deleteAllByFeedId(
+		@Param("feedId") UUID feedId
 	);
 }

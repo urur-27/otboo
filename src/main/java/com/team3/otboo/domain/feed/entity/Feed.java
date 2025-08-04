@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-@Table
+@Table(name = "feeds")
 @Entity
 @Getter
 @ToString
@@ -40,5 +40,9 @@ public class Feed extends BaseEntity {
 		feed.content = content;
 
 		return feed;
+	}
+
+	public void update(String content) {
+		this.content = content;
 	}
 }

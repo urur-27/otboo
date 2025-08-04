@@ -7,7 +7,6 @@ import com.team3.otboo.domain.feed.service.request.CommentCreateRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,12 +40,5 @@ public class CommentController {
 		CommentDto commentDto = commentService.create(request);
 
 		return ResponseEntity.ok(commentDto);
-	}
-
-	@DeleteMapping("/api/feeds/comments/{commentId}")
-	public void delete(
-		@PathVariable("feedId") UUID feedId,
-		@PathVariable("commentId") UUID commentId) {
-		commentService.delete(commentId);
 	}
 }

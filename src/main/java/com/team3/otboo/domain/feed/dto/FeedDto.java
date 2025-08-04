@@ -2,20 +2,21 @@ package com.team3.otboo.domain.feed.dto;
 
 
 import com.team3.otboo.domain.weather.dto.WeatherDto;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 public record FeedDto(
 	UUID id,
-	LocalDateTime createdAt,
-	LocalDateTime updatedAt,
-	AuthorDto author,
+	Instant createdAt,
+	Instant updatedAt,
+	AuthorDto authorDto,
 	WeatherDto weather,
-	List<OotdDto> ootds,
+	List<OotdDto> ootds, // 중간 테이블 이름을 왜 ootd로 했을까
 	String content,
 	Long likeCount,
 	Integer CommentCount,
 	Boolean likedByMe
 ) {
+
 }
