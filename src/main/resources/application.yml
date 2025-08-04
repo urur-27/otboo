@@ -1,6 +1,8 @@
 spring:
   profiles:
     active: default
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
     username: ${DB_USERNAME:root}
@@ -26,3 +28,17 @@ logging:
   level:
     root: info
     org.springframework.web: debug
+
+
+otboo:
+  storage:
+    type: ${STORAGE_TYPE:local}  # local | s3 (기본값: local)
+    local:
+      root-path: ${STORAGE_LOCAL_ROOT_PATH:.otboo}
+    s3:
+      access-key: ${AWS_S3_ACCESS_KEY}
+      secret-key: ${AWS_S3_SECRET_KEY}
+      region: ${AWS_S3_REGION}
+      bucket: ${AWS_S3_BUCKET}
+      baseUrl: ${AWS_S3_BUCKET_URL}
+      presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
