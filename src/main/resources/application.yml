@@ -36,3 +36,21 @@ otboo:
       bucket: ${AWS_S3_BUCKET}
       baseUrl: ${AWS_S3_BUCKET_URL}
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
+
+external:
+  apis:
+    kakao-map:
+      base-url: ${KAKAO_MAP_URL}
+      connect-timeout: ${KAKAO_MAP_CONNECT_TIMEOUT}
+      read-timeout: ${KAKAO_MAP_READ_TIMEOUT}
+      api-key: ${KAKAO_MAP_API_KEY}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      locationRestTemplate:
+        failureRateThreshold: 50
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10s
+
