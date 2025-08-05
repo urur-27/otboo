@@ -14,7 +14,7 @@ public class CommentApiTest {
 
 	@Test
 	void getCommentsInfiniteScroll() {
-		String feedId = "488846cf-c5c6-4ec4-938a-746a9572d5a1"; // feed id 꼭 넣어줘야함 .
+		String feedId = "c2ea31cf-c89a-4782-9e85-0401da7e6043"; // feed id 꼭 넣어줘야함 .
 
 		CommentDtoCursorResponse response = restClient.get()
 			.uri("/api/feeds/{feedId}/comments?limit=30", feedId)
@@ -26,6 +26,12 @@ public class CommentApiTest {
 		for (CommentDto commentDto : firstPage) {
 			System.out.println("content: " + commentDto.content());
 		}
+
+		if (firstPage.isEmpty()) {
+			System.out.println("댓글이 없습니다.");
+			return;
+		}
+
 		CommentDto lastCommentDto = firstPage.getLast();
 		String lastCreatedAt = lastCommentDto.createdAt().toString();
 		String lastCommentId = lastCommentDto.id().toString();
