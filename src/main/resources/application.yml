@@ -1,23 +1,20 @@
 spring:
-  profiles:
-    active: default
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
     driver-class-name: org.postgresql.Driver
-
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   jpa:
-    hibernate:
-      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost} # application.yml 파일은 localhost 로 설정해야함 .
-      port: ${REDIS_PORT:6379}
 
 server:
   port: 8080
@@ -25,12 +22,11 @@ server:
 logging:
   level:
     root: info
-    org.springframework.web: debug
-
+    com.team3: debug
 
 otboo:
   storage:
-    type: ${STORAGE_TYPE:local}  # local | s3 (기본값: local)
+    type: ${STORAGE_TYPE:local}
     local:
       root-path: ${STORAGE_LOCAL_ROOT_PATH:.otboo}
     s3:
