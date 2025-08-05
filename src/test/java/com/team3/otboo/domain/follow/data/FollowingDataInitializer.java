@@ -33,7 +33,7 @@ public class FollowingDataInitializer {
 
 	CountDownLatch latch = new CountDownLatch(EXECUTE_COUNT);
 
-	static final int BULK_INSERT_SIZE = 20000;
+	static final int BULK_INSERT_SIZE = 200;
 	static final int EXECUTE_COUNT = 1;
 
 	private UUID userId;
@@ -66,9 +66,6 @@ public class FollowingDataInitializer {
 		});
 	}
 
-	/*
-		한사람이 20000명의 팔로잉을 갖게 하기
-	 */
 	@Test
 	void initialize() throws InterruptedException {
 		ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -81,22 +78,27 @@ public class FollowingDataInitializer {
 		}
 		latch.await();
 		executorService.shutdown();
-
 	}
 
 	void insert() {
 		transactionTemplate.executeWithoutResult(status -> {
 			for (int i = 0; i < BULK_INSERT_SIZE; i++) {
-				UUID followeeId = UUID.randomUUID();
+				User followee = User.builder()
+					.username("follower_" + UUID.randomUUID())
+					.email(UUID.randomUUID() + "@example.com")
+					.password("pw")
+					.role(Role.USER)
+					.build();
+
+				entityManager.persist(followee);
 
 				FollowCreateRequest request = new FollowCreateRequest(
-					followeeId,
+					followee.getId(),
 					userId
 				);
 
 				followService.createBulk(request);
 
-				// 메모리 정리
 				if (i % 500 == 0) {
 					entityManager.flush();
 					entityManager.clear();
