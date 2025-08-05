@@ -8,8 +8,8 @@ spring:
     driver-class-name: org.postgresql.Driver
   data:
     redis:
-      port: ${REDIS_PORT}
-      host: ${REDIS_HOST}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   jpa:
     show-sql: true
     properties:
@@ -35,4 +35,4 @@ otboo:
       region: ${AWS_S3_REGION}
       bucket: ${AWS_S3_BUCKET}
       baseUrl: ${AWS_S3_BUCKET_URL}
-      presigned-url-expiration: 600
+      presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
