@@ -8,10 +8,14 @@ import org.springframework.stereotype.Component;
 public class AuthorMapper {
 
 	public AuthorDto toDto(User user) {
+		String imageUrl = null;
+		if (user.getProfile().getBinaryContent() != null) {
+			imageUrl = user.getProfile().getBinaryContent().getImageUrl();
+		}
 		return new AuthorDto(
 			user.getId(),
 			user.getUsername(),
-			user.getProfile().getBinaryContent().getImageUrl()
+			imageUrl
 		);
 	}
 }
