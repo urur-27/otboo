@@ -10,7 +10,7 @@ public record FeedDto(
 	UUID id,
 	Instant createdAt,
 	Instant updatedAt,
-	AuthorDto authorDto,
+	AuthorDto author,
 	WeatherDto weather,
 	List<OotdDto> ootds, // 중간 테이블 이름을 왜 ootd로 했을까
 	String content,

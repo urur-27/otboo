@@ -69,8 +69,7 @@ public class FollowController {
 
 		return ResponseEntity.ok(response);
 	}
-
-	// User domain 구현 후 진행 .
+	
 	@GetMapping("/api/follows/summary")
 	public ResponseEntity<FollowSummaryDto> getFollowSummary(
 		@RequestParam("userId") UUID userId,
