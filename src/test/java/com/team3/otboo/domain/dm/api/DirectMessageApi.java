@@ -45,8 +45,8 @@ public class DirectMessageApi {
 	@Test
 	void getDirectMessages() throws Exception {
 		// DataInitializer 에서 data 생성해서 실제 데이터베이스 user 테이블에 있는 userId를 넣어야함
-		UUID currentUserId = UUID.fromString("431c3108-c5da-4673-b4e9-9c711adb07d4");
-		UUID targetUserId = UUID.fromString("43d64e8d-e0e0-4848-938d-e01047901e10");
+		UUID currentUserId = UUID.fromString("3accb62a-acbc-492a-b077-9e7d964f2e19");
+		UUID targetUserId = UUID.fromString("33bbc8a8-aaec-41d9-aa3e-5e8c9f3d453a");
 
 		CustomUserDetails mockUserDetails = mock(CustomUserDetails.class);
 		when(mockUserDetails.getId()).thenReturn(currentUserId);
@@ -69,7 +69,7 @@ public class DirectMessageApi {
 		System.out.println("[First Page]");
 		for (DirectMessageDto messageDto : data) {
 			System.out.println("%s : content %s"
-				.formatted(messageDto.sender().userId(), messageDto.content()));
+				.formatted(messageDto.sender().name(), messageDto.content()));
 		}
 
 		DirectMessageDto lastElement = response.data.getLast();
@@ -99,7 +99,7 @@ public class DirectMessageApi {
 		List<DirectMessageDto> data2 = response2.data;
 		for (DirectMessageDto messageDto : data2) {
 			System.out.println("%s : content %s"
-				.formatted(messageDto.sender().userId(), messageDto.content()));
+				.formatted(messageDto.sender().name(), messageDto.content()));
 		}
 	}
 

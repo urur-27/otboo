@@ -42,7 +42,7 @@ public class DirectMessageDataInitializer {
 		transactionTemplate.executeWithoutResult(status -> {
 			// 첫 번째 유저 생성 (sender)
 			User sender = User.builder()
-				.username("senderUser")
+				.username("김태우")
 				.email("sender@example.com")
 				.password("password123")
 				.role(Role.USER.USER)
@@ -64,7 +64,7 @@ public class DirectMessageDataInitializer {
 
 			// 두 번째 유저 생성 (receiver)
 			User receiver = User.builder()
-				.username("receiverUser")
+				.username("김민식")
 				.email("receiver@example.com")
 				.password("password123")
 				.role(Role.USER)
