@@ -6,6 +6,7 @@ import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.mapper.ClothingAttributeDefMapper;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
+import com.team3.otboo.global.exception.attribute.AttributeNameDuplicatedException;
 import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attribute.AttributeOptionEmptyException;
 import jakarta.transaction.Transactional;
@@ -25,7 +26,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
     @Transactional
     public ClothingAttributeDefDto create(ClothingAttributeDefCreateRequest request) {
         if (attributeRepository.existsByName(request.name())) {
-            throw new AttributeNotFoundException();
+            throw new AttributeNameDuplicatedException();
         }
 
         Attribute attribute = mapper.toEntity(request);
@@ -85,7 +86,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
         }
 
         // 이름 변경
-        attribute.updateName(request.name());
+        attribute.setName(request.name());
         attribute.replaceOptions(request.selectableValues());
 
         return mapper.toDto(attribute);

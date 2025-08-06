@@ -32,7 +32,7 @@ public class Attribute extends BaseEntity {
         this.options.add(option);
     }
 
-    public void updateName(String newName) {
+    public void setName(String newName) {
         this.name = newName;
     }
 
