@@ -28,4 +28,14 @@ public interface LikeRepository extends JpaRepository<Like, UUID> {
 	void deleteAllByFeedId(
 		@Param("feedId") UUID feedId
 	);
+
+	@Query(
+		value = "delete from likes where feed_id = :feedId and user_id = :userId",
+		nativeQuery = true
+	)
+	@Modifying
+	void deleteByUserIdAndFeedId(
+		@Param("userId") UUID userId,
+		@Param("feedId") UUID feedId
+	);
 }

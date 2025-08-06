@@ -1,5 +1,7 @@
 package com.team3.otboo.global.exception;
 
+import com.team3.otboo.domain.weather.dto.response.LocationErrorResponse;
+import com.team3.otboo.global.exception.weather.ExternalApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -34,4 +36,11 @@ public class GlobalExceptionHandler {
     final ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR, request.getRequestURI());
     return new ResponseEntity<>(response, ErrorCode.INTERNAL_SERVER_ERROR.getStatus());
   }
+
+  @ExceptionHandler(ExternalApiException.class)
+  public ResponseEntity<LocationErrorResponse> handleExternalApiException(ExternalApiException ex) {
+    LocationErrorResponse response = LocationErrorResponse.of("EXTERNAL_API_FAILED", ex.getDetailMessage());
+    return new ResponseEntity<>(response, ErrorCode.EXTERNAL_API_FAILED.getStatus());
+  }
+
 }
