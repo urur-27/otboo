@@ -45,7 +45,10 @@ public enum ErrorCode {
   INVALID_IMAGE_PATH(HttpStatus.FORBIDDEN, "IMG003", "유효하지 않은 이미지 경로입니다."),
 
   // LLM Errors
-  LLM_JSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "LLM001", "응답에 JSON이 포함되어 있지 않습니다.");
+  LLM_JSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "LLM001", "응답에 JSON이 포함되어 있지 않습니다."),
+
+  // ExternalApiException Errors (Exxx)
+  EXTERNAL_API_FAILED(HttpStatus.BAD_GATEWAY, "E0001", "외부 API 호출 실패했습니다.");
 
   private final HttpStatus status;
   private final String code;
