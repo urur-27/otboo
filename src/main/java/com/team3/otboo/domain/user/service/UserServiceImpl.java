@@ -2,7 +2,9 @@ package com.team3.otboo.domain.user.service;
 
 import com.team3.otboo.domain.user.dto.*;
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
+import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
 import com.team3.otboo.domain.user.dto.response.UserCreateResponse;
+import com.team3.otboo.domain.user.dto.response.UserDtoCursorResponse;
 import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
@@ -85,16 +87,6 @@ public class UserServiceImpl implements UserService {
     public UserDtoCursorResponse getUsers(UserSearchCondition condition){
         // todo: 음....
         return null;
-    }
-
-    @Override
-    public void updateUserLock(UserLockUpdateRequest request){
-        // todo: 사용자 계정을 잠글 경우 사용
-    }
-
-    @Override
-    public void updateUserRole(UserRoleUpdateRequest request){
-        // todo: 사용자의 권한을 변경할 때 사용, 변경 시 자동 로그아웃
     }
 
     @Override

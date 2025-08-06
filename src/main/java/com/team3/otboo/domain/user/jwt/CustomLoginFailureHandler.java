@@ -1,7 +1,28 @@
 package com.team3.otboo.domain.user.jwt;
 
-public class CustomLoginFailureHandler {
-    // 로그인 실패 시 일관된 형식의 에러 메시지를 응답한다.
-    // json 응답을 클라이언트에게 보낸다.
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
+import java.io.IOException;
+
+@RequiredArgsConstructor
+public class CustomLoginFailureHandler implements AuthenticationFailureHandler {
+
+    private final ObjectMapper objectMapper;
+
+    @Override
+    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+                                        AuthenticationException exception) throws IOException, ServletException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(objectMapper.writeValueAsString(HttpServletResponse.SC_UNAUTHORIZED));
+    }
 }
+

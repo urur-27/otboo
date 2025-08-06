@@ -1,4 +1,6 @@
-package com.team3.otboo.domain.user.dto;
+package com.team3.otboo.domain.user.dto.response;
+
+import com.team3.otboo.domain.user.dto.UserDto;
 
 import java.util.List;
 

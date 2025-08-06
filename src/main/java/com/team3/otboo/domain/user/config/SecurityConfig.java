@@ -2,9 +2,9 @@ package com.team3.otboo.domain.user.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.domain.user.enums.Role;
+import com.team3.otboo.domain.user.jwt.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -14,20 +14,15 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.util.matcher.RequestMatcher;
-
-import javax.sql.DataSource;
 
 @Slf4j
 @Configuration
@@ -40,8 +35,7 @@ public class SecurityConfig {
             HttpSecurity http,
             ObjectMapper objectMapper,
             DaoAuthenticationProvider daoAuthenticationProvider,
-            SessionRegistry sessionRegistry,
-            PersistentTokenBasedRememberMeServices rememberMeServices
+            JwtService jwtService
     ) throws Exception {
         // 인증 -> DaoAuthenticationProvider
         // 인가 -> 일부 URL은 허용, 나머지는 ADMIN 권한 필요
@@ -49,39 +43,62 @@ public class SecurityConfig {
         // 로그아웃 -> 세션 삭제 + 200 응답
         // 로그인 필터 -> 기본 필터 대신 JSON기반 필터 사용
         // 세션 관리 -> 세션 고정 공격 방지 + 동시 로그인 제한
-        // Rememberme -> JDBC 기반 토큰 저장으로 자동 로그인 지원
         http
                 // 사용자 인증 처리 provider 등록
                 // 직접 설정한 dao~ 를 통해 사용자 인증을 수행
-                .csrf(csrf -> csrf.disable())
-                .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable())
+                .authenticationProvider(daoAuthenticationProvider)
                 // 인가 정책 설정
                 .authorizeHttpRequests(authorize -> authorize
-                        // permitAll -> 인증 없이 접근 허용
-                        // 회원가입
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                        // csrf token을 get방식으로 요청하는 경우
                         .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/refresh").permitAll()
-
+                        .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/sign-in").permitAll()
+                        // 나머지 경로는 인증된 사용자만 접근 가능
                         .anyRequest().authenticated()
-                );
-                // 기본적으로 활성화되지만, logout 요청은 csrf 토큰 없이도 요청할 수 있도록 예외처리
-//                .csrf(csrf -> csrf
-//                        // logout 패턴 지정
-//                        .ignoringRequestMatchers("/api/auth/sign-out")
-//                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-//                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
-//                .logout(logout ->
-//                        logout
-//                                //
-//                                .logoutRequestMatcher(config("api/auth/sign-out"))
-//                                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
-//                                .addLogoutHandler(new SessionRegistry)
-//                )
-
+                )
+                // .csrf(csrf -> csrf.disable())
+                .csrf(csrf ->
+                        csrf
+                                // 로그아웃 요청에 대해 CSRF 보호를 비활성화 -> 빠른 처리를 위해
+                                .ignoringRequestMatchers("/api/auth/sign-out")
+                                // 서버에서 생성한 CSRF 토큰을 쿠키에 저장하여 사용자에게 전달, JS에서 접근할 수 있게 함
+                                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                                // CSRF 토큰을 요청(request) 속성에서도 사용할 수 있도록 설정
+                                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                                // CSRF 보호 기능이 불필요하게 세션을 생성하는 것을 방지
+                                .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
+                )
+                .with(
+                        new JsonUsernamePasswordAuthenticationFilter.Configurer(objectMapper),
+                        configurer ->
+                                configurer
+                                        .successHandler(new JwtLoginSuccessHandler(objectMapper, jwtService))
+                                        .failureHandler(new CustomLoginFailureHandler(objectMapper))
+                )
+                //
+                .logout(logout ->
+                        logout
+                                // logout URL 경로 지정
+                                .logoutUrl("/api/auth/sign-out")
+                                // 로그아웃 성공 시 리다이렉트 대신 HTTP 200 OK 상태 코드만 반환
+                                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+                                // JWT 무효화하는 로직 수행
+                                .addLogoutHandler(new JwtLogoutHandler(jwtService))
+                )
+                // 세션 관리
+                .sessionManagement(session ->
+                        session
+                                // 세션을 생성하거나 사용하지 않는 stateless방식으로 설정
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                // JWT 인증 필터 추가
+                // 로그인 이후의 모든 요청에 대해 헤더의 JWT를 검증하고 인증 상태를 설정하는 필터
+                // 사용자 이름, 비밀번호 인증 필터보다 먼저 실행되어야 한다.
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService, objectMapper),
+                        JsonUsernamePasswordAuthenticationFilter.class)
+                // Form 로그인 및 HTTP Basic 인증 비활성화
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable());
         // HttpSecurity 설정 후 SecurityFilterChain 반환
         return http.build();
     }
@@ -124,16 +141,6 @@ public class SecurityConfig {
                 .implies(Role.USER.name())
                 .build();
     }
-
-    // 세션 추적
-    // 애플리케이션에 로그인한 모든 사용자 세션을 추적 관리
-    // 동시 로그인 제어(maximumSession(1) 등),
-    // 세션 만료 시 사용자 알림,
-    // 관리 콘솔에 접속 중인 사용자 리스트 제공 등에 활용
-//    @Bean
-//    public SessionRegistry sessionRegistry() {
-//        return new SessionRegistryImpl();
-//    }
 
 //    // RememberMe 자동 로그인
 //    @Bean

@@ -29,9 +29,11 @@ public class UserDetailsImpl implements UserDetails {
     public String getPassword() {
         return password;
     }
+
+    // override하여 메서드 명은 getUsername이지만, 실상 구현은 getEmail 역할
     @Override
     public String getUsername() {
-        return userDto.name();
+        return userDto.email();
     }
 
     @Override

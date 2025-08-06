@@ -20,7 +20,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Transactional(readOnly = true)
     @Override
     // username으로 DB에서 user를 불러온다.
-    // 그리고 user의 내용을 mapper로 변환하여 전달한다.
+    // 그리고 userDetail을 생성해서 돌려주는 메서드
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException{
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));

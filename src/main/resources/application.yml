@@ -27,3 +27,10 @@ logging:
 security:
   jwt:
     secret: ${SECURITY_JWT_KEY}
+    access-token-validity-seconds: ${SECURITY_JWT_ACCESS_TOKEN_VALIDITY_SECONDS}
+    refresh-token-validity-seconds: ${SECURITY_JWT_REFRESH_TOKEN_VALIDITY_SECONDS}
+
+admin:
+  username: ${ADMIN_USERNAME}
+  email: ${ADMIN_EMAIL}
+  password: ${ADMIN_PASSWORD}

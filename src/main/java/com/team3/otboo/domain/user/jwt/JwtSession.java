@@ -24,11 +24,9 @@ public class JwtSession extends BaseEntity {
     @Column(updatable = false, nullable = false)
     private UUID userId;
     @Column(nullable = false, unique = true)
-    private String accessToken;
-    @Column(nullable = false, unique = true)
     private String refreshToken;
     @Column(nullable = false)
-    private Instant expirationTime;
+    private Instant expirationTime; // access token의 만료시간
 
     // 현재 Access token이 만료되었는지
     public boolean isExpired() {
@@ -36,9 +34,8 @@ public class JwtSession extends BaseEntity {
     }
 
     // token 재발급 시 새로운 토큰 정보로 세션 업데이트
-    public void update(UUID userId, String accessToken, String refreshToken, Instant expirationTime) {
+    public void update(UUID userId, String refreshToken, Instant expirationTime) {
         this.userId = userId;
-        this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.expirationTime = expirationTime;
     }
