@@ -24,4 +24,14 @@ public interface FeedLikeCountRepository extends JpaRepository<FeedLikeCount, UU
 	)
 	@Modifying
 	int decrease(@Param("feedId") UUID feedId);
+
+	@Query(
+		value = "update feed_like_count "
+			+ "set like_count = like_count + 1 "
+			+ "where feed_id = :feedId "
+			+ "returning like_count",
+		nativeQuery = true
+	)
+	@Modifying
+	Long increaseAndGet(@Param("feedId") UUID feedId);
 }

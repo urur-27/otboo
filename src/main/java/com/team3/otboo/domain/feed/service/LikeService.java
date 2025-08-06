@@ -3,6 +3,7 @@ package com.team3.otboo.domain.feed.service;
 import com.team3.otboo.domain.feed.dto.FeedDto;
 import com.team3.otboo.domain.feed.entity.FeedLikeCount;
 import com.team3.otboo.domain.feed.entity.Like;
+import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
 import com.team3.otboo.domain.feed.repository.FeedLikeCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedRepository;
 import com.team3.otboo.domain.feed.repository.LikeRepository;
@@ -22,9 +23,11 @@ public class LikeService {
 	private final FeedRepository feedRepository;
 	private final UserRepository userRepository;
 
-	public FeedDto like(UUID userId, UUID feedId) {
+	private final FeedDtoAssembler feedDtoAssembler;
 
-		Like like = likeRepository.save(
+	@Transactional
+	public FeedDto like(UUID userId, UUID feedId) {
+		likeRepository.save(
 			Like.create(
 				feedId,
 				userId)
@@ -35,13 +38,21 @@ public class LikeService {
 			feedLikeCountRepository.save(FeedLikeCount.init(feedId, 1L));
 		}
 
-		// Weather 쪽 완성되면 .. feed dto assembler 로 FeedDto 만들기 .
-		return null;
+		// likeCount 를 바로 사용하지 못하고 DB에 저장했다가 저장한걸 꺼내는 식으로 구현 되어 있음.
+		// assemble 메서드의 파라미터로 likeCount 를 넣어주면 진짜 조금이라도 더 성능이 좋아지지 않을까 .
+		// 좋아요 누르면 FeedDto 를 반환 .. FeedDto 를 만드는게 생각보다 무거운 작업인데 FeedDto 를 반환해야할까 ? 이 부분 개선해도 좋을 것 같음 .
+		return feedDtoAssembler.assemble(feedId, userId);
 	}
 
+	@Transactional
 	public void unlike(UUID userId, UUID feedId) {
-		likeRepository.findByUserIdAndFeedId(userId, feedId);
+		likeRepository.deleteByUserIdAndFeedId(userId, feedId);
 		feedLikeCountRepository.decrease(feedId);
+	}
+
+	@Transactional
+	public void deleteAllByFeedId(UUID feedId) {
+		likeRepository.deleteAllByFeedId(feedId);
 	}
 
 	// 테스트 데이터 삽입용 메서드
@@ -58,9 +69,5 @@ public class LikeService {
 		}
 
 		return like;
-	}
-
-	public void deleteAllByFeedId(UUID feedId) {
-		likeRepository.deleteAllByFeedId(feedId);
 	}
 }
