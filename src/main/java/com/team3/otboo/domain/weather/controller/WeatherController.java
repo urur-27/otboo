@@ -21,6 +21,12 @@ public class WeatherController implements WeatherContentApi {
 
     private final WeatherService weatherService;
 
+    public ResponseEntity<LocationResponse> getWeather(
+            @Validated @ModelAttribute LocationRequest locationRequestDto
+    ){
+        return ResponseEntity.ok(weatherService.getLocationForUser(locationRequestDto));
+    }
+
     @GetMapping("/location")
     public ResponseEntity<LocationResponse> getLocation(
             @Validated @ModelAttribute LocationRequest locationRequestDto
