@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 public class WeatherServiceImpl implements WeatherService{
 
   @Override
-  public WeatherDto getWeatherForUser(UUID userId) {
+  public WeatherDto getWeatherById(UUID weatherId) {
     return null;
   }
 }

@@ -5,5 +5,5 @@ import java.util.UUID;
 
 public interface WeatherService {
 
-  WeatherDto getWeatherForUser(UUID userId);
+  WeatherDto getWeatherById(UUID weatherId);
 }
