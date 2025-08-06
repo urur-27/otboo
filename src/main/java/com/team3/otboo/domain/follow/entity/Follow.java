@@ -2,18 +2,20 @@ package com.team3.otboo.domain.follow.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Table(
 	name = "follows",
@@ -27,6 +29,7 @@ import org.springframework.data.annotation.CreatedDate;
 @Getter
 @ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(AuditingEntityListener.class)
 public class Follow {
 
 	@Id
@@ -34,7 +37,7 @@ public class Follow {
 	private UUID id;
 
 	@CreatedDate
-	private LocalDateTime createdAt;
+	private Instant createdAt;
 
 	@Column(nullable = false)
 	private UUID followeeId;
