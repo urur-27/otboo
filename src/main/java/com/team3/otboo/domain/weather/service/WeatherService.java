@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface WeatherService {
 
-  WeatherDto getWeatherForUser(UUID userId);
-
   LocationResponse getLocationForUser(LocationRequest locationRequest);
+
+  WeatherDto getWeatherById(UUID weatherId);
 }
