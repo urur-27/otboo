@@ -117,9 +117,17 @@ public class FollowService {
 			nextCursor = lastElement.getCreatedAt().toString();
 			nextIdAfter = lastElement.getId();
 		}
+		System.out.println("nextCursor: " + nextCursor);
+		System.out.println("nextIdAfter: " + nextIdAfter);
 
-		return new FollowListResponse(followDtoList, nextCursor, nextIdAfter, hasNext,
-			followingCount, "createdAt, id", SortDirection.DESCENDING);
+		return new FollowListResponse(
+			followDtoList,
+			nextCursor,
+			nextIdAfter,
+			hasNext,
+			followingCount,
+			"createdAt, id",
+			SortDirection.DESCENDING);
 	}
 
 	@Transactional(readOnly = true)
@@ -141,6 +149,11 @@ public class FollowService {
 		List<FollowDto> followDtoList = currentPage.stream()
 			.map(followMapper::toDto)
 			.toList();
+
+		System.out.println("[FollowDtoList]");
+		for (FollowDto followDto : followDtoList) {
+			System.out.println("follow id: " + followDto.follower().userId());
+		}
 
 		String nextCursor = null;
 		UUID nextIdAfter = null;

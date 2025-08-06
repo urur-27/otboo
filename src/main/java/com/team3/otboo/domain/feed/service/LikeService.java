@@ -5,9 +5,7 @@ import com.team3.otboo.domain.feed.entity.FeedLikeCount;
 import com.team3.otboo.domain.feed.entity.Like;
 import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
 import com.team3.otboo.domain.feed.repository.FeedLikeCountRepository;
-import com.team3.otboo.domain.feed.repository.FeedRepository;
 import com.team3.otboo.domain.feed.repository.LikeRepository;
-import com.team3.otboo.domain.user.repository.UserRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,9 +17,6 @@ public class LikeService {
 
 	private final LikeRepository likeRepository;
 	private final FeedLikeCountRepository feedLikeCountRepository;
-
-	private final FeedRepository feedRepository;
-	private final UserRepository userRepository;
 
 	private final FeedDtoAssembler feedDtoAssembler;
 
@@ -69,5 +64,11 @@ public class LikeService {
 		}
 
 		return like;
+	}
+
+	public Long count(UUID feedId) {
+		return feedLikeCountRepository.findById(feedId)
+			.map(FeedLikeCount::getLikeCount)
+			.orElse(0L);
 	}
 }
