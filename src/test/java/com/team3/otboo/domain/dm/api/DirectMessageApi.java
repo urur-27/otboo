@@ -66,9 +66,10 @@ public class DirectMessageApi {
 		);
 
 		List<DirectMessageDto> data = response.getData();
-		System.out.println("[Message List]");
+		System.out.println("[First Page]");
 		for (DirectMessageDto messageDto : data) {
-			System.out.println("content: " + messageDto.content());
+			System.out.println("%s : content %s"
+				.formatted(messageDto.sender().userId(), messageDto.content()));
 		}
 
 		DirectMessageDto lastElement = response.data.getLast();
@@ -94,9 +95,11 @@ public class DirectMessageApi {
 			nextPageResponse, DirectMessageDtoCursorResponse.class
 		);
 
+		System.out.println("[Next Page]");
 		List<DirectMessageDto> data2 = response2.data;
-		for (DirectMessageDto directMessageDto : data2) {
-			System.out.println("content: " + directMessageDto.content());
+		for (DirectMessageDto messageDto : data2) {
+			System.out.println("%s : content %s"
+				.formatted(messageDto.sender().userId(), messageDto.content()));
 		}
 	}
 
