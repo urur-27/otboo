@@ -203,7 +203,6 @@ public class FollowService {
 		);
 	}
 
-	// test 용 createBulk
 	@Transactional
 	public Follow createBulk(FollowCreateRequest request) {
 		Follow follow = followRepository.save(
@@ -212,7 +211,7 @@ public class FollowService {
 
 		// follower 의 following 카운트 증가
 		int followingResult = userFollowingCountRepository.increase(request.followerId());
-		if (followingResult == 0) {
+		if (followingResult == 0) { // 여러개 쓰레드로 접근하면 여기서 문제 생김 record 를 미리 만들어두던가 하면 된다
 			userFollowingCountRepository.save(
 				UserFollowingCount.init(request.followerId(), 1L)
 			);
@@ -220,7 +219,7 @@ public class FollowService {
 
 		// followee 의 follower 카운트 증가
 		int followerCount = userFollowerCountRepository.increase(request.followeeId());
-		if (followerCount == 0) {
+		if (followerCount == 0) { // 여러개 쓰레드로 접근하면 여기서 문제 생김
 			userFollowerCountRepository.save(
 				UserFollowerCount.init(request.followeeId(), 1L)
 			);

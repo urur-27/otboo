@@ -5,11 +5,11 @@ import com.team3.otboo.domain.follow.dto.FollowSummaryDto;
 import com.team3.otboo.domain.follow.service.FollowService;
 import com.team3.otboo.domain.follow.service.request.FollowCreateRequest;
 import com.team3.otboo.domain.follow.service.response.FollowListResponse;
+import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,9 +74,11 @@ public class FollowController {
 	@GetMapping("/api/follows/summary")
 	public ResponseEntity<FollowSummaryDto> getFollowSummary(
 		@RequestParam("userId") UUID userId,
-		@AuthenticationPrincipal UserDetails userDetails
+		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
-
-		return null;
+		UUID currentUserId = userDetails.getId();
+		FollowSummaryDto response = followService.getFollowSummary(userId, currentUserId);
+		
+		return ResponseEntity.ok(response);
 	}
 }

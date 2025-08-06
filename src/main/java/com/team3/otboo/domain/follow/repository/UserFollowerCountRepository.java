@@ -13,14 +13,14 @@ public interface UserFollowerCountRepository extends JpaRepository<UserFollowerC
 
 	// 대규모 트래픽이 예상되는 상황에서 팔로워, 팔로잉 수를 세는데 count 쿼리를 사용하면 너무 오래결럼 UserFollowerCount, UserFollowingCount 라는 객체를 따로 저장
 	@Query(
-		value = "update user_follower_count set follower_count = follower_count + 1 where userId = :userId",
+		value = "update user_follower_count set follower_count = follower_count + 1 where user_id = :userId",
 		nativeQuery = true
 	)
 	@Modifying
 	int increase(@Param("userId") UUID userId);
 
 	@Query(
-		value = "update user_following_count set following_count = following_count + 1 where userId = :userId",
+		value = "update user_following_count set following_count = following_count -1 where user_id = :userId",
 		nativeQuery = true
 	)
 	@Modifying
