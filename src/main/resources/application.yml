@@ -36,3 +36,7 @@ otboo:
       bucket: ${AWS_S3_BUCKET}
       baseUrl: ${AWS_S3_BUCKET_URL}
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
