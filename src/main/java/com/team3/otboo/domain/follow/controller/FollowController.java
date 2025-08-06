@@ -46,7 +46,7 @@ public class FollowController {
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam Integer limit,
-		@RequestParam String nameLike // 비슷한 이름 필터링
+		@RequestParam(required = false) String nameLike // 비슷한 이름 필터링
 	) {
 		FollowListResponse response = followService.getFollowings(
 			followerId, cursor, idAfter, limit, nameLike
@@ -61,7 +61,7 @@ public class FollowController {
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam Integer limit,
-		@RequestParam String nameLike
+		@RequestParam(required = false) String nameLike
 	) {
 		FollowListResponse response = followService.getFollowers(
 			followeeId, cursor, idAfter, limit, nameLike
@@ -69,7 +69,7 @@ public class FollowController {
 
 		return ResponseEntity.ok(response);
 	}
-	
+
 	@GetMapping("/api/follows/summary")
 	public ResponseEntity<FollowSummaryDto> getFollowSummary(
 		@RequestParam("userId") UUID userId,
@@ -77,7 +77,7 @@ public class FollowController {
 	) {
 		UUID currentUserId = userDetails.getId();
 		FollowSummaryDto response = followService.getFollowSummary(userId, currentUserId);
-		
+
 		return ResponseEntity.ok(response);
 	}
 }
