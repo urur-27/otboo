@@ -6,12 +6,12 @@ import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.mapper.ClothingAttributeDefMapper;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
+import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
+import com.team3.otboo.global.exception.attribute.AttributeOptionEmptyException;
 import jakarta.transaction.Transactional;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,7 +24,13 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
     @Override
     @Transactional
     public ClothingAttributeDefDto create(ClothingAttributeDefCreateRequest request) {
+        if (attributeRepository.existsByName(request.name())) {
+            throw new AttributeNotFoundException();
+        }
+
         Attribute attribute = mapper.toEntity(request);
+        // 연관관계 보완
+        attribute.getOptions().forEach(option -> option.assignAttribute(attribute));
         Attribute saved = attributeRepository.save(attribute);
         return mapper.toDto(saved);
     }
@@ -32,13 +38,16 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
     @Override
     public CursorPageResponse<ClothingAttributeDefDto> getAttributes(
             String cursor,
+            UUID idAfter,
             int limit,
             String sortBy,
-            String sortDirection,
+            Direction direction,
             String keyword
     ) {
-        Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.DESC);
-        CursorPageResponse<Attribute> result = attributeRepository.findAllByCursor(cursor, limit, sortBy, direction, keyword);
+        CursorPageResponse<Attribute> result = attributeRepository.findAllByCursor(
+                cursor, idAfter, limit, sortBy, direction, keyword
+        );
+
         List<ClothingAttributeDefDto> dtoList = result.data().stream()
                 .map(mapper::toDto)
                 .toList();
@@ -46,9 +55,11 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
         return new CursorPageResponse<>(
                 dtoList,
                 result.nextCursor(),
+                result.nextIdAfter(),
                 result.sortBy(),
                 result.sortDirection(),
-                result.totalCount()
+                result.totalCount(),
+                result.hasNext()
         );
     }
 
@@ -56,7 +67,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
     @Transactional
     public void deleteAttribute(UUID definitionId) {
         Attribute attribute = attributeRepository.findById(definitionId)
-                .orElseThrow(() -> new NoSuchElementException("해당 속성을 찾을 수 없습니다."));
+                .orElseThrow(AttributeNotFoundException::new);
 
         attributeRepository.delete(attribute);
     }
@@ -66,7 +77,12 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
     public ClothingAttributeDefDto updateAttribute(UUID definitionId,
             ClothingAttributeDefCreateRequest request) {
         Attribute attribute = attributeRepository.findById(definitionId)
-                .orElseThrow(() -> new NoSuchElementException("해당 속성을 찾을 수 없습니다."));
+                .orElseThrow(AttributeNotFoundException::new);
+
+        // 옵션 리스트 비어있을 경우
+        if (request.selectableValues().isEmpty()) {
+            throw new AttributeOptionEmptyException();
+        }
 
         // 이름 변경
         attribute.updateName(request.name());

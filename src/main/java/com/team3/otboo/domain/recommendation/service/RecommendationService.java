@@ -7,6 +7,7 @@ import com.team3.otboo.domain.recommendation.service.strategy.RecommendationStra
 import com.team3.otboo.domain.user.dto.ProfileDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
 import com.team3.otboo.domain.user.service.ProfileService;
 import com.team3.otboo.domain.weather.dto.WeatherDto;
 import com.team3.otboo.domain.weather.service.WeatherService;
@@ -26,13 +27,13 @@ public class RecommendationService {
   private final WeatherService weatherService;
   private final RecommendationStrategy recommendationStrategy;
 
-  public RecommendationDto recommend(UUID userId) {
+  public RecommendationDto recommend(UUID weatherId, UUID userId) {
     User user = userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
 
     ProfileDto profile = profileService.getProfile(userId);
     List<Clothing> clothes = clothesService.getClothesByOwner(user);
-    WeatherDto weather = weatherService.getWeatherForUser(userId);
+    WeatherDto weather = weatherService.getWeatherById(weatherId);
 
     return recommendationStrategy.recommend(profile, weather, clothes);
   }

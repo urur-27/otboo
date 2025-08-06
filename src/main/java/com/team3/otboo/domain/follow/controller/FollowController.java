@@ -5,11 +5,11 @@ import com.team3.otboo.domain.follow.dto.FollowSummaryDto;
 import com.team3.otboo.domain.follow.service.FollowService;
 import com.team3.otboo.domain.follow.service.request.FollowCreateRequest;
 import com.team3.otboo.domain.follow.service.response.FollowListResponse;
+import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,7 +46,7 @@ public class FollowController {
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam Integer limit,
-		@RequestParam String nameLike // 비슷한 이름 필터링
+		@RequestParam(required = false) String nameLike // 비슷한 이름 필터링
 	) {
 		FollowListResponse response = followService.getFollowings(
 			followerId, cursor, idAfter, limit, nameLike
@@ -61,7 +61,7 @@ public class FollowController {
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam Integer limit,
-		@RequestParam String nameLike
+		@RequestParam(required = false) String nameLike
 	) {
 		FollowListResponse response = followService.getFollowers(
 			followeeId, cursor, idAfter, limit, nameLike
@@ -70,13 +70,14 @@ public class FollowController {
 		return ResponseEntity.ok(response);
 	}
 
-	// User domain 구현 후 진행 .
 	@GetMapping("/api/follows/summary")
 	public ResponseEntity<FollowSummaryDto> getFollowSummary(
 		@RequestParam("userId") UUID userId,
-		@AuthenticationPrincipal UserDetails userDetails
+		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
+		UUID currentUserId = userDetails.getId();
+		FollowSummaryDto response = followService.getFollowSummary(userId, currentUserId);
 
-		return null;
+		return ResponseEntity.ok(response);
 	}
 }

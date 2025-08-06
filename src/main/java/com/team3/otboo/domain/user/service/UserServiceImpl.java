@@ -1,16 +1,20 @@
 package com.team3.otboo.domain.user.service;
 
 import com.team3.otboo.domain.user.dto.*;
+import com.team3.otboo.domain.user.dto.Request.*;
+import com.team3.otboo.domain.user.dto.response.UserDtoCursorResponse;
+import com.team3.otboo.domain.user.dto.response.UserResponse;
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
-import com.team3.otboo.domain.user.dto.response.UserCreateResponse;
-import com.team3.otboo.domain.user.dto.response.UserDtoCursorResponse;
 import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
+import com.team3.otboo.domain.user.enums.SortBy;
 import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.ProfileRepository;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.global.exception.user.RoleNotFoundException;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,7 +44,8 @@ public class UserServiceImpl implements UserService {
     // 회원가입
     @Override
     @Transactional
-    public UserCreateResponse createUser(UserCreateRequest request) {
+    public UserResponse createUser(UserCreateRequest request) {
+        // TODO AUTH 회원가입 기능 추가 필요
         log.debug("사용자 생성 시작: {}", request.name());
 
         if(userRepository.existsByEmail(request.email())){
@@ -60,7 +67,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("사용자 생성 완료: {}", user.getUsername());
 
-        return UserCreateResponse.of(user);
+        return UserResponse.of(user);
     }
 
     @Override
@@ -84,12 +91,66 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDtoCursorResponse getUsers(UserSearchCondition condition){
-        // todo: 음....
-        return null;
+    public UserDtoCursorResponse getUsers(UserSearchParams userSearchParams){
+        List<User> users = userRepository.findByFilterUser(
+                userSearchParams.cursor(),
+                userSearchParams.idAfter(), userSearchParams.limit() + 1,
+                userSearchParams.sortBy(), userSearchParams.sortDirection(),
+                userSearchParams.emailLike(), userSearchParams.roleEqual(), userSearchParams.locked()
+        );
+
+        boolean hasNext = getHasNext(users, userSearchParams.limit());
+        UUID  nextIdAfter = getNextIdAfter(users, userSearchParams.limit());
+        String nextCursor  = getNextCursor(users, userSearchParams.limit(), userSearchParams.sortBy());
+
+        Long totalCount = userRepository.totalCount(userSearchParams.emailLike(), userSearchParams.roleEqual(), userSearchParams.locked());
+
+        List<User> page = hasNext ? users.subList(0, userSearchParams.limit()) : users;
+        List<UserDto> userDtos = page.stream().map(userMapper::toDto).collect(Collectors.toList());
+
+        return UserDtoCursorResponse.of(userDtos, nextCursor, nextIdAfter, hasNext, totalCount, userSearchParams.sortBy(), userSearchParams.sortDirection());
     }
 
     @Override
+    @Transactional
+    public UUID updateUserLock(UserLockUpdateRequest request, UUID userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.updateLocked(request.locked());
+
+        return user.getId();
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateUserRole(UserRoleUpdateRequest request, UUID userId){
+        // TODO 업데이트시 로그아웃 기능 추가 필요
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if(!Role.contains(request.newRole())){
+            throw new RoleNotFoundException();
+        }
+
+        user.updateRole(request.newRole());
+
+        return UserResponse.of(user);
+    }
+
+    @Override
+    @Transactional
+    public void updateUserPassword(UserPasswordUpdateRequest request, UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        String encodedPassword = passwordEncoder.encode(request.newPassword());
+        user.updatePassword(encodedPassword);
+
+    }
+
+    @Override
+    @Transactional
     public void deleteUser(UUID id) {
         log.debug("사용자 삭제 시작: {}", id);
         if(!userRepository.existsById(id)){
@@ -97,5 +158,28 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.deleteById(id);
         log.info("사용자 삭제 완료");
+    }
+
+    public static boolean getHasNext(List<?> items, int limit) {
+        return items.size() > limit;
+    }
+
+    public static UUID getNextIdAfter(List<User> users, int limit) {
+        if (!getHasNext(users, limit)) {
+            return null;
+        }
+        return users.get(limit - 1).getId();
+    }
+
+    public static String getNextCursor(List<User> users, int limit, SortBy sortBy){
+        if (!getHasNext(users, limit)) {
+            return null;
+        }
+        User next = users.get(limit - 1);
+        if (SortBy.email.equals(sortBy)) {
+            return URLEncoder.encode(next.getEmail(), StandardCharsets.UTF_8);
+        } else {
+            return next.getId().toString();
+        }
     }
 }

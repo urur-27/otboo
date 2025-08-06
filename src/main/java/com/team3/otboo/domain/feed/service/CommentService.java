@@ -10,6 +10,7 @@ import com.team3.otboo.domain.feed.repository.FeedCommentCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedRepository;
 import com.team3.otboo.domain.feed.service.request.CommentCreateRequest;
 import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.domain.user.enums.SortDirection;
 import com.team3.otboo.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
@@ -20,7 +21,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.query.SortDirection;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -111,13 +111,36 @@ public class CommentService {
 		String nextCursor = null;
 		UUID nextIdAfter = null;
 
-		if (hasNext && !comments.isEmpty()) {
-			Comment lastElements = comments.get(limit - 1);
+		if (hasNext && !currentPage.isEmpty()) {
+			Comment lastElements = currentPage.getLast();
 			nextCursor = lastElements.getCreatedAt().toString();
 			nextIdAfter = lastElements.getId();
 		}
 
 		return new CommentDtoCursorResponse(commentDtoList, nextCursor, nextIdAfter, hasNext,
 			commentCount, "createdAt", SortDirection.ASCENDING);
+	}
+
+	public void deleteAllByFeedId(UUID feedId) {
+		commentRepository.deleteAllByFeedId(feedId);
+	}
+
+	// 테스트 데이터 생성용 ..
+	@Transactional
+	public Comment createBulk(CommentCreateRequest request) {
+		Comment comment = commentRepository.save(Comment.create(
+			request.feedId(),
+			request.authorId(),
+			request.content()
+		));
+
+		int result = feedCommentCountRepository.increase(request.feedId());
+		if (result == 0) {
+			feedCommentCountRepository.save(
+				FeedCommentCount.init(request.feedId(), 1L)
+			);
+		}
+
+		return comment;
 	}
 }

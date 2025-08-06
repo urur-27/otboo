@@ -1,9 +1,12 @@
-package com.team3.otboo.domain.user.enums;
+package com.team3.otboo.domain.user.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 @Embeddable
 public class Location {
     private Double latitude;
@@ -12,7 +15,8 @@ public class Location {
     private Integer y;  // 기상청 y 좌표
 
     @ElementCollection
-    @CollectionTable(name = "profile_location_names", joinColumns = @JoinColumn(name = "profile_user_id"))
+    @CollectionTable(name = "profile_location_names", joinColumns = @JoinColumn(name = "profile_id"))
     @Column(name = "location_name")
-    private List<String> locationNames;
+    private List<String> locationNames = new ArrayList<>();
+
 }

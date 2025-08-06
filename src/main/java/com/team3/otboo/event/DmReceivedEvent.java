@@ -1,5 +1,10 @@
 package com.team3.otboo.event;
 
-public record DmReceivedEvent() {
+import com.team3.otboo.domain.user.entity.User;
+
+public record DmReceivedEvent(
+    User receiver,
+    String senderName
+) {
 
 }

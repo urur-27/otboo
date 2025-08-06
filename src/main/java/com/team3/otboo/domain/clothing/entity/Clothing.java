@@ -15,12 +15,13 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class Clothing extends BaseEntity {
 
     private String name; // 의상 이름
     private String imageUrl; // 이미지 저장 경로 or 외부 링크
     private String purchaseUrl; // 구매 링크
+    private String type; // 타입 (상의, 하의...)
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User owner; // 의상을 등록한 사용자
@@ -34,6 +35,18 @@ public class Clothing extends BaseEntity {
         clothing.owner = owner;
         return clothing;
     }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public void updateOwner(User owner) {
+        this.owner = owner;
+    }
+
+    public void updateName(String name) { this.name = name; }
+
+    public void updateType(String type) { this.type = type; }
 
     public void addAttributeValue(ClothingAttributeValue attributeValue) {
         this.attributeValues.add(attributeValue);

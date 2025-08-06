@@ -1,8 +1,8 @@
 package com.team3.otboo.domain.feed.dto;
 
+import com.team3.otboo.domain.user.enums.SortDirection;
 import java.util.List;
 import java.util.UUID;
-import org.hibernate.query.SortDirection;
 
 public record CommentDtoCursorResponse(
 	List<CommentDto> data,
@@ -13,5 +13,5 @@ public record CommentDtoCursorResponse(
 	String sortBy,
 	SortDirection sortDirection
 ) {
-
+	
 }

@@ -1,8 +1,8 @@
 package com.team3.otboo.domain.feed.dto;
 
+import com.team3.otboo.domain.user.enums.SortDirection;
 import java.util.List;
 import java.util.UUID;
-import org.hibernate.query.SortDirection;
 
 public record FeedDtoCursorResponse(
 	List<FeedDto> data,
