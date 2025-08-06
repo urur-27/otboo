@@ -88,10 +88,4 @@ public class ClothingController {
         ClothingDto response = clothingService.updateClothing(clothesId, request, image);
         return ResponseEntity.ok(response);
     }
-
-//    @GetMapping("/extractions")
-//    public ResponseEntity<ClothingDto> extractClothingInfo(@RequestParam String url){
-//        ClothingDto dto = extractionsService.extractAndSave(url);
-//        return ResponseEntity.ok(dto);
-//    }
 }
