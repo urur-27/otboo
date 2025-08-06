@@ -54,3 +54,7 @@ resilience4j:
         minimumNumberOfCalls: 5
         waitDurationInOpenState: 10s
 
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
