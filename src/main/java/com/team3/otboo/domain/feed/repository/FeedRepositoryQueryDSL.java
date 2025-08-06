@@ -49,9 +49,6 @@ public class FeedRepositoryQueryDSL {
 			.fetch();
 	}
 
-	/* ------------------------------------------------------------------
-	   조건에 맞는 피드 총 개수
-	--------------------------------------------------------------------*/
 	public int countFeeds(FeedListRequest req) {
 
 		Long cnt = queryFactory
@@ -72,9 +69,6 @@ public class FeedRepositoryQueryDSL {
 		return cnt == null ? 0 : Math.toIntExact(cnt);
 	}
 
-	/* ------------------------------------------------------------------
-	   ──────────────── 조건 빌더 메서드 ────────────────
-	--------------------------------------------------------------------*/
 	private BooleanExpression keywordLike(String keyword) {
 		return (keyword == null || keyword.isBlank())
 			? null
@@ -102,7 +96,6 @@ public class FeedRepositoryQueryDSL {
 			return null;
 		}
 
-		/* createdAt 기준 페이징 */
 		if ("createdAt".equals(sortBy)) {
 			Instant time = Instant.parse(cursor);
 
@@ -115,7 +108,6 @@ public class FeedRepositoryQueryDSL {
 						.and(idAfter != null ? feed.id.gt(idAfter) : null));
 		}
 
-		/* likeCount 기준 페이징 (집계 테이블 사용) */
 		if ("likeCount".equals(sortBy)) {
 			Long likeCnt = Long.parseLong(cursor);
 
@@ -145,7 +137,6 @@ public class FeedRepositoryQueryDSL {
 				: feedLikeCount.likeCount.coalesce(0L).asc();
 		}
 
-		/* 기본: 최신순 DESC */
 		return feed.createdAt.desc();
 	}
 }
