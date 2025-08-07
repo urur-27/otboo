@@ -25,7 +25,7 @@ public class LocalImageStorage implements ImageStorage {
     private final Path root;
 
     public LocalImageStorage(@Value("${otboo.storage.local.root-path}") Path root) {
-        this.root = root;
+        this.root = Paths.get(System.getProperty("user.dir")).resolve(root).toAbsolutePath();
     }
 
     @PostConstruct
