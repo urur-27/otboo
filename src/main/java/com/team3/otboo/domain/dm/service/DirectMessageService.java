@@ -77,7 +77,7 @@ public class DirectMessageService {
 
 		String nextCursor = null;
 		UUID nextIdAfter = null;
-		if (hasNext) {
+		if (hasNext && !currentPage.isEmpty()) {
 			DirectMessage lastElements = currentPage.getLast();
 			nextCursor = lastElements.getCreatedAt().toString();
 			nextIdAfter = lastElements.getId();
