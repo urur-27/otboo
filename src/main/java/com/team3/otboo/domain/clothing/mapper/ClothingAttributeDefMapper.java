@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 public interface ClothingAttributeDefMapper {
 
     // request → entity
+    @Mapping(target = "name", source = "name")
     @Mapping(target = "options", source = "selectableValues", qualifiedByName = "toOptions")
     Attribute toEntity(ClothingAttributeDefCreateRequest request);
 
