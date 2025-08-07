@@ -141,28 +141,4 @@ public class SecurityConfig {
                 .implies(Role.USER.name())
                 .build();
     }
-
-//    // RememberMe 자동 로그인
-//    @Bean
-//    public PersistentTokenBasedRememberMeServices rememberMeServices(
-//            // 해시 계산 시 쓰이는 비밀 키.
-//            @Value("${security.remember-me.key}") String key,
-//            // 쿠키에 저장된 토큰의 만료기간(초)
-//            @Value("${security.remember-me.token-validity-seconds}") int tokenValiditySeconds,
-//            UserDetailsService userDetailsService,
-//            DataSource dataSource
-//    ) {
-//        // DB 저장용 토큰 레포지토리
-//        // 자동으로 persistent_logins 테이블 스키마를 기대하며
-//        // 로그인 시 생성된 토큰을 DB에 CRUD한다.
-//        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
-//        tokenRepository.setDataSource(dataSource);
-//
-//        // remember-me 서비스 객체
-//        PersistentTokenBasedRememberMeServices rememberMeServices = new PersistentTokenBasedRememberMeServices(
-//                key, userDetailsService, tokenRepository);
-//        rememberMeServices.setTokenValiditySeconds(tokenValiditySeconds);
-//
-//        return rememberMeServices;
-//    }
 }

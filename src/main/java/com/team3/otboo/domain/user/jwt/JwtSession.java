@@ -26,9 +26,9 @@ public class JwtSession extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String refreshToken;
     @Column(nullable = false)
-    private Instant expirationTime; // access token의 만료시간
+    private Instant expirationTime; // refresh token의 만료시간
 
-    // 현재 Access token이 만료되었는지
+    // 현재 Refresh token이 만료되었는지
     public boolean isExpired() {
         return this.expirationTime.isBefore(Instant.now());
     }

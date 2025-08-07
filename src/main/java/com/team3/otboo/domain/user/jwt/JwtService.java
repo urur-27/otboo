@@ -8,6 +8,11 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.team3.otboo.domain.user.dto.AccessRefreshToken;
 import com.team3.otboo.domain.user.dto.UserDto;
+import com.team3.otboo.domain.user.mapper.UserMapper;
+import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.global.exception.BusinessException;
+import com.team3.otboo.global.exception.ErrorCode;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import jakarta.persistence.Access;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +24,7 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -40,6 +46,8 @@ public class JwtService {
 
     private final JwtSessionRepository jwtSessionRepository;
     private final ObjectMapper objectMapper;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     /*
         <nimbus-jose-jwt 라이브러리 구성 요소 설명>
@@ -146,7 +154,6 @@ public class JwtService {
         return verified;
     }
 
-    // private해도 되려나?
     // token -> JwtObject 매핑 (token 분해 후 넣어준다.)
     public JwtObject parse(String token) {
         try {
@@ -166,9 +173,8 @@ public class JwtService {
             );
         } catch (ParseException e) {
             log.error("파싱 실패: {}", e.getMessage());
-            // 예외처리 필요
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "JWT 토큰 파싱에 실패했습니다.");
         }
-        return null;
     }
 
     // JWT Session을 무효화 하는 메서드
@@ -197,10 +203,78 @@ public class JwtService {
         jwtSessionRepository.findByUserId(userId)
                 .ifPresent(this::invalidate);
     }
-    // 만약 한 사용자가 다른 기기로 동시에 로그인이 가능해질 경우
-    // 모든 기기에서 로그아웃을 하려면 findByUserId 반환값을 list로 해야하지 않을까?
-    // 현재는 하나의 기기에서만 로그아웃 되는 것 같음...
+
+    public List<JwtSession> getActiveJwtSessions() {
+        return jwtSessionRepository.findAllByExpirationTimeAfter(Instant.now());
+    }
+
+    public JwtSession getJwtSession(String refreshToken) {
+        return jwtSessionRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰을 찾을 수 없습니다."));
+    }
+
+    // access token 기간 만료 및 me 조회 요청에 따른 재발급
+    public AccessRefreshToken meJwtRefreshToken(String refreshToken) {
+        // 토큰 유효성 검사
+        if (!validate(refreshToken)) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 유효하지 않습니다.");
+        }
+
+        // 리프레시 토큰으로 세션 조회
+        JwtSession session = jwtSessionRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰을 찾을 수 없습니다."));
+
+        // refresh token이 만료되었다면
+        if(session.isExpired()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 이미 만료되었습니다.");
+        }
+
+        // 토큰에서 사용자 ID 파싱 및 사용자 조회
+        UUID userId = parse(refreshToken).userDto().id();
+        UserDto userDto = userRepository.findById(userId)
+                .map(userMapper::toDto)
+                .orElseThrow(() -> new UserNotFoundException("ID: " + userId));
+
+        // 새로운 JWT 객체 생성
+        JwtObject accessJwtObject = generateJwtObject(userDto, accessTokenValiditySeconds);
+
+        return new AccessRefreshToken(accessJwtObject.token(), refreshToken);
+    }
 
     // refresh token 기간 만료에 따른 재발급
+    @Transactional
+    public AccessRefreshToken refreshJwtSession(String refreshToken) {
+        // 토큰 유효성 검사
+        if (!validate(refreshToken)) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 유효하지 않습니다.");
+        }
 
+        // 리프레시 토큰으로 세션 조회
+        JwtSession session = jwtSessionRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰을 찾을 수 없습니다."));
+
+        // 토큰에서 사용자 ID 파싱 및 사용자 조회
+        UUID userId = parse(refreshToken).userDto().id();
+        UserDto userDto = userRepository.findById(userId)
+                .map(userMapper::toDto)
+                .orElseThrow(() -> new UserNotFoundException("ID: " + userId));
+
+        // 새로운 JWT 객체 생성
+        JwtObject accessJwtObject = generateJwtObject(userDto, accessTokenValiditySeconds);
+        JwtObject refreshJwtObject = generateJwtObject(userDto, refreshTokenValiditySeconds);
+
+        session.update(
+                userId,
+                refreshJwtObject.token(),
+                refreshJwtObject.expirationTime()
+        );
+
+        return new AccessRefreshToken(accessJwtObject.token(), refreshJwtObject.token());
+    }
 }

@@ -10,6 +10,5 @@ import java.util.UUID;
 
 public interface AuthService {
     UserDto initAdmin();
-    UserDto updateRole(UUID userId, Role role);
-    UserDto updateLock(UUID userId, Boolean locked);
+
 }

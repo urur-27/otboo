@@ -2,6 +2,7 @@ package com.team3.otboo.domain.user.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.domain.user.dto.AccessRefreshToken;
+import com.team3.otboo.domain.user.service.CustomUserDetailsService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,7 +34,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
             Authentication authentication
     ) throws IOException, ServletException {
         // 인증된 사용자 정보를 가져온다
-        UserDetailsImpl user = (UserDetailsImpl) authentication.getPrincipal();
+        CustomUserDetailsService.CustomUserDetails user = (CustomUserDetailsService.CustomUserDetails) authentication.getPrincipal();
         // 기존에 이미 발급된 사용자의 JWT 세션이 있다면 모두 무효화처리
         // 동시 로그인 제한 및 이전에 사용하던 기기에서의 세션 만료 역할
         jwtService.invalidateJwtSession(user.getUserDto().id());

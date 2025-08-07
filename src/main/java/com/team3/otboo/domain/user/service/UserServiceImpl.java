@@ -10,6 +10,7 @@ import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
 import com.team3.otboo.domain.user.enums.SortBy;
+import com.team3.otboo.domain.user.jwt.JwtService;
 import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.ProfileRepository;
 import com.team3.otboo.domain.user.repository.UserRepository;
@@ -37,7 +38,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
-
+    private final JwtService jwtService;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -45,7 +46,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
-        // TODO AUTH 회원가입 기능 추가 필요
         log.debug("사용자 생성 시작: {}", request.name());
 
         if(userRepository.existsByEmail(request.email())){
@@ -119,13 +119,16 @@ public class UserServiceImpl implements UserService {
 
         user.updateLocked(request.locked());
 
+        // 계정을 잠금 상태로 변경할 경우, 토큰 무효화 진행
+        if(request.locked()) {
+            jwtService.invalidateJwtSession(user.getId());
+        }
         return user.getId();
     }
 
     @Override
     @Transactional
     public UserResponse updateUserRole(UserRoleUpdateRequest request, UUID userId){
-        // TODO 업데이트시 로그아웃 기능 추가 필요
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
@@ -135,6 +138,8 @@ public class UserServiceImpl implements UserService {
 
         user.updateRole(request.newRole());
 
+        // 권한 변경 후 해당 사용자가 로그인한 세션 만료 처리
+        jwtService.invalidateJwtSession(user.getId());
         return UserResponse.of(user);
     }
 
