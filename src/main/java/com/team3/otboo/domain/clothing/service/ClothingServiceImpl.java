@@ -149,8 +149,7 @@ public class ClothingServiceImpl implements ClothingService {
         AttributeOption option = attributeOptionRepository.findByAttributeAndValue(attribute, attrDto.value())
                 .orElseThrow(AttributeOptionNotFoundException::new);
 
-        ClothingAttributeValue value = ClothingAttributeValue.of(clothing, attribute, option);
-        clothing.addAttributeValue(value);
+        ClothingAttributeValue.of(clothing, attribute, option);
       }
     }
 
