@@ -95,7 +95,7 @@ public class JwtService {
             signedJWT.sign(new MACSigner(secret));
         } catch (JOSEException e) {
             log.error(e.getMessage());
-            // error 처리?
+            new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "jwt 서명에 실패했습니다.");
         }
 
         // 직렬화하여 최종적으로 token 생성

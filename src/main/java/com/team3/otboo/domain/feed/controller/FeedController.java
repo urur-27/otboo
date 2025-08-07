@@ -6,6 +6,7 @@ import com.team3.otboo.domain.feed.service.FeedService;
 import com.team3.otboo.domain.feed.service.request.FeedCreateRequest;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.request.FeedUpdateRequest;
+import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.SortDirection;
 import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
@@ -73,7 +74,7 @@ public class FeedController {
 		@RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,
 		@RequestParam(value = "authorIdEqual", required = false) UUID authorIdEqual
 	) {
-		User user = userDetails.getUser();
+		UserDto userDto = userDetails.getUserDto();
 		FeedListRequest request = new FeedListRequest(
 			cursor,
 			idAfter,
@@ -86,7 +87,7 @@ public class FeedController {
 			authorIdEqual
 		);
 
-		FeedDtoCursorResponse response = feedService.getFeeds(user.getId(), request);
+		FeedDtoCursorResponse response = feedService.getFeeds(userDto.id(), request);
 
 		return ResponseEntity.ok(response);
 	}

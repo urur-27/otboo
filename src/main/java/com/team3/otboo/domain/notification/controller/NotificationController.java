@@ -2,6 +2,7 @@ package com.team3.otboo.domain.notification.controller;
 
 import com.team3.otboo.domain.notification.dto.NotificationDto;
 import com.team3.otboo.domain.notification.service.NotificationService;
+import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
 import java.util.List;
@@ -22,9 +23,9 @@ public class NotificationController {
   @GetMapping
   public ResponseEntity<List<NotificationDto>> getNotifications(@AuthenticationPrincipal
   CustomUserDetails userPrincipal) {
-    User user = userPrincipal.getUser();
+    UserDto userDto = userPrincipal.getUserDto();
 
-    List<NotificationDto> notifications = notificationService.findNotificationsByUser(user);
+    List<NotificationDto> notifications = notificationService.findNotificationsByUser(userDto);
 
     return ResponseEntity.ok(notifications);
   }

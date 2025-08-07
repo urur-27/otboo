@@ -40,12 +40,20 @@ public class CustomUserDetailsService implements UserDetailsService {
 	 * 변환한다.
 	 */
 	@Getter
-	@RequiredArgsConstructor
 	public static class CustomUserDetails implements UserDetails {
 
-		// private final User user;
 		private final UserDto userDto;
 		private final String password;
+
+		public CustomUserDetails(UserDto userDto, String password) {
+			this.userDto = userDto;
+			this.password = password;
+		}
+
+		public CustomUserDetails(User user){
+			this.userDto = new UserMapper().toDto(user);
+			this.password = user.getPassword();
+		}
 
 		@Override
 		public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -77,6 +85,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 		// 자격 증명 만료 여부 (현재는 모든 자격 증명이 만료되지 않음)
 		@Override
 		public boolean isCredentialsNonExpired() {
+			return true;
+		}
+
+		@Override
+		public boolean isEnabled() {
 			return true;
 		}
 
