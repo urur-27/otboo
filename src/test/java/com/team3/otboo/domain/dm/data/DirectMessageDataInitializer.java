@@ -30,8 +30,8 @@ public class DirectMessageDataInitializer {
 
 	CountDownLatch latch = new CountDownLatch(EXECUTE_COUNT);
 
-	static final int BULK_INSERT_SIZE = 200;
-	static final int EXECUTE_COUNT = 2; // 데이터 400개 생성
+	static final int BULK_INSERT_SIZE = 1000;
+	static final int EXECUTE_COUNT = 1; // 1000개의 dm 데이터 생성
 
 	private UUID senderId;
 	private UUID receiverId;
@@ -42,7 +42,7 @@ public class DirectMessageDataInitializer {
 		transactionTemplate.executeWithoutResult(status -> {
 			// 첫 번째 유저 생성 (sender)
 			User sender = User.builder()
-				.username("senderUser")
+				.username("김태우")
 				.email("sender@example.com")
 				.password("password123")
 				.role(Role.USER.USER)
@@ -64,7 +64,7 @@ public class DirectMessageDataInitializer {
 
 			// 두 번째 유저 생성 (receiver)
 			User receiver = User.builder()
-				.username("receiverUser")
+				.username("김민식")
 				.email("receiver@example.com")
 				.password("password123")
 				.role(Role.USER)
