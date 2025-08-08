@@ -1,6 +1,6 @@
-package com.team3.otboo.domain.hot.common.outboxMessageRelay;
+package com.team3.otboo.common.outboxMessageRelay;
 
-import com.team3.otboo.domain.hot.common.event.EventType;
+import com.team3.otboo.common.event.EventType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

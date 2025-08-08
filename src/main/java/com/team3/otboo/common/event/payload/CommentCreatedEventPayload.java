@@ -1,6 +1,6 @@
-package com.team3.otboo.domain.hot.common.event.payload;
+package com.team3.otboo.common.event.payload;
 
-import com.team3.otboo.domain.hot.common.event.EventPayload;
+import com.team3.otboo.common.event.EventPayload;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FeedDeletedEventPayload implements EventPayload {
+public class CommentCreatedEventPayload implements EventPayload {
 
 	private UUID id;
 	private Instant createdAt;
 	private Instant updatedAt;
+	private UUID feedId;
 	private UUID authorId;
-	private UUID weatherId;
 	private String content;
 }

@@ -1,8 +1,8 @@
 package com.team3.otboo.domain.hot.consumer;
 
-import com.team3.otboo.domain.hot.common.event.Event;
-import com.team3.otboo.domain.hot.common.event.EventPayload;
-import com.team3.otboo.domain.hot.common.event.EventType.Topic;
+import com.team3.otboo.common.event.Event;
+import com.team3.otboo.common.event.EventPayload;
+import com.team3.otboo.common.event.EventType.Topic;
 import com.team3.otboo.domain.hot.service.HotFeedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

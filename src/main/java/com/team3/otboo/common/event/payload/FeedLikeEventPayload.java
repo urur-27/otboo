@@ -1,6 +1,6 @@
-package com.team3.otboo.domain.hot.common.event.payload;
+package com.team3.otboo.common.event.payload;
 
-import com.team3.otboo.domain.hot.common.event.EventPayload;
+import com.team3.otboo.common.event.EventPayload;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;

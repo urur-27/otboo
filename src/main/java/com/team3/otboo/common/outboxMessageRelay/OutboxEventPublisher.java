@@ -1,6 +1,6 @@
-package com.team3.otboo.domain.hot.common.outboxMessageRelay;
+package com.team3.otboo.common.outboxMessageRelay;
 
-import com.team3.otboo.domain.hot.common.event.EventType;
+import com.team3.otboo.common.event.EventType;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -21,8 +21,7 @@ public class OutboxEventPublisher {
 			payload,
 			shardKey
 		);
-
-		// Outbox 를 OutboxEvent 에 담아서 전송 .
+		// 이벤트가 발생했다는 신호를 애플리케이션에 전파함 .
 		applicationEventPublisher.publishEvent(OutboxEvent.of(outbox));
 	}
 }

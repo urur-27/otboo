@@ -2,10 +2,10 @@ package com.team3.otboo.domain.hot.common.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.team3.otboo.domain.hot.common.event.Event;
-import com.team3.otboo.domain.hot.common.event.EventPayload;
-import com.team3.otboo.domain.hot.common.event.EventType;
-import com.team3.otboo.domain.hot.common.event.payload.FeedCreatedEventPayload;
+import com.team3.otboo.common.event.Event;
+import com.team3.otboo.common.event.EventPayload;
+import com.team3.otboo.common.event.EventType;
+import com.team3.otboo.common.event.payload.FeedCreatedEventPayload;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;

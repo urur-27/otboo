@@ -1,8 +1,8 @@
 package com.team3.otboo.domain.hot.service.eventhandler;
 
-import com.team3.otboo.domain.hot.common.event.Event;
-import com.team3.otboo.domain.hot.common.event.EventType;
-import com.team3.otboo.domain.hot.common.event.payload.FeedDeletedEventPayload;
+import com.team3.otboo.common.event.Event;
+import com.team3.otboo.common.event.EventType;
+import com.team3.otboo.common.event.payload.FeedDeletedEventPayload;
 import com.team3.otboo.domain.hot.repository.HotFeedListRepository;
 import java.time.ZoneId;
 import java.util.UUID;

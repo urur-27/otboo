@@ -1,5 +1,6 @@
 package com.team3.otboo.domain.feed.service;
 
+import com.team3.otboo.common.outboxMessageRelay.OutboxEventPublisher;
 import com.team3.otboo.domain.feed.dto.FeedDto;
 import com.team3.otboo.domain.feed.dto.FeedDtoCursorResponse;
 import com.team3.otboo.domain.feed.entity.Feed;
@@ -11,7 +12,6 @@ import com.team3.otboo.domain.feed.repository.FeedRepositoryQueryDSL;
 import com.team3.otboo.domain.feed.service.request.FeedCreateRequest;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.request.FeedUpdateRequest;
-import com.team3.otboo.domain.hot.common.outboxMessageRelay.OutboxEventPublisher;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;

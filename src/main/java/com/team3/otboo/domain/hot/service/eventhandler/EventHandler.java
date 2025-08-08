@@ -1,7 +1,7 @@
 package com.team3.otboo.domain.hot.service.eventhandler;
 
-import com.team3.otboo.domain.hot.common.event.Event;
-import com.team3.otboo.domain.hot.common.event.EventPayload;
+import com.team3.otboo.common.event.Event;
+import com.team3.otboo.common.event.EventPayload;
 import java.util.UUID;
 
 public interface EventHandler<T extends EventPayload> {

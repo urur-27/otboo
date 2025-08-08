@@ -5,8 +5,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.team3.otboo.domain.hot.common.event.Event;
-import com.team3.otboo.domain.hot.common.event.EventType;
+import com.team3.otboo.common.event.Event;
+import com.team3.otboo.common.event.EventType;
 import com.team3.otboo.domain.hot.service.eventhandler.EventHandler;
 import java.util.List;
 import java.util.stream.Stream;

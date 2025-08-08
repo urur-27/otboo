@@ -1,5 +1,8 @@
-package com.team3.otboo.domain.hot.common.outboxMessageRelay;
+package com.team3.otboo.domain.hot.service;
 
+import com.team3.otboo.common.outboxMessageRelay.Outbox;
+import com.team3.otboo.common.outboxMessageRelay.OutboxEvent;
+import com.team3.otboo.common.outboxMessageRelay.OutboxRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;

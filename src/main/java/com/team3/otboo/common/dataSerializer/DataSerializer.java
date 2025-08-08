@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.hot.common.dataSerializer;
+package com.team3.otboo.common.dataSerializer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
