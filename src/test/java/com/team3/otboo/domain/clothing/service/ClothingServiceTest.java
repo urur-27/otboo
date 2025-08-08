@@ -103,8 +103,8 @@ public class ClothingServiceTest {
             verify(attributeRepository).findById(attributeId);
             verify(attributeOptionRepository).findByAttributeIdAndValue(attributeId, "청색");
             verify(clothingMapper).toDto(mockClothing);
-            verify(mockClothing).updateOwner(mockUser);
-            verify(mockClothing).updateImageUrl(imageUrl);
+            verify(mockClothing).setOwner(mockUser);
+            verify(mockClothing).setUrl(imageUrl);
 
             assertThat(result).isNotNull();
             assertThat(result.name()).isEqualTo("청바지");
@@ -353,9 +353,9 @@ public class ClothingServiceTest {
 
             // then
             assertThat(result).isEqualTo(expectedDto);
-            verify(clothing).updateName("셔츠");
-            verify(clothing).updateType("TOP");
-            verify(clothing).updateImageUrl("/uploads/shirt.jpg");
+            verify(clothing).setName("셔츠");
+            verify(clothing).setType("TOP");
+            verify(clothing).setUrl("/uploads/shirt.jpg");
             verify(clothingRepository).findById(clothingId);
             verify(imageStorage).upload(image);
         }
@@ -377,8 +377,8 @@ public class ClothingServiceTest {
             ClothingDto result = clothingService.updateClothing(clothingId, request, image);
 
             // then
-            verify(clothing).updateName("셔츠");
-            verify(clothing).updateType("TOP");
+            verify(clothing).setName("셔츠");
+            verify(clothing).setType("TOP");
             verifyNoInteractions(imageStorage);
             verify(clothingMapper).toDto(clothing);
         }
@@ -403,7 +403,7 @@ public class ClothingServiceTest {
             // then
             verify(imageStorage).delete("/uploads/old.jpg");
             verify(imageStorage).upload(image);
-            verify(clothing).updateImageUrl("/uploads/shirt.jpg");
+            verify(clothing).setUrl("/uploads/shirt.jpg");
         }
 
         @DisplayName("updateClothing 성공 테스트 - 이미지 파일이 비어 있을 때 이미지 변경 무시")

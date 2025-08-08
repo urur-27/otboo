@@ -15,12 +15,14 @@ import com.team3.otboo.domain.clothing.repository.AttributeOptionRepository;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.domain.clothing.repository.ClothingRepository;
 import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.domain.user.repository.UserRepository;
 import com.team3.otboo.global.exception.BusinessException;
 import com.team3.otboo.global.exception.ErrorCode;
 import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
 import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,7 @@ public class ClothingServiceImpl implements ClothingService {
   private final ImageStorage imageStorage;
   private final AttributeRepository attributeRepository;
   private final AttributeOptionRepository attributeOptionRepository;
+  private final UserRepository userRepository;
 
   @Override
   public List<Clothing> getClothesByOwner(User user) {
@@ -57,8 +60,8 @@ public class ClothingServiceImpl implements ClothingService {
     Clothing clothing = clothingMapper.toEntity(request);
 
     // 연관관계 세팅
-    clothing.updateOwner(user);           // 로그인 사용자
-    clothing.updateImageUrl(imageUrl);    // 업로드 url
+    clothing.setOwner(user);           // 로그인 사용자
+    clothing.setUrl(imageUrl);    // 업로드 url
 
     // attributeValues 직접 생성 및 연관관계 연결
     for (ClothingAttributeDto attrReq : request.attributes()) {
@@ -67,8 +70,7 @@ public class ClothingServiceImpl implements ClothingService {
       AttributeOption option = attributeOptionRepository.findByAttributeIdAndValue(attribute.getId(), attrReq.value())
               .orElseThrow(AttributeOptionNotFoundException::new);
 
-      ClothingAttributeValue cav = ClothingAttributeValue.of(clothing, attribute, option);
-      clothing.addAttributeValue(cav);
+      ClothingAttributeValue.of(clothing, attribute, option);
     }
 
     clothingRepository.save(clothing);
@@ -125,8 +127,8 @@ public class ClothingServiceImpl implements ClothingService {
             .orElseThrow(ClothingNotFoundException::new);
 
     // 기본 정보 업데이트
-    if (req.name() != null) clothing.updateName(req.name());
-    if (req.type() != null) clothing.updateType(req.type());
+    if (req.name() != null) clothing.setName(req.name());
+    if (req.type() != null) clothing.setType(req.type());
 
     if(image != null && !image.isEmpty()){
       // 기존 이미지 삭제
@@ -134,7 +136,7 @@ public class ClothingServiceImpl implements ClothingService {
         imageStorage.delete(clothing.getImageUrl());
       }
       String imageUrl = imageStorage.upload(image);
-      clothing.updateImageUrl(imageUrl);
+      clothing.setUrl(imageUrl);
     }
 
     // 속성 업데이트(전체 교체)
@@ -147,8 +149,7 @@ public class ClothingServiceImpl implements ClothingService {
         AttributeOption option = attributeOptionRepository.findByAttributeAndValue(attribute, attrDto.value())
                 .orElseThrow(AttributeOptionNotFoundException::new);
 
-        ClothingAttributeValue value = ClothingAttributeValue.of(clothing, attribute, option);
-        clothing.addAttributeValue(value);
+        ClothingAttributeValue.of(clothing, attribute, option);
       }
     }
 
