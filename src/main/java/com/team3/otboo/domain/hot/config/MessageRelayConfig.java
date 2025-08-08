@@ -17,7 +17,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
-@ComponentScan("com.team3.otboo.domain.hot.common.outboxMessageRelay")
+@ComponentScan("com.team3.otboo.common.outboxMessageRelay")
 @EnableAsync // 비동기 처리 .
 @EnableScheduling
 public class MessageRelayConfig {
