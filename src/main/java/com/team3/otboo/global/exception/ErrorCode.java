@@ -44,8 +44,15 @@ public enum ErrorCode {
   IMAGE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "IMG002", "이미지 삭제에 실패했습니다."),
   INVALID_IMAGE_PATH(HttpStatus.FORBIDDEN, "IMG003", "유효하지 않은 이미지 경로입니다."),
 
+  // Html Errors
+  HTML_PARSE_FAILED(HttpStatus.BAD_REQUEST, "HTML001", "HTML에서 유효한 의류 정보를 추출하지 못했습니다."),
+  UNSUPPORTED_DOMAIN(HttpStatus.BAD_REQUEST, "HTML002", "지원하지 않는 쇼핑몰 도메인입니다."),
+  INVALID_URL(HttpStatus.BAD_REQUEST, "HTML003", "유효하지 않은 URL 형식입니다."),
+
   // LLM Errors
   LLM_JSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "LLM001", "응답에 JSON이 포함되어 있지 않습니다."),
+  LLM_JSON_PARSE_ERROR(HttpStatus.BAD_REQUEST, "LLM002", "LLM 응답을 JSON으로 변환하는 데 실패했습니다."),
+  LLM_CALL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "LLM003", "LLM 호출에 실패했습니다."),
 
   // ExternalApiException Errors (Exxx)
   EXTERNAL_API_FAILED(HttpStatus.BAD_GATEWAY, "E0001", "외부 API 호출 실패했습니다.");
