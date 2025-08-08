@@ -1,6 +1,5 @@
 package com.team3.otboo.domain.feed.service;
 
-import com.team3.otboo.common.outboxMessageRelay.OutboxEventPublisher;
 import com.team3.otboo.domain.feed.dto.FeedDto;
 import com.team3.otboo.domain.feed.dto.FeedDtoCursorResponse;
 import com.team3.otboo.domain.feed.entity.Feed;
@@ -12,6 +11,7 @@ import com.team3.otboo.domain.feed.repository.FeedRepositoryQueryDSL;
 import com.team3.otboo.domain.feed.service.request.FeedCreateRequest;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.request.FeedUpdateRequest;
+import com.team3.otboo.domain.hot.service.DMOutboxEventPublisher;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +36,7 @@ public class FeedService {
 
 	// 알림 기능과 겹치니까 publish 는 한번만 하고, Listener 를 두개 써야함 .
 	// 겹치는거 -> 좋아요 생성 삭제, 댓글 생성 시 알림 가야하고 + 인기 피드 쪽에서 점수 계산까지 해야함 .
-	private OutboxEventPublisher outboxEventPublisher;
+	private DMOutboxEventPublisher DMOutboxEventPublisher;
 
 	@Transactional
 	public FeedDto create(UUID userId, FeedCreateRequest request) {

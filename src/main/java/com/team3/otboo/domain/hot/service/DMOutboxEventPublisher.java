@@ -1,6 +1,8 @@
-package com.team3.otboo.common.outboxMessageRelay;
+package com.team3.otboo.domain.hot.service;
 
 import com.team3.otboo.common.event.EventType;
+import com.team3.otboo.common.outboxMessageRelay.Outbox;
+import com.team3.otboo.common.outboxMessageRelay.OutboxEvent;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -8,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class OutboxEventPublisher {
+public class DMOutboxEventPublisher {
 
 	// 스프링 내부에 이벤트 시스템을 통해서 발행함 .
 	private final ApplicationEventPublisher applicationEventPublisher;
