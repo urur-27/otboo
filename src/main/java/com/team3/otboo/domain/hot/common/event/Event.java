@@ -1,6 +1,6 @@
-package com.team3.otboo.common.event;
+package com.team3.otboo.domain.hot.common.event;
 
-import com.team3.otboo.common.dataSerializer.DataSerializer;
+import com.team3.otboo.domain.hot.common.dataSerializer.DataSerializer;
 import java.util.UUID;
 import lombok.Getter;
 

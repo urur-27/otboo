@@ -1,4 +1,4 @@
-package com.team3.otboo.common.outboxMessageRelay;
+package com.team3.otboo.domain.hot.common.outboxMessageRelay;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

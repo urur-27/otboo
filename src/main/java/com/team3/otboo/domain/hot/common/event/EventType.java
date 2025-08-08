@@ -1,12 +1,12 @@
-package com.team3.otboo.common.event;
+package com.team3.otboo.domain.hot.common.event;
 
-import com.team3.otboo.common.event.payload.CommentCreatedEventPayload;
-import com.team3.otboo.common.event.payload.FeedCreatedEventPayload;
-import com.team3.otboo.common.event.payload.FeedDeletedEventPayload;
-import com.team3.otboo.common.event.payload.FeedLikeEventPayload;
-import com.team3.otboo.common.event.payload.FeedUnLikeEventPayload;
-import com.team3.otboo.common.event.payload.FeedUpdatedEventPayload;
-import com.team3.otboo.common.event.payload.FeedViewedEventPayload;
+import com.team3.otboo.domain.hot.common.event.payload.CommentCreatedEventPayload;
+import com.team3.otboo.domain.hot.common.event.payload.FeedCreatedEventPayload;
+import com.team3.otboo.domain.hot.common.event.payload.FeedDeletedEventPayload;
+import com.team3.otboo.domain.hot.common.event.payload.FeedLikeEventPayload;
+import com.team3.otboo.domain.hot.common.event.payload.FeedUnLikeEventPayload;
+import com.team3.otboo.domain.hot.common.event.payload.FeedUpdatedEventPayload;
+import com.team3.otboo.domain.hot.common.event.payload.FeedViewedEventPayload;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

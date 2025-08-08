@@ -1,8 +1,8 @@
 package com.team3.otboo.domain.hot.service.eventhandler;
 
-import com.team3.otboo.common.event.Event;
-import com.team3.otboo.common.event.EventType;
-import com.team3.otboo.common.event.payload.FeedLikeEventPayload;
+import com.team3.otboo.domain.hot.common.event.Event;
+import com.team3.otboo.domain.hot.common.event.EventType;
+import com.team3.otboo.domain.hot.common.event.payload.FeedLikeEventPayload;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;

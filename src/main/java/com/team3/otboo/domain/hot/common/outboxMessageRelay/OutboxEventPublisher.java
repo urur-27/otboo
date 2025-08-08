@@ -1,6 +1,6 @@
-package com.team3.otboo.common.outboxMessageRelay;
+package com.team3.otboo.domain.hot.common.outboxMessageRelay;
 
-import com.team3.otboo.common.event.EventType;
+import com.team3.otboo.domain.hot.common.event.EventType;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 
 import com.team3.otboo.domain.feed.entity.Feed;
 import com.team3.otboo.domain.feed.service.FeedService;
-import com.team3.otboo.common.event.Event;
+import com.team3.otboo.domain.hot.common.event.Event;
 import com.team3.otboo.domain.hot.repository.HotFeedListRepository;
 import com.team3.otboo.domain.hot.service.eventhandler.EventHandler;
 import java.time.Duration;
