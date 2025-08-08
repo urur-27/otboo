@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class DMOutboxEventPublisher {
+public class OutboxEventPublisher {
 
 	// 스프링 내부에 이벤트 시스템을 통해서 발행함 .
 	private final ApplicationEventPublisher applicationEventPublisher;
