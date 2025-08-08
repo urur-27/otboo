@@ -1,17 +1,11 @@
 package com.team3.otboo.fixture;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeDto;
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeWithDefDto;
-import com.team3.otboo.domain.clothing.dto.ClothingDto;
-import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
-import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import com.team3.otboo.domain.clothing.entity.Clothing;
 import com.team3.otboo.domain.clothing.entity.ClothingAttributeValue;
 import com.team3.otboo.domain.user.entity.User;
 import java.util.List;
-import java.util.UUID;
 
 public class ClothingFixture {
 

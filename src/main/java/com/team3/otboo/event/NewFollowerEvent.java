@@ -1,5 +1,10 @@
 package com.team3.otboo.event;
 
-public record NewFollowerEvent() {
+import com.team3.otboo.domain.user.entity.User;
+
+public record NewFollowerEvent(
+    User followee,
+    String followerName
+) {
 
 }
