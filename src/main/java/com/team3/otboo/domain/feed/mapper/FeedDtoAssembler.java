@@ -41,7 +41,7 @@ public class FeedDtoAssembler {
 
 		UUID authorId = feed.getAuthorId();
 		User user = userRepository.findById(authorId).orElseThrow(
-			() -> new EntityNotFoundException("user not found. userId: " + userId)
+			() -> new EntityNotFoundException("user not found. user id: " + authorId)
 		);
 
 		AuthorDto authorDto = new AuthorDto(
@@ -50,12 +50,11 @@ public class FeedDtoAssembler {
 			user.getProfile().getBinaryContent().getImageUrl()
 		);
 
-		UUID weatherId = feed.getWeatherId();
-		Weather weather = weatherRepository.findById(weatherId).orElseThrow(
-			() -> new EntityNotFoundException("weather not found. weatherId: " + weatherId)
-		);
-
 		// TODO: weather 쪽 구현(repository) 완료 후 코드 완성하기
+//		UUID weatherId = feed.getWeatherId();
+//		Weather weather = weatherRepository.findById(weatherId).orElseThrow(
+//			() -> new EntityNotFoundException("weather not found. weatherId: " + weatherId)
+//		);
 
 		List<OotdDto> ootdDtos = ootdService.getOotdDtos(feedId);
 
@@ -68,6 +67,7 @@ public class FeedDtoAssembler {
 			.map(FeedLikeCount::getLikeCount)
 			.orElse(0L);
 
+		// 내가 좋아요를 눌렀는가 하나 때문에 userId 를 넣어줘야함 .
 		boolean likedByMe = likeRepository.existsByUserIdAndFeedId(userId, feedId);
 
 		return new FeedDto(
@@ -80,7 +80,7 @@ public class FeedDtoAssembler {
 			feed.getContent(),
 			likeCount,
 			commentCount,
-			likedByMe // likeByMe .. ->
+			likedByMe
 		);
 	}
 
