@@ -2,6 +2,8 @@ package com.team3.otboo.common.outboxMessageRelay;
 
 import com.team3.otboo.common.event.EventType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,6 +28,7 @@ public class Outbox {
 	private UUID id;
 	@CreatedDate
 	private Instant createdAt;
+	@Enumerated(EnumType.STRING)
 	private EventType eventType;
 	private String payload; // 해당 이벤트가 어떤 값을 가지고 있는가 .
 	private UUID shardKey;
