@@ -16,7 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class MessageRelay {
+public class HotFeedMessageRelay {
 
 	private final OutboxRepository outboxRepository; // outbox repository 에 서 주기적으로 미전송 데이터 가져옴
 	private final KafkaTemplate<String, String> kafkaTemplate;
