@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FeedUnLikeEventPayload implements EventPayload {
+public class FeedLikedEventPayload implements EventPayload {
 
 	private UUID id;
 	private Instant createdAt;

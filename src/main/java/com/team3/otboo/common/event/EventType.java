@@ -3,8 +3,8 @@ package com.team3.otboo.common.event;
 import com.team3.otboo.common.event.payload.CommentCreatedEventPayload;
 import com.team3.otboo.common.event.payload.FeedCreatedEventPayload;
 import com.team3.otboo.common.event.payload.FeedDeletedEventPayload;
-import com.team3.otboo.common.event.payload.FeedLikeEventPayload;
-import com.team3.otboo.common.event.payload.FeedUnLikeEventPayload;
+import com.team3.otboo.common.event.payload.FeedLikedEventPayload;
+import com.team3.otboo.common.event.payload.FeedUnlikedEventPayload;
 import com.team3.otboo.common.event.payload.FeedUpdatedEventPayload;
 import com.team3.otboo.common.event.payload.FeedViewedEventPayload;
 import lombok.Getter;
@@ -19,8 +19,8 @@ public enum EventType {
 	FEED_UPDATED(FeedUpdatedEventPayload.class, Topic.OTBOO_FEED),
 	FEED_DELETE(FeedDeletedEventPayload.class, Topic.OTBOO_FEED),
 	COMMENT_CREATED(CommentCreatedEventPayload.class, Topic.OTBOO_FEED_COMMENT),
-	FEED_LIKED(FeedLikeEventPayload.class, Topic.OTBOO_FEED_LIKE),
-	FEED_UNLIKED(FeedUnLikeEventPayload.class, Topic.OTBOO_FEED_LIKE),
+	FEED_LIKED(FeedLikedEventPayload.class, Topic.OTBOO_FEED_LIKE),
+	FEED_UNLIKED(FeedUnlikedEventPayload.class, Topic.OTBOO_FEED_LIKE),
 	// 나중에 view service 만들기 .
 	FEED_VIEWED(FeedViewedEventPayload.class, Topic.OTBOO_FEED_VIEW);
 

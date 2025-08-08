@@ -2,27 +2,27 @@ package com.team3.otboo.domain.hot.service.eventhandler;
 
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventType;
-import com.team3.otboo.common.event.payload.FeedUnLikeEventPayload;
+import com.team3.otboo.common.event.payload.FeedUnlikedEventPayload;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class FeedUnlikedEventHandler implements EventHandler<FeedUnLikeEventPayload> {
+public class FeedUnlikedEventHandler implements EventHandler<FeedUnlikedEventPayload> {
 
 	@Override
-	public void handle(Event<FeedUnLikeEventPayload> event) {
+	public void handle(Event<FeedUnlikedEventPayload> event) {
 
 	}
 
 	@Override
-	public boolean supports(Event<FeedUnLikeEventPayload> event) {
+	public boolean supports(Event<FeedUnlikedEventPayload> event) {
 		return event.getType() == EventType.FEED_UNLIKED;
 	}
 
 	@Override
-	public UUID findFeedId(Event<FeedUnLikeEventPayload> event) {
+	public UUID findFeedId(Event<FeedUnlikedEventPayload> event) {
 		return event.getPayload().getId();
 	}
 }
