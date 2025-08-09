@@ -36,17 +36,17 @@ public class Clothing extends BaseEntity {
         return clothing;
     }
 
-    public void updateImageUrl(String imageUrl) {
+    public void setUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
 
-    public void updateOwner(User owner) {
+    public void setOwner(User owner) {
         this.owner = owner;
     }
 
-    public void updateName(String name) { this.name = name; }
+    public void setName(String name) { this.name = name; }
 
-    public void updateType(String type) { this.type = type; }
+    public void setType(String type) { this.type = type; }
 
     public void addAttributeValue(ClothingAttributeValue attributeValue) {
         this.attributeValues.add(attributeValue);

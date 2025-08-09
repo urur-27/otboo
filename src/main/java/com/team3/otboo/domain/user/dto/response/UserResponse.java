@@ -27,7 +27,7 @@ public class UserResponse {
     private boolean locked;
 
     @Builder
-    private UserResponse(UUID id, Instant createdAt, String email, String name, Role role, Set<OAuthProvider> linkedOAuthProviders, boolean locked) {
+    public UserResponse(UUID id, Instant createdAt, String email, String name, Role role, Set<OAuthProvider> linkedOAuthProviders, boolean locked) {
         this.id = id;
         this.createdAt = createdAt;
         this.email = email;

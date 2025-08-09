@@ -80,6 +80,9 @@ dependencies {
 
     // 크롤링을 위한 jsoup
     implementation 'org.jsoup:jsoup:1.17.2'
+
+    // JWT
+    implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
 }
 
 tasks.named('test') {

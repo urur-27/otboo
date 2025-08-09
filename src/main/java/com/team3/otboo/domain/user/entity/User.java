@@ -5,11 +5,10 @@ import com.team3.otboo.domain.user.enums.OAuthProvider;
 import com.team3.otboo.domain.user.enums.Role;
 import jakarta.persistence.*;
 
+import java.util.Objects;
 import java.util.Set;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+
+import lombok.*;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

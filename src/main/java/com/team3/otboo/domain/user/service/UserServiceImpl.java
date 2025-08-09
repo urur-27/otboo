@@ -4,13 +4,18 @@ import com.team3.otboo.domain.user.dto.*;
 import com.team3.otboo.domain.user.dto.Request.*;
 import com.team3.otboo.domain.user.dto.response.UserDtoCursorResponse;
 import com.team3.otboo.domain.user.dto.response.UserResponse;
+import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
+import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
 import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
 import com.team3.otboo.domain.user.enums.SortBy;
+import com.team3.otboo.domain.user.jwt.JwtService;
 import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.ProfileRepository;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.global.exception.BusinessException;
+import com.team3.otboo.global.exception.ErrorCode;
 import com.team3.otboo.global.exception.user.RoleNotFoundException;
 import com.team3.otboo.global.exception.user.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +40,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
-
+    private final JwtService jwtService;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -43,14 +48,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
-        // TODO AUTH 회원가입 기능 추가 필요
         log.debug("사용자 생성 시작: {}", request.name());
 
         if(userRepository.existsByEmail(request.email())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 가입된 이메일입니다.");
         }
         if(userRepository.existsByUsername(request.name())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username already exists");
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 가입한 사용자 이름입니다.");
         }
 
         String encodedPassword = passwordEncoder.encode(request.password());
@@ -117,13 +121,16 @@ public class UserServiceImpl implements UserService {
 
         user.updateLocked(request.locked());
 
+        // 계정을 잠금 상태로 변경할 경우, 토큰 무효화 진행
+        if(request.locked()) {
+            jwtService.invalidateJwtSession(user.getId());
+        }
         return user.getId();
     }
 
     @Override
     @Transactional
     public UserResponse updateUserRole(UserRoleUpdateRequest request, UUID userId){
-        // TODO 업데이트시 로그아웃 기능 추가 필요
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
@@ -133,6 +140,8 @@ public class UserServiceImpl implements UserService {
 
         user.updateRole(request.newRole());
 
+        // 권한 변경 후 해당 사용자가 로그인한 세션 만료 처리
+        jwtService.invalidateJwtSession(user.getId());
         return UserResponse.of(user);
     }
 
