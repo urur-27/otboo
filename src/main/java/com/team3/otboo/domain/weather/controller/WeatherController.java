@@ -23,7 +23,7 @@ public class WeatherController implements WeatherContentApi {
     public ResponseEntity<LocationResponse> getWeather(
             @Validated @ModelAttribute LocationRequest locationRequestDto
     ){
-        
+
         return null;
     }
 

@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.team3.otboo.domain.weather.enums.WeatherApiParams;
 import static com.team3.otboo.domain.weather.enums.Category.*;
 
 @Service
@@ -45,11 +46,8 @@ public class WeatherServiceImpl implements WeatherService {
   private final RestTemplate locationRestTemplate;
 
   private final ExternalApisProperties apisProps;
-
   private final ProfileRepository profileRepository;
-
   private final WeatherRepository weatherRepository;
-
   private final WeatherExternal weatherExternal;
 
   private static final DateTimeFormatter DATE_PARSER = DateTimeFormatter.BASIC_ISO_DATE;
@@ -119,10 +117,13 @@ public class WeatherServiceImpl implements WeatherService {
                         firstDate.minusDays(1)
                 );
 
+        // 🔒 발표본 스냅샷(기준 시각) — 한 번만 캡처해서 모든 엔트리에 사용
+        var base = WeatherApiParams.currentBase();
+
         for (Map.Entry<LocalDate, Map<Category, ForecastItem>> entry : byDate.entrySet()) {
           Optional<Weather> prevDb = entry.getKey().equals(firstDate) ? prevDbOfFirst : Optional.empty();
 
-          Weather weather = buildWeatherFromForecast(profile, entry, byDate, prevDb);
+          Weather weather = buildWeatherFromForecast(profile, entry, byDate, prevDb, base);
           upsertWeather(weather);
         }
       });
@@ -156,10 +157,11 @@ public class WeatherServiceImpl implements WeatherService {
           Profile profile,
           Map.Entry<LocalDate, Map<Category, ForecastItem>> currentEntry,
           Map<LocalDate, Map<Category, ForecastItem>> byDate,
-          Optional<Weather> prevDb // ✅ 추가
+          Optional<Weather> prevDb,
+          WeatherApiParams.Base base
   ) {
-    String baseDate = currentEntry.getValue().get(SKY).getFcstDate();
-    String baseTime = WeatherApiParams.BASETIME.getValue();
+    // 예보 대상 일자 (YYYYMMdd)
+    String fcstDate = currentEntry.getValue().get(SKY).getFcstDate();
 
     WeatherLocation location = new WeatherLocation(
             profile.getLocation().getLatitude(),
@@ -169,10 +171,10 @@ public class WeatherServiceImpl implements WeatherService {
             profile.getLocation().getLocationNames()
     );
 
-    // forecastAt: 해당 날짜 00:00
-    LocalDateTime forecastAt = LocalDateTime.parse(baseDate.concat("0000"), DATE_TIME_PARSER);
-    // forecastedAt: API 기준 발표시각(baseTime)
-    LocalDateTime forecastedAt = LocalDateTime.parse(baseDate.concat(baseTime), DATE_TIME_PARSER);
+    // forecastAt: 해당 날짜 00:00 (예보가 적용되는 날의 자정)
+    LocalDateTime forecastAt = LocalDateTime.parse(fcstDate + "0000", DATE_TIME_PARSER);
+    // forecastedAt: 발표본 시각 (base_date + base_time) ← 세트로!
+    LocalDateTime forecastedAt = LocalDateTime.parse(base.date() + base.time(), DATE_TIME_PARSER);
 
     LocalDate prevDate = currentEntry.getKey().minusDays(1);
     Map<Category, ForecastItem> prevApi = byDate.get(prevDate); // 있을 수도, 없을 수도
@@ -187,8 +189,8 @@ public class WeatherServiceImpl implements WeatherService {
     double max = Double.parseDouble(currentEntry.getValue().get(TMX).getFcstValue());
 
     double prevTmp = prevDb
-            .map(w -> w.getTemperature().getTemperatureCurrent())
-            .orElseGet(() -> prevApi != null
+            .map(w -> w.getTemperature().getTemperatureCurrent()) // 프로젝트 게터명에 맞춤
+            .orElseGet(() -> prevApi != null && prevApi.get(TMP) != null
                     ? Double.parseDouble(prevApi.get(TMP).getFcstValue())
                     : cur);
     Temperature temperature = new Temperature(cur, prevTmp, min, max);
@@ -196,8 +198,8 @@ public class WeatherServiceImpl implements WeatherService {
     // 습도
     double curHum = Double.parseDouble(currentEntry.getValue().get(REH).getFcstValue());
     double prevHum = prevDb
-            .map(w -> w.getHumidity().getHumidityCurrent())
-            .orElseGet(() -> prevApi != null
+            .map(w -> w.getHumidity().getHumidityCurrent()) // 프로젝트 게터명에 맞춤
+            .orElseGet(() -> prevApi != null && prevApi.get(REH) != null
                     ? Double.parseDouble(prevApi.get(REH).getFcstValue())
                     : curHum);
     Humidity humidity = new Humidity(curHum, prevHum);
