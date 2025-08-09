@@ -13,14 +13,14 @@ public class LocationResponse {
 
     private Double longitude;
 
-    private Double x;
+    private Integer x;
 
-    private Double y;
+    private Integer y;
 
     private List<String> locationNames;
 
     @Builder
-    private LocationResponse(Double latitude, Double longitude, Double x, Double y, List<String> locationNames) {
+    private LocationResponse(Double latitude, Double longitude, Integer x, Integer y, List<String> locationNames) {
         this.latitude = latitude;
         this.longitude = longitude;
         this.x = x;
@@ -28,7 +28,7 @@ public class LocationResponse {
         this.locationNames = locationNames;
     }
 
-    public static LocationResponse of(Double latitude, Double longitude, Double x, Double y, List<String> locationNames) {
+    public static LocationResponse of(Double latitude, Double longitude, Integer x, Integer y, List<String> locationNames) {
         return LocationResponse.builder()
                 .latitude(latitude)
                 .longitude(longitude)

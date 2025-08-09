@@ -34,4 +34,21 @@ public class WeatherConfig {
         return rt;
     }
 
+    @Bean("weatherRestTemplate")
+    public RestTemplate weatherRestTemplate() {
+        ExternalApisProperties.ApiProperties props = apisProps.getApis().get("weather");
+
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(props.getConnectTimeout());
+        factory.setReadTimeout(props.getReadTimeout());
+
+        RestTemplate restTemplate = new RestTemplate(factory);
+
+        DefaultUriBuilderFactory uriFactory = new DefaultUriBuilderFactory(props.getBaseUrl());
+        uriFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
+        restTemplate.setUriTemplateHandler(uriFactory);
+
+        return restTemplate;
+    }
+
 }
