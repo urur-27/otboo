@@ -1,15 +1,20 @@
 package com.team3.otboo.domain.weather.service;
 
+import com.team3.otboo.converter.GridConverter;
+import com.team3.otboo.domain.user.entity.Location;
+import com.team3.otboo.domain.user.entity.Profile;
+import com.team3.otboo.domain.user.repository.ProfileRepository;
 import com.team3.otboo.domain.weather.dto.KakaoGeoResponse;
 import com.team3.otboo.domain.weather.dto.WeatherDto;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Stream;
-
 import com.team3.otboo.domain.weather.dto.request.LocationRequest;
+import com.team3.otboo.domain.weather.dto.response.ForecastItem;
 import com.team3.otboo.domain.weather.dto.response.LocationResponse;
+import com.team3.otboo.domain.weather.entity.*;
+import com.team3.otboo.domain.weather.enums.*;
+import com.team3.otboo.domain.weather.repository.WeatherRepository;
+import com.team3.otboo.external.WeatherExternal;
 import com.team3.otboo.global.exception.weather.ExternalApiException;
+import com.team3.otboo.global.exception.weather.WeatherApiException;
 import com.team3.otboo.props.external.ExternalApisProperties;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -21,33 +26,100 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.team3.otboo.domain.weather.enums.WeatherApiParams;
+import static com.team3.otboo.domain.weather.enums.Category.*;
+
 @Service
 @Slf4j
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class WeatherServiceImpl implements WeatherService{
+public class WeatherServiceImpl implements WeatherService {
 
   @Qualifier("locationRestTemplate")
   private final RestTemplate locationRestTemplate;
 
   private final ExternalApisProperties apisProps;
+  private final ProfileRepository profileRepository;
+  private final WeatherRepository weatherRepository;
+  private final WeatherExternal weatherExternal;
+
+  private static final DateTimeFormatter DATE_PARSER = DateTimeFormatter.BASIC_ISO_DATE;
+  private static final DateTimeFormatter DATE_TIME_PARSER = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
   @Override
+  @Transactional
+  public List<WeatherDto> getWeatherForUser(LocationRequest locationRequest) {
+    ZoneId KST = ZoneId.of("Asia/Seoul");
+
+    ZonedDateTime nowKst = ZonedDateTime.now(KST);
+    ZonedDateTime startKst = nowKst.toLocalDate().atStartOfDay(KST); // 오늘 00:00 KST
+    ZonedDateTime endKstExclusive = startKst.plusDays(5);            // +5일 00:00 KST
+
+    LocalDate startDate = startKst.toLocalDate();
+    LocalDateTime from = startKst.toLocalDateTime();
+    LocalDateTime toExclusive = endKstExclusive.toLocalDateTime();
+
+    List<Weather> weathers = weatherRepository
+            .findByLocation_LatitudeAndLocation_LongitudeAndForecastAtGreaterThanEqualAndForecastAtLessThan(
+                    locationRequest.latitude(), locationRequest.longitude(), from, toExclusive
+            );
+
+    LocationResponse lr = getLocationForUser(locationRequest);
+    Location location = new Location(lr.getLatitude(), lr.getLongitude(), lr.getX(), lr.getY(), lr.getLocationNames());
+
+    if (!hasFiveDistinctDays(weathers, startDate)) {
+      weathers = computeDailyForecastMap(location)
+              .map(byDate -> upsertForecastsForProfile(location, byDate))  // <- 반환값 사용
+              .orElseGet(List::of);
+    }
+
+    return weathers.stream()
+            .sorted(Comparator.comparing(Weather::getForecastAt))
+            .map(WeatherDto::from)
+            .toList();
+
+  }
+
+  // KST 기준 오늘~+4일까지(총 5일) 날짜별로 데이터가 있는지 확인
+  private boolean hasFiveDistinctDays(List<Weather> weathers, LocalDate startDateKst) {
+    var days = weathers.stream()
+            .map(w -> w.getForecastAt().toLocalDate()) // DB가 KST 기준이라면 OK (UTC라면 변환 필요)
+            .filter(d -> !d.isBefore(startDateKst) && !d.isAfter(startDateKst.plusDays(4)))
+            .collect(Collectors.toSet());
+    return days.size() == 5;
+  }
+
+  // latitude(위도), longitude(경도)
+  @Override
   public WeatherDto getWeatherById(UUID weatherId) {
-    return null;
+    Weather weather = weatherRepository.findById(weatherId)
+            .orElseThrow(WeatherApiException::new);
+
+    return WeatherDto.from(weather);
   }
 
   @Override
   @CircuitBreaker(name = "locationRestTemplate", fallbackMethod = "fallbackLocation")
   public LocationResponse getLocationForUser(LocationRequest locationRequest) {
     String uri = UriComponentsBuilder
-      .fromUriString(apisProps.getApis().get("kakao-map").getBaseUrl())
-      .queryParam("x", locationRequest.longitude())
-      .queryParam("y", locationRequest.latitude())
-      .build()
-      .toUriString();
+            .fromUriString(apisProps.getApis().get("kakao-map").getBaseUrl())
+            .queryParam("x", locationRequest.longitude())
+            .queryParam("y", locationRequest.latitude())
+            .build()
+            .toUriString();
 
     KakaoGeoResponse responseJson = locationRestTemplate.getForObject(uri, KakaoGeoResponse.class);
+
+    int[] grid = GridConverter.latLonToGrid(locationRequest.latitude(), locationRequest.longitude());
 
     if (responseJson.getDocuments().isEmpty()) {
       throw new ExternalApiException();
@@ -56,20 +128,295 @@ public class WeatherServiceImpl implements WeatherService{
     var doc = responseJson.getDocuments().get(0);
 
     List<String> locationNames = Stream.of(
-      doc.getRegion1depthName(),
-      doc.getRegion2depthName(),
-      doc.getRegion3depthName(),
-      doc.getRegion4depthName()
-    )
-    .filter(s -> s != null && !s.isBlank())
-    .toList();
+                    doc.getRegion1depthName(),
+                    doc.getRegion2depthName(),
+                    doc.getRegion3depthName(),
+                    doc.getRegion4depthName()
+            )
+            .filter(s -> s != null && !s.isBlank())
+            .toList();
 
     return LocationResponse.of(
-      locationRequest.latitude(),
-      locationRequest.longitude(),
-      doc.getX(), doc.getY(),
-      locationNames
+            locationRequest.latitude(),
+            locationRequest.longitude(),
+            grid[0],
+            grid[1],
+            locationNames
     );
+  }
+
+  @Override
+  @Transactional
+  public void collectWeatherData() {
+    List<Profile> profiles = profileRepository.findAll();
+
+    for (Profile profile : profiles) {
+        Location location = profile.getLocation();
+        if(location == null || location.getLatitude() == null || location.getLongitude() == null || location.getX() == null || location.getY() == null) {
+          continue;
+        }
+
+        computeDailyForecastMap(profile.getLocation()).ifPresent(byDate -> {
+            upsertForecastsForProfile(profile.getLocation(), byDate);
+        });
+    }
+  }
+
+  private List<Weather> upsertForecastsForProfile(
+          Location loc,
+          Map<LocalDate, Map<Category, ForecastItem>> byDate
+  ) {
+    List<Weather> resultWeather = new ArrayList<>();
+
+    LocalDate firstDate = byDate.keySet().stream()
+            .min(LocalDate::compareTo)
+            .orElseThrow();
+
+    Optional<Weather> prevDbOfFirst = weatherRepository
+            .findLatestByLocationAndForecastDate(
+                    loc.getLatitude(), loc.getLongitude(),
+                    firstDate.minusDays(1)
+            );
+
+    var base = WeatherApiParams.currentBase(); // 스냅샷 1회 캡처
+
+    for (var entry : byDate.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .toList()) {
+
+      Optional<Weather> prevDb = entry.getKey().equals(firstDate) ? prevDbOfFirst : Optional.empty();
+
+      Weather weather = buildWeatherFromForecast(loc, entry, byDate, prevDb, base);
+      Weather persisted = upsertWeatherReturning(weather);
+      resultWeather.add(persisted);
+    }
+
+    return resultWeather;
+  }
+
+  /**
+   * 위치 유효성 검사 → 외부 호출 → 일자별 예보 맵 생성까지 한 번에 처리
+   */
+  private Optional<Map<LocalDate, Map<Category, ForecastItem>>> computeDailyForecastMap(Location loc) {
+    List<ForecastItem> items = weatherExternal.getWeather(loc.getX(), loc.getY());
+    if (items == null || items.isEmpty()) return Optional.empty();
+
+    Map<LocalDate, String> earliestTimePerDate = getLocalDateStringMap(items);
+    Map<LocalDate, Map<Category, ForecastItem>> weatherListDateMap =
+            getWeatherListDateMap(items, earliestTimePerDate);
+
+    return Optional.of(weatherListDateMap);
+  }
+
+  /**
+   * 한 날짜(entry)와 이전 날짜 데이터를 합쳐 Weather 엔티티 생성
+   */
+  private Weather buildWeatherFromForecast(
+          Location loc,
+          Map.Entry<LocalDate, Map<Category, ForecastItem>> currentEntry,
+          Map<LocalDate, Map<Category, ForecastItem>> byDate,
+          Optional<Weather> prevDb,
+          WeatherApiParams.Base base
+  ) {
+    // 예보 대상 일자 (YYYYMMdd)
+    String fcstDate = currentEntry.getValue().get(SKY).getFcstDate();
+
+    WeatherLocation location = new WeatherLocation(
+            loc.getLatitude(),
+            loc.getLongitude(),
+            loc.getX(),
+            loc.getY(),
+            loc.getLocationNames()
+    );
+
+    // forecastAt: 해당 날짜 00:00 (예보가 적용되는 날의 자정)
+    LocalDateTime forecastAt = LocalDateTime.parse(fcstDate + "0000", DATE_TIME_PARSER);
+    // forecastedAt: 발표본 시각 (base_date + base_time) ← 세트로!
+    LocalDateTime forecastedAt = LocalDateTime.parse(base.date() + base.time(), DATE_TIME_PARSER);
+
+    LocalDate prevDate = currentEntry.getKey().minusDays(1);
+    Map<Category, ForecastItem> prevApi = byDate.get(prevDate); // 있을 수도, 없을 수도
+
+    // 하늘상태
+    int skyCode = Integer.parseInt(currentEntry.getValue().get(SKY).getFcstValue());
+    SkyStatus sky = SkyStatus.fromSkyStatusCode(skyCode);
+
+    // 온도
+    double cur = Double.parseDouble(currentEntry.getValue().get(TMP).getFcstValue());
+    double min = Double.parseDouble(currentEntry.getValue().get(TMN).getFcstValue());
+    double max = Double.parseDouble(currentEntry.getValue().get(TMX).getFcstValue());
+
+    double prevTmp = prevDb
+            .map(w -> w.getTemperature().getTemperatureCurrent()) // 프로젝트 게터명에 맞춤
+            .orElseGet(() -> prevApi != null && prevApi.get(TMP) != null
+                    ? Double.parseDouble(prevApi.get(TMP).getFcstValue())
+                    : cur);
+    Temperature temperature = new Temperature(cur, prevTmp, min, max);
+
+    // 습도
+    double curHum = Double.parseDouble(currentEntry.getValue().get(REH).getFcstValue());
+    double prevHum = prevDb
+            .map(w -> w.getHumidity().getHumidityCurrent()) // 프로젝트 게터명에 맞춤
+            .orElseGet(() -> prevApi != null && prevApi.get(REH) != null
+                    ? Double.parseDouble(prevApi.get(REH).getFcstValue())
+                    : curHum);
+    Humidity humidity = new Humidity(curHum, prevHum);
+
+    // 강수
+    Precipitation precipitation = getPrecipitation(currentEntry);
+
+    // 바람
+    double windSpeedMs = Double.parseDouble(currentEntry.getValue().get(WSD).getFcstValue());
+    WindSpeed windSpeed = new WindSpeed(windSpeedMs, WindSpeedLevel.fromSpeed(windSpeedMs));
+
+    log.info("기온: {}", temperature);
+    log.info("습도: {}", humidity);
+    log.info("강수 {}", precipitation);
+    log.info("바람 {}", windSpeed);
+
+    return Weather.of(forecastedAt, forecastAt, sky, location, precipitation, humidity, temperature, windSpeed);
+  }
+
+  /**
+   * 존재하면 update, 없으면 insert
+   */
+  private Weather upsertWeatherReturning(Weather weather) {
+    return weatherRepository
+            .findByLocationLatitudeAndLocationLongitudeAndForecastAt(
+                    weather.getLocation().getLatitude(),
+                    weather.getLocation().getLongitude(),
+                    weather.getForecastAt()
+            )
+            .map(e -> {
+              e.updateFrom(
+                      weather.getForecastedAt(),
+                      weather.getForecastAt(),
+                      weather.getSkyStatus(),
+                      weather.getLocation(),
+                      weather.getPrecipitation(),
+                      weather.getHumidity(),
+                      weather.getTemperature(),
+                      weather.getWindSpeed()
+              );
+              return e; // 영속 엔티티
+            })
+            .orElseGet(() -> weatherRepository.save(weather)); // 새로 저장된 영속 엔티티
+  }
+
+
+  private Precipitation getPrecipitation(Map.Entry<LocalDate, Map<Category, ForecastItem>> currentForecastItem) {
+    int precipitationCode = Integer.parseInt(currentForecastItem.getValue().get(PTY).getFcstValue());
+    PrecipitationType precipitationType = PrecipitationType.fromCode(precipitationCode);
+
+    // 2) 강수 확률 (%)
+    double precipitationProbability = Double.parseDouble(currentForecastItem.getValue().get(POP).getFcstValue());
+
+    // 3) 강수량 (mm) — “강수없음” 같은 값 처리
+    String pcpRaw = currentForecastItem.getValue().get(PCP).getFcstValue();
+    double precipitationAmount = getPrecipitationAmount(pcpRaw);
+    return new Precipitation(precipitationType, precipitationProbability, precipitationAmount);
+  }
+
+  private double getPrecipitationAmount(String raw) {
+    if (raw == null) return 0.0;
+    raw = raw.trim();
+    if (raw.isEmpty() || raw.contains("없음")) return 0.0;
+
+    boolean isBelow = raw.contains("미만"); // 예: "1 미만", "1.0mm 미만"
+
+    String num = raw.replaceAll("[^0-9.]", "");
+    if (num.isEmpty()) return 0.0;
+
+    double v;
+    try {
+      v = Double.parseDouble(num);
+    } catch (NumberFormatException e) {
+      log.warn("PCP parse failed: '{}'", raw, e);
+      return 0.0;
+    }
+
+    if (isBelow) {
+      return 0.0;
+    }
+
+    return v;
+  }
+
+  private LinkedHashMap<LocalDate, Map<Category, ForecastItem>> getWeatherListDateMap(List<ForecastItem> items, Map<LocalDate, String> earliestTimePerDate) {
+    // 날짜별 전체 ForecastItem 묶음
+    LinkedHashMap<LocalDate, List<ForecastItem>> itemsByDate = items.stream()
+            .collect(Collectors.groupingBy(
+                    fi -> LocalDate.parse(fi.getFcstDate(), DATE_PARSER),
+                    LinkedHashMap::new,
+                    Collectors.toList()
+            ));
+
+    // 날짜별 TMP 통계
+    Map<LocalDate, DoubleSummaryStatistics> tmpStatsByDate = itemsByDate.entrySet().stream()
+            .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> e.getValue().stream()
+                            .filter(fi -> TMP.name().equals(fi.getCategory()))
+                            .mapToDouble(fi -> Double.parseDouble(fi.getFcstValue()))
+                            .summaryStatistics(),
+                    (a, b) -> a,
+                    LinkedHashMap::new
+            ));
+
+    // 가장 빠른 시각 항목들 + TMN/TMX 추가
+    return items.stream()
+            .filter(item -> {
+              LocalDate d = LocalDate.parse(item.getFcstDate(), DATE_PARSER);
+              return item.getFcstTime().equals(earliestTimePerDate.get(d));
+            })
+            .collect(Collectors.groupingBy(
+                    item -> LocalDate.parse(item.getFcstDate(), DATE_PARSER),
+                    LinkedHashMap::new,
+                    Collectors.collectingAndThen(
+                            Collectors.toList(),
+                            list -> {
+                              // 1) 가장 이른 시각의 기본 카테고리들
+                              EnumMap<Category, ForecastItem> m = new EnumMap<>(Category.class);
+                              list.forEach(fi -> m.put(Category.valueOf(fi.getCategory()), fi));
+
+                              LocalDate date = LocalDate.parse(list.get(0).getFcstDate(), DATE_PARSER);
+                              DoubleSummaryStatistics stats = tmpStatsByDate.get(date);
+
+                              // 2) 하루 전체 TMP 중 최소값 -> TMN
+                              itemsByDate.get(date).stream()
+                                      .filter(fi -> TMP.name().equals(fi.getCategory()))
+                                      .filter(fi -> Double.parseDouble(fi.getFcstValue()) == stats.getMin())
+                                      .findFirst()
+                                      .ifPresent(fiMin -> m.put(Category.TMN, fiMin));
+
+                              // 3) 하루 전체 TMP 중 최대값 -> TMX
+                              itemsByDate.get(date).stream()
+                                      .filter(fi -> TMP.name().equals(fi.getCategory()))
+                                      .filter(fi -> Double.parseDouble(fi.getFcstValue()) == stats.getMax())
+                                      .findFirst()
+                                      .ifPresent(fiMax -> m.put(Category.TMX, fiMax));
+
+                              return m;
+                            }
+                    )
+            ));
+  }
+
+  private Map<LocalDate, String> getLocalDateStringMap(List<ForecastItem> items) {
+    return items.stream()
+            .collect(Collectors.groupingBy(
+                    item -> LocalDate.parse(item.getFcstDate(), DATE_PARSER),
+                    // 각 아이템의 fcstTime을 뽑아서, MIN(Time) 구하기
+                    Collectors.mapping(ForecastItem::getFcstTime,
+                            Collectors.minBy(String::compareTo))
+            ))
+            .entrySet().stream()
+            .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> e.getValue().orElseThrow(),
+                    (a, b) -> a,
+                    LinkedHashMap::new
+            ));
   }
 
   public LocationResponse fallbackLocation(LocationRequest locationRequest, Throwable ex) {

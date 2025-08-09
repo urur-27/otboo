@@ -7,7 +7,6 @@ import com.team3.otboo.domain.recommendation.service.strategy.RecommendationStra
 import com.team3.otboo.domain.user.dto.ProfileDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.repository.UserRepository;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
 import com.team3.otboo.domain.user.service.ProfileService;
 import com.team3.otboo.domain.weather.dto.WeatherDto;
 import com.team3.otboo.domain.weather.service.WeatherService;
