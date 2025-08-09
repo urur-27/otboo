@@ -8,7 +8,6 @@ import lombok.ToString;
 
 @Embeddable
 @Getter
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Temperature {
     private Double temperatureCurrent;

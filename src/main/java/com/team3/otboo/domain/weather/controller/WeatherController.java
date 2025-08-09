@@ -1,6 +1,7 @@
 package com.team3.otboo.domain.weather.controller;
 
 
+import com.team3.otboo.domain.weather.dto.WeatherDto;
 import com.team3.otboo.domain.weather.dto.request.LocationRequest;
 import com.team3.otboo.domain.weather.dto.response.LocationResponse;
 import com.team3.otboo.domain.weather.service.WeatherService;
@@ -11,6 +12,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -20,11 +23,10 @@ public class WeatherController implements WeatherContentApi {
     private final WeatherService weatherService;
 
     @GetMapping
-    public ResponseEntity<LocationResponse> getWeather(
+    public ResponseEntity<List<WeatherDto>> getWeather(
             @Validated @ModelAttribute LocationRequest locationRequestDto
     ){
-
-        return null;
+        return ResponseEntity.ok(weatherService.getWeatherForUser(locationRequestDto));
     }
 
     @GetMapping("/location")
