@@ -3,6 +3,7 @@ package com.team3.otboo.domain.feed.service;
 import com.team3.otboo.domain.feed.dto.CommentDto;
 import com.team3.otboo.domain.feed.dto.CommentDtoCursorResponse;
 import com.team3.otboo.domain.feed.entity.Comment;
+import com.team3.otboo.domain.feed.entity.Feed;
 import com.team3.otboo.domain.feed.entity.FeedCommentCount;
 import com.team3.otboo.domain.feed.mapper.CommentMapper;
 import com.team3.otboo.domain.feed.repository.CommentRepository;
@@ -12,6 +13,7 @@ import com.team3.otboo.domain.feed.service.request.CommentCreateRequest;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.SortDirection;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.event.NewCommentEvent;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +33,7 @@ public class CommentService {
 
 	private final CommentRepository commentRepository;
 	private final FeedCommentCountRepository feedCommentCountRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
 	private final UserRepository userRepository;
 	private final FeedRepository feedRepository;
@@ -40,6 +44,11 @@ public class CommentService {
 		if (!feedRepository.existsById(request.feedId())) {
 			throw new IllegalArgumentException("feed not found. feed id: " + request.feedId());
 		}
+		Feed feed = feedRepository.findById(request.feedId())
+				.orElseThrow(IllegalArgumentException::new);
+
+		User feedOwner = userRepository.findById(feed.getAuthorId())
+				.orElseThrow(EntityNotFoundException::new);
 
 		User author = userRepository.findById(request.authorId()).orElseThrow(
 			() -> new EntityNotFoundException("user not found. user Id: " + request.authorId())
@@ -58,6 +67,10 @@ public class CommentService {
 			);
 		}
 
+		eventPublisher.publishEvent(new NewCommentEvent(
+				feedOwner,
+				author.getUsername(),
+				feed.getId()));
 		return commentMapper.toDto(comment, author);
 	}
 
