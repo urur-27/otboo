@@ -11,7 +11,6 @@ import com.team3.otboo.domain.clothing.analyzers.VisionAnalyzer;
 import com.team3.otboo.domain.clothing.mapper.AttributeMapper;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,7 +27,7 @@ public class ClothingExtractionServiceImpl implements ClothingExtractionService 
     private final AttributeMapper attributeMapper;
 
     @Override
-    public ClothingDto extractFromUrl(String url, UUID ownerId) {
+    public ClothingDto extractFromUrl(String url) {
         HtmlExtractionResult html = htmlExtractor.extract(url);
 
         // DB 정의 목록 조회 → 프롬프트 재료
@@ -48,6 +47,6 @@ public class ClothingExtractionServiceImpl implements ClothingExtractionService 
         List<ClothingAttributeWithDefDto> mappedAttrs = attributeMapper.mapFromVision(vision);
 
         // merge 시 attributes를 mappedAttrs로 교체
-        return clothingDtoMerger.merge(ownerId, html, vision, mappedAttrs);
+        return clothingDtoMerger.merge(html, vision, mappedAttrs);
     }
 }
