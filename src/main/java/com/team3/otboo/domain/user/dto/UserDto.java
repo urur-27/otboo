@@ -4,7 +4,6 @@ import com.team3.otboo.domain.user.enums.OAuthProvider;
 import com.team3.otboo.domain.user.enums.Role;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 

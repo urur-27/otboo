@@ -18,6 +18,7 @@ public enum ErrorCode {
   // User Errors (Uxxx)
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "해당 사용자를 찾을 수 없습니다."),
   PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "U002", "해당 프로필을 찾을 수 없습니다."),
+  ALREADY_EXISTS(HttpStatus.ALREADY_REPORTED, "U003", "이미 존재합니다."),
 
   // Roles Errors (Rxxx)
   ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "해당 권한은 존재하지 않습니다."),
@@ -55,7 +56,10 @@ public enum ErrorCode {
   LLM_CALL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "LLM003", "LLM 호출에 실패했습니다."),
 
   // ExternalApiException Errors (Exxx)
-  EXTERNAL_API_FAILED(HttpStatus.BAD_GATEWAY, "E0001", "외부 API 호출 실패했습니다.");
+  EXTERNAL_API_FAILED(HttpStatus.BAD_GATEWAY, "E0001", "외부 API 호출 실패했습니다."),
+
+  // jwt
+  SESSION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "J001", "세션 오류 발생했습니다.");
 
   private final HttpStatus status;
   private final String code;

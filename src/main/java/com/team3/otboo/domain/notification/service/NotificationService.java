@@ -5,6 +5,7 @@ import com.team3.otboo.domain.notification.entity.Notification;
 import com.team3.otboo.domain.notification.entity.NotificationLevel;
 import com.team3.otboo.domain.notification.mapper.NotificationMapper;
 import com.team3.otboo.domain.notification.repository.NotificationRepository;
+import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.event.NewFollowerEvent;
 import java.util.List;

@@ -1,11 +1,14 @@
 package com.team3.otboo.domain.user.service;
 
+import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.UUID;
+
+import java.util.*;
+
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -13,16 +16,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
 	private final UserRepository userRepository;
+	private final UserMapper userMapper;
 
 	@Override
+	@Transactional(readOnly = true)
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		User user = userRepository.findByUsername(username).orElseThrow(
+		// username -> email(고유값)
+		User user = userRepository.findByEmail(username).orElseThrow(
 			() -> new EntityNotFoundException("user not found. username: " + username));
 
 		return new CustomUserDetails(user);
@@ -32,33 +39,33 @@ public class CustomUserDetailsService implements UserDetailsService {
 	 * Spring Security의 UserDetails 인터페이스를 구현한 커스텀 클래스 User 엔티티를 Spring Security가 이해할 수 있는 형태로
 	 * 변환한다.
 	 */
+	@Getter
 	public static class CustomUserDetails implements UserDetails {
 
 		private final User user;
 
-		public CustomUserDetails(User user) {
+		public CustomUserDetails(User user){
 			this.user = user;
 		}
 
 		@Override
 		public Collection<? extends GrantedAuthority> getAuthorities() {
-			// 사용자의 역할을 Spring Security 권한으로 변환
-			return Collections.singletonList(
-				new SimpleGrantedAuthority("ROLE_USER"));
+			return List.of(new SimpleGrantedAuthority(user.getRole().name()));
 		}
-
+		
 		public UUID getId() {
 			return user.getId();
+		}
+
+		// override하여 메서드 명은 getUsername이지만, 실상 구현은 getEmail 역할
+		@Override
+		public String getUsername() {
+			return user.getEmail();
 		}
 
 		@Override
 		public String getPassword() {
 			return user.getPassword();
-		}
-
-		@Override
-		public String getUsername() {
-			return user.getUsername();
 		}
 
 		// 계정 만료 여부 (현재는 모든 계정이 만료되지 않음)
@@ -79,9 +86,21 @@ public class CustomUserDetailsService implements UserDetailsService {
 			return true;
 		}
 
-		// User 엔티티에 접근할 수 있는 메서드
-		public User getUser() {
-			return user;
+		@Override
+		public boolean isEnabled() {
+			return true;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if(this == o) return true;
+			if(!(o instanceof CustomUserDetails that)) return false;
+			return user.getUsername().equals(that.user.getUsername());
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(user.getUsername());
 		}
 	}
 }

@@ -6,6 +6,7 @@ import com.team3.otboo.domain.feed.service.FeedService;
 import com.team3.otboo.domain.feed.service.request.FeedCreateRequest;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.request.FeedUpdateRequest;
+import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.SortDirection;
 import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
