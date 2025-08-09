@@ -7,8 +7,10 @@ import com.team3.otboo.domain.weather.dto.response.LocationResponse;
 import java.util.UUID;
 
 public interface WeatherService {
+ LocationResponse getLocationForUser(LocationRequest locationRequest);
 
-  LocationResponse getLocationForUser(LocationRequest locationRequest);
+ WeatherDto getWeatherById(UUID weatherId);
 
-  WeatherDto getWeatherById(UUID weatherId);
+ void collectWeatherData();
+
 }
