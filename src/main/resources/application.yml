@@ -56,5 +56,7 @@ resilience4j:
 
 
 openai:
-  api:
-    key: ${OPENAI_API_KEY}
+  model: ${OPENAI_MODEL:gpt-4o-mini}
+  temperature: ${OPENAI_TEMPERATURE:0.2}
+  max-tokens: ${OPENAI_MAX_TOKENS:600}
+  api-key: ${OPENAI_API_KEY}
