@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active:  ${SPRING_PROFILES_ACTIVE:local}
   config:
     import: optional:file:.env[.properties]
   datasource:
@@ -46,6 +48,11 @@ external:
       connect-timeout: ${KAKAO_MAP_CONNECT_TIMEOUT}
       read-timeout: ${KAKAO_MAP_READ_TIMEOUT}
       api-key: ${KAKAO_MAP_API_KEY}
+    weather:
+      base-url: ${WEATHER_URL}
+      connect-timeout: ${WEATHER_CONNECT_TIMEOUT}
+      read-timeout: ${WEATHER_READ_TIMEOUT}
+      api-key: ${WEATHER_API_KEY}
 
 resilience4j:
   circuitbreaker:
@@ -55,11 +62,16 @@ resilience4j:
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
         waitDurationInOpenState: 10s
+      weatherRestTemplate:
+        failureRateThreshold: 50
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10s
+
 
 openai:
   api:
     key: ${OPENAI_API_KEY}
-
 
 security:
   jwt:
