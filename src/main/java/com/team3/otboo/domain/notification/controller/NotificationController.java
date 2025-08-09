@@ -23,9 +23,9 @@ public class NotificationController {
   @GetMapping
   public ResponseEntity<List<NotificationDto>> getNotifications(@AuthenticationPrincipal
   CustomUserDetails userPrincipal) {
-    UserDto userDto = userPrincipal.getUserDto();
+    User user = userPrincipal.getUser();
 
-    List<NotificationDto> notifications = notificationService.findNotificationsByUser(userDto);
+    List<NotificationDto> notifications = notificationService.findNotificationsByUser(user);
 
     return ResponseEntity.ok(notifications);
   }

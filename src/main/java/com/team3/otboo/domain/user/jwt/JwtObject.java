@@ -1,21 +1,22 @@
 package com.team3.otboo.domain.user.jwt;
 
 import com.team3.otboo.domain.user.dto.UserDto;
+import com.team3.otboo.domain.user.entity.User;
 
 import java.time.Instant;
 
 // 정보를 담아놓은 객체
-// (발급 시간, 만료 시간, 사용자 정보(UserDto), 토큰)
+// (발급 시간, 만료 시간, 사용자 정보(User), 토큰)
 public record JwtObject(
         // 발급 시간
         Instant issueTime,
         // 만료 시간
         Instant expirationTime,
-        UserDto userDto,
+        User user,
         String token
 ) {
-    // 만료 여부 확인하는 메서드
+    // 만료 시 true
     public boolean isExpired() {
-        return Instant.now().isBefore(expirationTime);
+        return expirationTime.isBefore(Instant.now());
     }
 }

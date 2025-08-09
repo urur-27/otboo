@@ -14,6 +14,8 @@ import com.team3.otboo.domain.user.jwt.JwtService;
 import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.ProfileRepository;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.global.exception.BusinessException;
+import com.team3.otboo.global.exception.ErrorCode;
 import com.team3.otboo.global.exception.user.RoleNotFoundException;
 import com.team3.otboo.global.exception.user.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -49,10 +51,10 @@ public class UserServiceImpl implements UserService {
         log.debug("사용자 생성 시작: {}", request.name());
 
         if(userRepository.existsByEmail(request.email())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 가입된 이메일입니다.");
         }
         if(userRepository.existsByUsername(request.name())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username already exists");
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 가입한 사용자 이름입니다.");
         }
 
         String encodedPassword = passwordEncoder.encode(request.password());

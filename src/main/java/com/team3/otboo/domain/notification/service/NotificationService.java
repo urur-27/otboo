@@ -39,8 +39,8 @@ public class NotificationService {
     sseService.sendNotification(event.followee().getId(), notificationDto);
   }
 
-  public List<NotificationDto> findNotificationsByUser(UserDto userDto) {
-    List<Notification> notifications = notificationRepository.findByReceiverOrderByCreatedAtDescIdDesc(userDto);
+  public List<NotificationDto> findNotificationsByUser(User user) {
+    List<Notification> notifications = notificationRepository.findByReceiverOrderByCreatedAtDescIdDesc(user);
     return notificationMapper.toDtoList(notifications);
   }
 }

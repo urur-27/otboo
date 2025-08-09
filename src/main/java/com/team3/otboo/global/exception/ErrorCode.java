@@ -49,7 +49,10 @@ public enum ErrorCode {
   LLM_JSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "LLM001", "응답에 JSON이 포함되어 있지 않습니다."),
 
   // ExternalApiException Errors (Exxx)
-  EXTERNAL_API_FAILED(HttpStatus.BAD_GATEWAY, "E0001", "외부 API 호출 실패했습니다.");
+  EXTERNAL_API_FAILED(HttpStatus.BAD_GATEWAY, "E0001", "외부 API 호출 실패했습니다."),
+
+  // jwt
+  SESSION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "J001", "세션 오류 발생했습니다.");
 
   private final HttpStatus status;
   private final String code;

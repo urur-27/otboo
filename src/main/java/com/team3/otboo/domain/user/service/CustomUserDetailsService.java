@@ -32,7 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 		User user = userRepository.findByEmail(username).orElseThrow(
 			() -> new EntityNotFoundException("user not found. username: " + username));
 
-		return new CustomUserDetails(userMapper.toDto(user), user.getPassword());
+		return new CustomUserDetails(user);
 	}
 
 	/**
@@ -42,34 +42,32 @@ public class CustomUserDetailsService implements UserDetailsService {
 	@Getter
 	public static class CustomUserDetails implements UserDetails {
 
-		private final UserDto userDto;
-		private final String password;
-
-		public CustomUserDetails(UserDto userDto, String password) {
-			this.userDto = userDto;
-			this.password = password;
-		}
+		private final User user;
 
 		public CustomUserDetails(User user){
-			this.userDto = new UserMapper().toDto(user);
-			this.password = user.getPassword();
+			this.user = user;
 		}
 
 		@Override
 		public Collection<? extends GrantedAuthority> getAuthorities() {
-			return List.of(new SimpleGrantedAuthority(userDto.role().name()));
+			return List.of(new SimpleGrantedAuthority(user.getRole().name()));
 		}
 		
 		public UUID getId() {
-			return userDto.id();
+			return user.getId();
 		}
 
 		// override하여 메서드 명은 getUsername이지만, 실상 구현은 getEmail 역할
 		@Override
 		public String getUsername() {
-			return userDto.email();
+			return user.getEmail();
 		}
-		
+
+		@Override
+		public String getPassword() {
+			return user.getPassword();
+		}
+
 		// 계정 만료 여부 (현재는 모든 계정이 만료되지 않음)
 		@Override
 		public boolean isAccountNonExpired() {
@@ -97,12 +95,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 		public boolean equals(Object o) {
 			if(this == o) return true;
 			if(!(o instanceof CustomUserDetails that)) return false;
-			return userDto.name().equals(that.userDto.name());
+			return user.getUsername().equals(that.user.getUsername());
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(userDto.name());
+			return Objects.hash(user.getUsername());
 		}
 	}
 }

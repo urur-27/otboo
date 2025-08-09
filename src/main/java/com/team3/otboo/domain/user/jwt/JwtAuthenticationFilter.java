@@ -2,6 +2,7 @@ package com.team3.otboo.domain.user.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.domain.user.dto.UserDto;
+import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -64,13 +65,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 토큰 검증 성공 시, 인증된 사용자의 요청으로 처리
             if (jwtService.validate(accessToken)) {
-                UserDto userDto = jwtService.parse(accessToken).userDto();
-                CustomUserDetailsService.CustomUserDetails userDetails
-                        = new CustomUserDetailsService.CustomUserDetails(userDto, null);
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(userDetails, null,
-                                userDetails.getAuthorities());
-
+                User user = jwtService.parse(accessToken).user();
+                CustomUserDetailsService.CustomUserDetails userDetails = new CustomUserDetailsService.CustomUserDetails(user);
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities()
+                );
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
                 chain.doFilter(request, response);

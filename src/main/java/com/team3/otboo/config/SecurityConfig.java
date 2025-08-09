@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.user.config;
+package com.team3.otboo.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.domain.user.enums.Role;
@@ -49,11 +49,14 @@ public class SecurityConfig {
                 .authenticationProvider(daoAuthenticationProvider)
                 // 인가 정책 설정
                 .authorizeHttpRequests(authorize -> authorize
+                        //.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/sign-in").permitAll()
-                        // 나머지 경로는 인증된 사용자만 접근 가능
+                        .requestMatchers("/api/**").authenticated()
+
+                        .requestMatchers("/", "/assets/**", "/**.html", "/**.css", "/**.js", "/favicon.ico").permitAll()
                         .anyRequest().authenticated()
                 )
                 // .csrf(csrf -> csrf.disable())
@@ -62,6 +65,7 @@ public class SecurityConfig {
                                 // 로그아웃 요청에 대해 CSRF 보호를 비활성화 -> 빠른 처리를 위해
                                 .ignoringRequestMatchers("/api/auth/sign-out")
                                 // 서버에서 생성한 CSRF 토큰을 쿠키에 저장하여 사용자에게 전달, JS에서 접근할 수 있게 함
+                                // XSRF-TOKEN, X-XSRF-TOKEN 자동 지정해줌
                                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                                 // CSRF 토큰을 요청(request) 속성에서도 사용할 수 있도록 설정
                                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
@@ -88,17 +92,16 @@ public class SecurityConfig {
                 // 세션 관리
                 .sessionManagement(session ->
                         session
-                                // 세션을 생성하거나 사용하지 않는 stateless방식으로 설정
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 // JWT 인증 필터 추가
                 // 로그인 이후의 모든 요청에 대해 헤더의 JWT를 검증하고 인증 상태를 설정하는 필터
                 // 사용자 이름, 비밀번호 인증 필터보다 먼저 실행되어야 한다.
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService, objectMapper),
-                        JsonUsernamePasswordAuthenticationFilter.class)
-                // Form 로그인 및 HTTP Basic 인증 비활성화
-                .formLogin(form -> form.disable())
-                .httpBasic(basic -> basic.disable());
+                        JsonUsernamePasswordAuthenticationFilter.class);
+//                // Form 로그인 및 HTTP Basic 인증 비활성화
+//                .formLogin(form -> form.disable())
+//                .httpBasic(basic -> basic.disable());
         // HttpSecurity 설정 후 SecurityFilterChain 반환
         return http.build();
     }

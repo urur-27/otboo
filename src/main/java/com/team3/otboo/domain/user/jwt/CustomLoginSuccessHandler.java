@@ -24,6 +24,6 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(objectMapper.writeValueAsString(principal.getUserDto()));
+        response.getWriter().write(objectMapper.writeValueAsString(principal.getUser()));
     }
 }

@@ -74,7 +74,7 @@ public class FeedController {
 		@RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,
 		@RequestParam(value = "authorIdEqual", required = false) UUID authorIdEqual
 	) {
-		UserDto userDto = userDetails.getUserDto();
+		User user = userDetails.getUser();
 		FeedListRequest request = new FeedListRequest(
 			cursor,
 			idAfter,
@@ -87,7 +87,7 @@ public class FeedController {
 			authorIdEqual
 		);
 
-		FeedDtoCursorResponse response = feedService.getFeeds(userDto.id(), request);
+		FeedDtoCursorResponse response = feedService.getFeeds(user.getId(), request);
 
 		return ResponseEntity.ok(response);
 	}
