@@ -1,8 +1,11 @@
 package com.team3.otboo.domain.dm.interceptor;
 
-import com.team3.otboo.domain.user.jwt.JwtProvider;
 import java.util.Map;
+import java.util.UUID;
+
+import com.team3.otboo.domain.user.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -13,9 +16,8 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 @RequiredArgsConstructor
 public class HttpHandshakeInterceptor implements HandshakeInterceptor {
 
-	private final JwtProvider jwtProvider;
+	private final JwtService jwtService;
 
-	// TODO token provider 구현 후 token 검증 구현
 	@Override
 	public boolean beforeHandshake(
 		ServerHttpRequest request,
@@ -23,8 +25,18 @@ public class HttpHandshakeInterceptor implements HandshakeInterceptor {
 		WebSocketHandler wsHandler,
 		Map<String, Object> attributes) throws Exception {
 
-		// 여기서 토큰 검증
-
+//		// 토큰 검증
+//		if(!request.getHeaders().containsKey("Authorization")) {
+//			return null;
+//		}
+//		String token = request.getHeaders().getFirst("Authorization");
+//		if(token != null && jwtService.validate(token)){
+//			UUID userId = jwtService.getJwtSession(token).getUserId();
+//			attributes.put("userId", userId);
+//			return true;
+//		}
+//		response.setStatusCode(HttpStatus.UNAUTHORIZED);
+//		return false;
 		return true;
 	}
 

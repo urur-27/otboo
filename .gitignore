@@ -1,6 +1,7 @@
 HELP.md
 .gradle
 .env
+src/main/resources/static
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/

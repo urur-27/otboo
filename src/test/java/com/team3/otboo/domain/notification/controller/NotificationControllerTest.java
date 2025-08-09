@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.team3.otboo.domain.notification.dto.NotificationDto;
 import com.team3.otboo.domain.notification.service.NotificationService;
+import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
 import com.team3.otboo.fixture.UserFixture;
@@ -37,7 +38,7 @@ public class NotificationControllerTest {
     // given:
     // 1. 테스트에 사용할 로그인된 사용자 정보를 준비합니다.
     CustomUserDetails userPrincipal = new CustomUserDetails(UserFixture.createDefaultUser());
-    User user = userPrincipal.getUser();
+    UserDto userDto = userPrincipal.getUserDto();
     UUID userId = userPrincipal.getId();
 
     // 2. 가짜 NotificationService가 반환할 가짜 알림 목록을 미리 만들어 둡니다.
@@ -45,7 +46,7 @@ public class NotificationControllerTest {
         new NotificationDto(UUID.randomUUID(), null, userId, "알림 제목 1", "내용 1", null),
         new NotificationDto(UUID.randomUUID(), null, userId, "알림 제목 2", "내용 2", null)
     );
-    when(notificationService.findNotificationsByUser(user)).thenReturn(expectedResult);
+    when(notificationService.findNotificationsByUser(userDto)).thenReturn(expectedResult);
 
     // when & then:
     // 3. /api/notifications 엔드포인트로 GET 요청을 보내고 응답을 검증합니다.

@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.user.dto;
+package com.team3.otboo.domain.user.dto.Request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
