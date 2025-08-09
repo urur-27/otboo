@@ -77,7 +77,6 @@ class NotificationServiceTest {
     // 주인공 객체를 직접 생성합니다.
     notificationService = new NotificationService(
         notificationRepository,
-        userRepository,
         sseService,
         notificationMapper,
         strategies
