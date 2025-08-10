@@ -9,7 +9,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
 
-@Component
+@Component("fallback")
 public class JsoupHtmlParser implements HtmlParser {
 
     @Override
@@ -23,11 +23,9 @@ public class JsoupHtmlParser implements HtmlParser {
             String imageUrl = Optional.ofNullable(doc.selectFirst("meta[property=og:image]"))
                     .map(e -> e.attr("content")).orElse(null);
 
-            String description = Optional.ofNullable(doc.selectFirst("meta[property=og:description]"))
-                    .map(e -> e.attr("content")).orElse(doc.body().text());
+            String fullHtml = doc.outerHtml();
 
-            return new ParsedClothingInfo(imageUrl, null, description);
-
+            return new ParsedClothingInfo(null, null, imageUrl, fullHtml);
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.CLOTHING_EXTACTION_EXCEPTION);
         }
