@@ -1,7 +1,7 @@
 package com.team3.otboo.domain.dm.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.team3.otboo.domain.dm.dto.DirectMessageSendPayload;
+import com.team3.otboo.domain.dm.event.payload.DirectMessageSentPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
@@ -21,11 +21,11 @@ public class SubscribeService implements MessageListener {
 	public void onMessage(Message message, byte[] pattern) {
 		try {
 			String publishMessage = new String(message.getBody());
-			DirectMessageSendPayload payload = objectMapper
-				.readValue(publishMessage, DirectMessageSendPayload.class);
+			DirectMessageSentPayload payload = objectMapper
+				.readValue(publishMessage, DirectMessageSentPayload.class);
 
 			messageTemplate.convertAndSend(
-				"/sub/direct-messages_" + payload.dmKey(), // 수신 엔드포인트
+				"/sub/direct-messages_" + payload.getDmKey(), // 수신 엔드포인트
 				payload);
 		} catch (Exception e) {
 			log.error("[SubscribeService.onMessage]json 역직렬화 중 오류 발생");
