@@ -6,8 +6,6 @@ import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
 import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.service.ClothingService;
 import com.team3.otboo.domain.user.entity.User;
-import com.team3.otboo.domain.user.enums.Role;
-import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -36,19 +35,11 @@ public class ClothingController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClothingDto> createClothing(
+            @AuthenticationPrincipal User user,
             @RequestPart("request") ClothingCreateRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         log.info("의상 등록 시작");
-
-        // 인증 서비스가 설정되지 않은 상태이므로 임시로 생성
-        User user = User.builder()
-                .username("temp")
-                .email("temp@dev.com")
-                .password("secret")
-                .role(Role.USER)
-                .linkedOAuthProviders(Set.of())
-                .build();
 
         ClothingDto result = clothingService.registerClothing(user, request, image);
         log.info("의상 등록 완료");
