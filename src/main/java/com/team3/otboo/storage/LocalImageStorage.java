@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.team3.otboo.global.exception.BusinessException;
@@ -23,9 +24,17 @@ import org.springframework.web.multipart.MultipartFile;
 public class LocalImageStorage implements ImageStorage {
 
     private final Path root;
+    private final String publicPath;       // URL prefix
 
-    public LocalImageStorage(@Value("${otboo.storage.local.root-path}") Path root) {
-        this.root = Paths.get(System.getProperty("user.dir")).resolve(root).toAbsolutePath();
+    public LocalImageStorage(
+            @Value("${otboo.storage.local.root-path}") String rootProp,
+            @Value("${otboo.storage.local.public-path:/uploads/}") String publicPath) {
+        Path r = Paths.get(rootProp);
+        if (!r.isAbsolute()) {
+            r = Paths.get(System.getProperty("user.dir")).resolve(r).toAbsolutePath();
+        }
+        this.root = r.normalize();
+        this.publicPath = publicPath.endsWith("/") ? publicPath : publicPath + "/";
     }
 
     @PostConstruct
@@ -43,11 +52,14 @@ public class LocalImageStorage implements ImageStorage {
     @Override
     public String upload(MultipartFile file) {
         try {
-            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path targetPath = root.resolve(filename);
-            file.transferTo(targetPath.toFile()); // 저장
+            String original = Optional.ofNullable(file.getOriginalFilename()).orElse("file");
+            String safeName = original.replaceAll("[\\\\/\\s]+", "_"); // 간단 sanitizing
+            String filename = UUID.randomUUID() + "_" + safeName;
 
-            return "/uploads/" + filename; // 서버에 따라 변경
+            Path targetPath = root.resolve(filename).normalize();
+            file.transferTo(targetPath.toFile());
+
+            return publicPath + filename;
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED, e.getMessage());
         }

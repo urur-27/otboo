@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/sign-in").permitAll()
+                        .requestMatchers("/uploads/**").permitAll() // 로컬 이미지 찾기 위한 url 경로 허용
                         .requestMatchers("/api/**").authenticated()
 
                         .requestMatchers("/", "/assets/**", "/**.html", "/**.css", "/**.js", "/favicon.ico").permitAll()
