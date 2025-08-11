@@ -19,6 +19,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +62,7 @@ public class FeedService {
 		return feedDtoAssembler.assemble(feed.getId(), userId);
 	}
 
-	//	TODO : @PreAuthorize()
+	@PreAuthorize("@feedSecurity.isAuthor(#feedId, authentication.principal.id)")
 	@Transactional
 	public FeedDto update(UUID feedId, UUID userId, FeedUpdateRequest request) {
 		Feed feed = feedRepository.findById(feedId).orElseThrow(
@@ -73,7 +74,7 @@ public class FeedService {
 		return feedDtoAssembler.assemble(feedId, userId);
 	}
 
-	//	TODO : @PreAuthorize() 사용자 관리 쪽 구현 후 완성하기
+	@PreAuthorize("@feedSecurity.isAuthor(#feedId, authentication.principal.id)")
 	@Transactional
 	public void delete(UUID feedId) {
 		ootdService.deleteAllByFeedId(feedId);
