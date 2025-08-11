@@ -18,6 +18,14 @@ spring:
       hibernate:
         format_sql: true
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: kuke-board-hot-article-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+
 server:
   port: 8080
 
@@ -65,7 +73,6 @@ resilience4j:
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
         waitDurationInOpenState: 10s
-
 
 openai:
   model: ${OPENAI_MODEL:gpt-4o-mini}
