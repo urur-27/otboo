@@ -35,9 +35,9 @@ public class CommentService {
 	private final FeedCommentCountRepository feedCommentCountRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
+	private final CommentMapper commentMapper;
 	private final UserRepository userRepository;
 	private final FeedRepository feedRepository;
-	private final CommentMapper commentMapper;
 
 	@Transactional
 	public CommentDto create(CommentCreateRequest request) {

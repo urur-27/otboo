@@ -33,12 +33,15 @@ public class FeedService {
 
 	private final OotdService ootdService;
 	private final CommentService commentService;
-	private final FeedCommentCountRepository feedCommentCountRepository;
 	private final LikeService likeService;
+
 	private final FeedLikeCountRepository feedLikeCountRepository;
 	private final FeedRepositoryQueryDSL feedRepositoryQueryDSL;
 	private final UserRepository userRepository;
+	private final FeedCommentCountRepository feedCommentCountRepository;
 
+	// 알림 기능과 겹치니까 publish 는 한번만 하고, Listener 를 두개 써야함 .
+	// 겹치는거 -> 좋아요 생성 삭제, 댓글 생성 시 알림 가야하고 + 인기 피드 쪽에서 점수 계산까지 해야함 .
 	@Transactional
 	public FeedDto create(UUID userId, FeedCreateRequest request) {
 
@@ -120,5 +123,17 @@ public class FeedService {
 			request.sortBy(),
 			request.sortDirection()
 		);
+	}
+
+	@Transactional(readOnly = true)
+	public Feed read(UUID feedId) {
+		return feedRepository.findById(feedId).orElseThrow(
+			() -> new EntityNotFoundException("feed not found. feed id: " + feedId)
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public FeedDto read(UUID feedId, UUID userId) {
+		return feedDtoAssembler.assemble(feedId, userId);
 	}
 }

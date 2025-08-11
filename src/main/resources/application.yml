@@ -20,6 +20,14 @@ spring:
   messages:
     basename: messages # message.yml 불러오는 법
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: kuke-board-hot-article-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+
 server:
   port: 8080
 
@@ -33,6 +41,7 @@ otboo:
     type: ${STORAGE_TYPE:local}
     local:
       root-path: ${STORAGE_LOCAL_ROOT_PATH:.otboo}
+      public-path: ${STORAGE_LOCAL_PUBLIC_PATH:/uploads/}  # 브라우저가 접근할 URL prefix
     s3:
       access-key: ${AWS_S3_ACCESS_KEY}
       secret-key: ${AWS_S3_SECRET_KEY}
@@ -68,10 +77,11 @@ resilience4j:
         minimumNumberOfCalls: 5
         waitDurationInOpenState: 10s
 
-
 openai:
-  api:
-    key: ${OPENAI_API_KEY}
+  model: ${OPENAI_MODEL:gpt-4o-mini}
+  temperature: ${OPENAI_TEMPERATURE:0.2}
+  max-tokens: ${OPENAI_MAX_TOKENS:600}
+  api-key: ${OPENAI_API_KEY}
 
 security:
   jwt:
