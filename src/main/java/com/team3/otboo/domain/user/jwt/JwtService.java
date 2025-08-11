@@ -68,15 +68,15 @@ public class JwtService {
             // token의 유효 시간
             long tokenValiditySeconds
     ) {
-        // 토큰 발급 시간, 만료 시간 설정
         Instant issueTime = Instant.now();
         Instant expirationTime = issueTime.plus(Duration.ofSeconds(tokenValiditySeconds));
 
-        // JWT Payload 설정(보낼 내용들)
+        // JWT Payload 설정
         JWTClaimsSet claimSet = new JWTClaimsSet.Builder()
-                .subject(user.getEmail())                                 // 사용자 고유 식별자로 email
+                .subject(user.getEmail())                               // 사용자 고유 식별자로 email
                 .claim("name", user.getUsername())                      // 필요한 정보만 주입 (UserDto X)
                 .claim("role", user.getRole())
+                .claim("userId", user.getId())
                 .issueTime(new Date(issueTime.toEpochMilli()))            // 발급 시간
                 .expirationTime(new Date(expirationTime.toEpochMilli()))  // 만료 시간
                 .build();
@@ -233,18 +233,13 @@ public class JwtService {
 
     // access token 기간 만료 및 me 조회 요청에 따른 재발급
     public AccessRefreshToken meJwtRefreshToken(String refreshToken) {
-        // 토큰 유효성 검사
         if (!validate(refreshToken)) {
             throw new BusinessException(
                     ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 유효하지 않습니다.");
         }
-
-        // 리프레시 토큰으로 세션 조회
         JwtSession session = jwtSessionRepository.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰을 찾을 수 없습니다."));
-
-        // refresh token이 만료되었다면
         if(session.isExpired()) {
             throw new BusinessException(
                     ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 이미 만료되었습니다.");
@@ -252,7 +247,6 @@ public class JwtService {
 
         // 토큰에서 사용자 ID 파싱 및 사용자 조회
         User user = parse(refreshToken).user();
-
         // 새로운 JWT 객체 생성
         JwtObject accessJwtObject = generateJwtObject(user, accessTokenValiditySeconds);
 
@@ -262,20 +256,16 @@ public class JwtService {
     // refresh token 기간 만료에 따른 재발급
     @Transactional
     public AccessRefreshToken refreshJwtSession(String refreshToken) {
-        // 토큰 유효성 검사
         if (!validate(refreshToken)) {
             throw new BusinessException(
                     ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 유효하지 않습니다.");
         }
-
-        // 리프레시 토큰으로 세션 조회
         JwtSession session = jwtSessionRepository.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰을 찾을 수 없습니다."));
 
         // 토큰에서 사용자 ID 파싱 및 사용자 조회
         User user = parse(refreshToken).user();
-
         // 새로운 JWT 객체 생성
         JwtObject accessJwtObject = generateJwtObject(user, accessTokenValiditySeconds);
         JwtObject refreshJwtObject = generateJwtObject(user, refreshTokenValiditySeconds);

@@ -10,11 +10,16 @@ import com.team3.otboo.domain.dm.mapper.DirectMessageMapper;
 import com.team3.otboo.domain.dm.repository.DirectMessageCountRepository;
 import com.team3.otboo.domain.dm.repository.DirectMessageRepository;
 import com.team3.otboo.domain.dm.service.request.DirectMessageCreateRequest;
+import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.event.DmReceivedEvent;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.SortDirection;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +29,10 @@ public class DirectMessageService {
 
 	private final DirectMessageRepository directMessageRepository;
 	private final DirectMessageCountRepository directMessageCountRepository;
+
+	private final UserRepository userRepository;
+	private final ApplicationEventPublisher eventPublisher;
+
 	private final DirectMessageMapper directMessageMapper;
 	
 	private final DMOutboxEventPublisher outboxEventPublisher;
@@ -31,6 +40,10 @@ public class DirectMessageService {
 
 	@Transactional
 	public void save(DirectMessageCreateRequest request) {
+	public DirectMessageSendPayload save(DirectMessageCreateRequest request) {
+		User sender = userRepository.findById(request.senderId()).orElseThrow(UserNotFoundException::new);
+		User receiver = userRepository.findById(request.receiverId()).orElseThrow(UserNotFoundException::new);
+
 		DirectMessage directMessage = directMessageRepository.save(
 			DirectMessage.create(
 				request.senderId(),
@@ -54,6 +67,9 @@ public class DirectMessageService {
 			EventType.DIRECT_MESSAGE_SENT,
 			payload
 		);
+		eventPublisher.publishEvent(new DmReceivedEvent(receiver, sender.getUsername()));
+
+		return new DirectMessageSendPayload(dmKey, directMessageMapper.toDto(directMessage));
 	}
 
 	public DirectMessageDtoCursorResponse getDirectMessages(UUID userId, UUID currentUserId,

@@ -17,6 +17,8 @@ import com.team3.otboo.domain.user.dto.ProfileDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.weather.dto.TemperatureDto;
 import com.team3.otboo.domain.weather.dto.WeatherDto;
+import com.team3.otboo.domain.weather.entity.Temperature;
+import com.team3.otboo.domain.weather.entity.Weather;
 import com.team3.otboo.fixture.ClothingFixture;
 import com.team3.otboo.fixture.ClothingFixture.CreatedClothing;
 import com.team3.otboo.fixture.UserFixture;
@@ -43,13 +45,11 @@ public class DataDrivenStrategyTest {
   @Test
   @DisplayName("DB에 저장된 '더운 날 규칙' 에 따라 반팔티를 추천해야 한다")
   void recommendBasedOnDatabaseRule() {
-    // given: 테스트 시나리오에 필요한 데이터를 헬퍼 메서드로 생성
+    // given:
     TestData testData = createTestDataForHotDay();
 
-    // Mock Repository 설정: 변경된 5개 파라미터 형식에 맞게 호출
-    when(ruleRepository.findMatchingRules(testData.weather)).thenReturn(List.of(testData.rule()));
+    when(ruleRepository.findMatchingRules(testData.weather())).thenReturn(List.of(testData.rule()));
 
-    // Mock Mapper 설정
     when(clothingMapper.toOotdDtoList(anyList())).thenAnswer(invocation -> {
       List<Clothing> inputList = invocation.getArgument(0);
       return inputList.stream()
@@ -71,38 +71,6 @@ public class DataDrivenStrategyTest {
         .containsExactly("검은색 반팔티");
   }
 
-  // 테스트 데이터 생성을 위한 private 헬퍼 메서드
-  private TestData createTestDataForHotDay() {
-    User mockOwner = UserFixture.createDefaultUser();
-
-    ClothingFixture.CreatedClothing createdTshirt = ClothingFixture.createTshirt(mockOwner);
-    Clothing tshirt = createdTshirt.clothing();
-    AttributeOption tshirtOpt = createdTshirt.option();
-    List<Clothing> userClothes = List.of(tshirt);
-
-    ProfileDto profile = ProfileDto.builder()
-        .userId(mockOwner.getId())
-        .build();
-
-    WeatherDto weather = WeatherDto.builder()
-        .id(UUID.randomUUID())
-        .temperature(TemperatureDto.builder().current(28.0).build())
-        .build();
-
-    RecommendationRule hotWeatherRule = RecommendationRule.builder()
-        .ruleName("더운 날 규칙")
-        .minTemp(25.0)
-        .build();
-
-    RuleToOption ruleToOptionLink = RuleToOption.builder()
-        .rule(hotWeatherRule)
-        .option(tshirtOpt)
-        .build();
-    hotWeatherRule.getRecommendedOptions().add(ruleToOptionLink);
-
-    return new TestData(userClothes, profile, weather, hotWeatherRule);
-  }
-
   @Test
   @DisplayName("16~24도의 적당한 날씨에는 맨투맨을 추천해야 한다")
   void recommendSweatshirtOnMildWeather() {
@@ -112,11 +80,18 @@ public class DataDrivenStrategyTest {
     CreatedClothing sweatshirt = ClothingFixture.createSweatshirt(mockOwner);
     List<Clothing> userClothes = List.of(sweatshirt.clothing());
 
-    ProfileDto profile = ProfileDto.builder().userId(mockOwner.getId()).build();
-    WeatherDto weather = WeatherDto.builder()
-        .id(UUID.randomUUID())
-        .temperature(TemperatureDto.builder().current(20.0).build())
+    ProfileDto profile = ProfileDto.builder()
+        .userId(mockOwner.getId())
         .build();
+
+    // 👇 1. 테스트 시나리오에 맞는 'Weather 엔티티'를 먼저 만듭니다.
+    Weather mockWeatherEntity = Weather.builder()
+        .id(UUID.randomUUID())
+        .temperature(new Temperature(20.0, 0.0, 18.0, 22.0))
+        .build();
+
+    // 👇 2. 엔티티를 사용해 'from()' 메서드로 DTO를 생성합니다.
+    WeatherDto weather = WeatherDto.from(mockWeatherEntity);
 
     RecommendationRule mildWeatherRule = RecommendationRule.builder()
         .ruleName("적당한 날씨 규칙")
@@ -124,17 +99,14 @@ public class DataDrivenStrategyTest {
         .maxTemp(24.9)
         .build();
 
-    // '적당한 날씨 규칙'이 '맨투맨 옵션'을 추천하도록 명시적으로 연결
     RuleToOption ruleToOptionLink = RuleToOption.builder()
         .rule(mildWeatherRule)
         .option(sweatshirt.option())
         .build();
     mildWeatherRule.getRecommendedOptions().add(ruleToOptionLink);
 
-    // Mock Repository 설정
     when(ruleRepository.findMatchingRules(any(WeatherDto.class))).thenReturn(List.of(mildWeatherRule));
 
-    // 가짜 Mapper 설정
     when(clothingMapper.toOotdDtoList(anyList())).thenAnswer(invocation -> {
       List<Clothing> inputList = invocation.getArgument(0);
       return inputList.stream()
@@ -150,6 +122,42 @@ public class DataDrivenStrategyTest {
         .hasSize(1)
         .extracting(OotdDto::name)
         .containsExactly("곰돌이 맨투맨");
+  }
+
+  // private 헬퍼 메서드도 동일하게 수정합니다.
+  private TestData createTestDataForHotDay() {
+    User mockOwner = UserFixture.createDefaultUser();
+
+    CreatedClothing createdTshirt = ClothingFixture.createTshirt(mockOwner);
+    Clothing tshirt = createdTshirt.clothing();
+    AttributeOption tshirtOpt = createdTshirt.option();
+    List<Clothing> userClothes = List.of(tshirt);
+
+    ProfileDto profile = ProfileDto.builder()
+        .userId(mockOwner.getId())
+        .build();
+
+    // 👇 1. 'Weather 엔티티' 생성
+    Weather mockWeatherEntity = Weather.builder()
+        .id(UUID.randomUUID())
+        .temperature(new Temperature(28.0, 0.0, 25.0, 30.0))
+        .build();
+
+    // 👇 2. 'from()' 메서드로 DTO 생성
+    WeatherDto weather = WeatherDto.from(mockWeatherEntity);
+
+    RecommendationRule hotWeatherRule = RecommendationRule.builder()
+        .ruleName("더운 날 규칙")
+        .minTemp(25.0)
+        .build();
+
+    RuleToOption ruleToOptionLink = RuleToOption.builder()
+        .rule(hotWeatherRule)
+        .option(tshirtOpt)
+        .build();
+    hotWeatherRule.getRecommendedOptions().add(ruleToOptionLink);
+
+    return new TestData(userClothes, profile, weather, hotWeatherRule);
   }
 
   private record TestData(List<Clothing> userClothes, ProfileDto profile, WeatherDto weather, RecommendationRule rule) {}
