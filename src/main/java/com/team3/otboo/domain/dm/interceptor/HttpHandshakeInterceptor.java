@@ -1,11 +1,7 @@
 package com.team3.otboo.domain.dm.interceptor;
 
 import java.util.Map;
-import java.util.UUID;
-
-import com.team3.otboo.domain.user.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -15,8 +11,6 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 @Component
 @RequiredArgsConstructor
 public class HttpHandshakeInterceptor implements HandshakeInterceptor {
-
-	private final JwtService jwtService;
 
 	@Override
 	public boolean beforeHandshake(
