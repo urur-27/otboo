@@ -11,7 +11,7 @@ public class KafkaTopicConfig {
 	@Bean
 	public NewTopic feedTopic() {
 		return TopicBuilder.name("otboo-feed")
-			.partitions(3)
+			.partitions(1)
 			.replicas(1)
 			.build();
 	}
@@ -19,7 +19,7 @@ public class KafkaTopicConfig {
 	@Bean
 	public NewTopic commentTopic() {
 		return TopicBuilder.name("otboo-feed-comment")
-			.partitions(3)
+			.partitions(1)
 			.replicas(1)
 			.build();
 	}
@@ -27,7 +27,7 @@ public class KafkaTopicConfig {
 	@Bean
 	public NewTopic likeTopic() {
 		return TopicBuilder.name("otboo-feed-like")
-			.partitions(3)
+			.partitions(1)
 			.replicas(1)
 			.build();
 	}
@@ -35,7 +35,7 @@ public class KafkaTopicConfig {
 	@Bean
 	public NewTopic viewTopic() {
 		return TopicBuilder.name("otboo-feed-view")
-			.partitions(3)
+			.partitions(1)
 			.replicas(1)
 			.build();
 	}

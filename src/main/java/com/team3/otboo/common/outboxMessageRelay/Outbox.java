@@ -31,13 +31,12 @@ public class Outbox {
 	@Enumerated(EnumType.STRING)
 	private EventType eventType;
 	private String payload; // 해당 이벤트가 어떤 값을 가지고 있는가 .
-	private UUID shardKey;
+	
 
-	public static Outbox create(EventType eventType, String payload, UUID shardKey) {
+	public static Outbox create(EventType eventType, String payload) {
 		Outbox outbox = new Outbox();
 		outbox.eventType = eventType;
 		outbox.payload = payload;
-		outbox.shardKey = shardKey;
 		return outbox;
 	}
 }
