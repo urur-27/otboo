@@ -5,7 +5,7 @@ import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
 import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
 import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.service.ClothingService;
-import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,13 +35,13 @@ public class ClothingController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClothingDto> createClothing(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal CustomUserDetails user,
             @RequestPart("request") ClothingCreateRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         log.info("의상 등록 시작");
 
-        ClothingDto result = clothingService.registerClothing(user, request, image);
+        ClothingDto result = clothingService.registerClothing(user.getUser(), request, image);
         log.info("의상 등록 완료");
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
