@@ -6,8 +6,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
 
 @Getter
+@SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "weather", uniqueConstraints = {@UniqueConstraint(name = "uk_weather_forecast_grid", columnNames = {"forecast_at", "x", "y"})}
@@ -36,17 +38,17 @@ public class Weather extends BaseEntity {
     @Embedded
     private WindSpeed windSpeed;
 
-    @Builder
-    private Weather(LocalDateTime forecastedAt, LocalDateTime forecastAt, SkyStatus skyStatus, WeatherLocation location, Precipitation precipitation, Humidity humidity, Temperature temperature, WindSpeed windSpeed) {
-        this.forecastedAt = forecastedAt;
-        this.forecastAt = forecastAt;
-        this.skyStatus = skyStatus;
-        this.location = location;
-        this.precipitation = precipitation;
-        this.humidity = humidity;
-        this.temperature = temperature;
-        this.windSpeed = windSpeed;
-    }
+//    @Builder
+//    private Weather(LocalDateTime forecastedAt, LocalDateTime forecastAt, SkyStatus skyStatus, WeatherLocation location, Precipitation precipitation, Humidity humidity, Temperature temperature, WindSpeed windSpeed) {
+//        this.forecastedAt = forecastedAt;
+//        this.forecastAt = forecastAt;
+//        this.skyStatus = skyStatus;
+//        this.location = location;
+//        this.precipitation = precipitation;
+//        this.humidity = humidity;
+//        this.temperature = temperature;
+//        this.windSpeed = windSpeed;
+//    }
 
     public static Weather of(LocalDateTime forecastedAt, LocalDateTime forecastAt, SkyStatus skyStatus, WeatherLocation location, Precipitation precipitation, Humidity humidity, Temperature temperature, WindSpeed windSpeed) {
         return Weather

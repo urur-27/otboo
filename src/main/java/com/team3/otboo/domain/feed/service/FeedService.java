@@ -11,10 +11,15 @@ import com.team3.otboo.domain.feed.repository.FeedRepositoryQueryDSL;
 import com.team3.otboo.domain.feed.service.request.FeedCreateRequest;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.request.FeedUpdateRequest;
+import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.event.FollowedUserPostedFeedEvent;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +29,7 @@ public class FeedService {
 
 	private final FeedRepository feedRepository;
 	private final FeedDtoAssembler feedDtoAssembler;
+	private final ApplicationEventPublisher eventPublisher;
 
 	private final OotdService ootdService;
 	private final CommentService commentService;
@@ -31,13 +37,16 @@ public class FeedService {
 
 	private final FeedLikeCountRepository feedLikeCountRepository;
 	private final FeedRepositoryQueryDSL feedRepositoryQueryDSL;
+	private final UserRepository userRepository;
 	private final FeedCommentCountRepository feedCommentCountRepository;
 
 	// 알림 기능과 겹치니까 publish 는 한번만 하고, Listener 를 두개 써야함 .
 	// 겹치는거 -> 좋아요 생성 삭제, 댓글 생성 시 알림 가야하고 + 인기 피드 쪽에서 점수 계산까지 해야함 .
-
 	@Transactional
 	public FeedDto create(UUID userId, FeedCreateRequest request) {
+
+		User author = userRepository.findById(request.authorId())
+				.orElseThrow(UserNotFoundException::new);
 
 		Feed feed = feedRepository.save(Feed.create(
 			request.authorId(),
@@ -46,6 +55,8 @@ public class FeedService {
 		);
 
 		ootdService.create(feed.getId(), request.clothesIds());
+
+		eventPublisher.publishEvent(new FollowedUserPostedFeedEvent(author, feed.getId()));
 
 		return feedDtoAssembler.assemble(feed.getId(), userId);
 	}
