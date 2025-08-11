@@ -5,14 +5,12 @@ import com.team3.otboo.domain.clothing.dto.ClothingDto;
 import com.team3.otboo.domain.clothing.dto.response.HtmlExtractionResult;
 import com.team3.otboo.domain.clothing.dto.response.VisionAnalysisResult;
 import java.util.List;
-import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ClothingDtoMerger {
 
     public ClothingDto merge(
-            UUID ownerId,
             HtmlExtractionResult html,
             VisionAnalysisResult vision,
             List<ClothingAttributeWithDefDto> normalizedAttributes
@@ -23,7 +21,7 @@ public class ClothingDtoMerger {
 
         return new ClothingDto(
                 null,                  // id는 저장 시 할당
-                ownerId,
+                null,
                 name,
                 html.imageUrl(),
                 vision.type(),
