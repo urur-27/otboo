@@ -1,13 +1,20 @@
 package com.team3.otboo.domain.feed.service;
 
 import com.team3.otboo.domain.feed.dto.FeedDto;
+import com.team3.otboo.domain.feed.entity.Feed;
 import com.team3.otboo.domain.feed.entity.FeedLikeCount;
 import com.team3.otboo.domain.feed.entity.Like;
 import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
 import com.team3.otboo.domain.feed.repository.FeedLikeCountRepository;
+import com.team3.otboo.domain.feed.repository.FeedRepository;
 import com.team3.otboo.domain.feed.repository.LikeRepository;
+import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.event.FeedLikedEvent;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +24,20 @@ public class LikeService {
 
 	private final LikeRepository likeRepository;
 	private final FeedLikeCountRepository feedLikeCountRepository;
-
+	private final UserRepository userRepository;
+	private final FeedRepository feedRepository;
 	private final FeedDtoAssembler feedDtoAssembler;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public FeedDto like(UUID userId, UUID feedId) {
+		User liker = userRepository.findById(userId)
+				.orElseThrow(UserNotFoundException::new);
+		Feed feed = feedRepository.findById(feedId)
+				.orElseThrow(UserNotFoundException::new);
+		User feedOwner = userRepository.findById(feed.getAuthorId())
+				.orElseThrow(UserNotFoundException::new);
+
 		likeRepository.save(
 			Like.create(
 				feedId,
@@ -32,6 +48,8 @@ public class LikeService {
 		if (result == 0) { // 여기서 스레드 두개가 if 문 안으로 들어가서 동시성 문제 생길 수 있음 .
 			feedLikeCountRepository.save(FeedLikeCount.init(feedId, 1L));
 		}
+
+		eventPublisher.publishEvent(new FeedLikedEvent(feedOwner, liker.getUsername(), feedId));
 
 		// likeCount 를 바로 사용하지 못하고 DB에 저장했다가 저장한걸 꺼내는 식으로 구현 되어 있음.
 		// assemble 메서드의 파라미터로 likeCount 를 넣어주면 진짜 조금이라도 더 성능이 좋아지지 않을까 .

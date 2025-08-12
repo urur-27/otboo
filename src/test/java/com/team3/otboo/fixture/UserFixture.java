@@ -34,4 +34,26 @@ public class UserFixture {
         .role(Role.USER)
         .build();
   }
+
+  public static User createAnotherUser() {
+    User user = User.builder()
+        .username("testuser2")
+        .email("test2@example.com")
+        .password("password")
+        .role(Role.USER)
+        .build();
+    ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
+    return user;
+  }
+
+  public static User createThirdUser() {
+    User user = User.builder()
+        .username("testuser3")
+        .email("test3@example.com")
+        .password("password")
+        .role(Role.USER)
+        .build();
+    ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
+    return user;
+  }
 }

@@ -14,6 +14,7 @@ import com.team3.otboo.domain.follow.service.response.FollowListResponse;
 import com.team3.otboo.domain.user.dto.UserSummary;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.event.NewFollowerEvent;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.SortDirection;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class FollowService {
 	private final UserRepository userRepository;
 	private final FollowRepository followRepository;
 	private final FollowMapper followMapper;
+	private final ApplicationEventPublisher eventPublisher;
 
 	private final UserFollowerCountRepository userFollowerCountRepository;
 	private final UserFollowingCountRepository userFollowingCountRepository;
@@ -67,6 +70,8 @@ public class FollowService {
 				UserFollowerCount.init(followee.getId(), 1L)
 			);
 		}
+
+		eventPublisher.publishEvent(new NewFollowerEvent(followee, follower.getUsername()));
 
 		return new FollowDto(
 			follow.getId(),
