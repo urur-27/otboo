@@ -17,6 +17,18 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  # SMTP = Simple Mail Transfer Protocol
+  mail:
+    host: smtp.gmail.com        # gmail로 발송하겠다는 뜻
+    port: 587                   # TLS 암호화 통신을 위한 표준 포트
+    username: ${EMAIL_SEND}     # 발송할 이메일
+    password: ${PASSWORD_SEND}  # 발송할 이메일의 비밀번호
+    properties:
+      mail:
+        smtp:
+          auth: true            # 인증
+          starttls:
+            enable: true        # 통신 보호
 
   kafka:
     bootstrap-servers: localhost:9092
