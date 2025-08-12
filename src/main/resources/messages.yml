@@ -1,0 +1,29 @@
+notification:
+
+  follower:
+    title: "새로운 팔로워"
+    content: "{0}님이 회원님을 팔로우하기 시작했습니다."
+
+  like:
+    title: "새로운 좋아요"
+    content: "{0}님이 회원님의 피드를 좋아합니다."
+
+  comment:
+    title: "새로운 댓글"
+    content: "{0}님이 회원님의 피드에 댓글을 남겼습니다."
+
+  new_feed:
+    title: "새로운 피드"
+    content: "{0}님이 새로운 피드를 등록했습니다."
+
+  dm:
+    title: "새로운 쪽지"
+    content: "{0}님으로부터 새로운 쪽지가 도착했습니다."
+
+  attribute:
+    title: "새로운 의상 속성"
+    content: "'{0}' 속성이 추가되었습니다. 내 옷장에도 적용해보세요!"
+
+  role_change:
+    title: "계정 권한 변경"
+    content: "새로운 계정 권한이 {0}(으)로 변경되었습니다."
