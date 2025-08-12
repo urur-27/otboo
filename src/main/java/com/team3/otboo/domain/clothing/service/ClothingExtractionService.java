@@ -1,7 +1,7 @@
 package com.team3.otboo.domain.clothing.service;
 
-import com.team3.otboo.domain.clothing.dto.ClothingDto;
+import com.team3.otboo.domain.clothing.dto.ClothesDto;
 
 public interface ClothingExtractionService {
-    ClothingDto extractFromUrl(String url);
+    ClothesDto extractFromUrl(String url);
 }

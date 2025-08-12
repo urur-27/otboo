@@ -1,8 +1,8 @@
 package com.team3.otboo.domain.clothing.service;
 
-import com.team3.otboo.domain.clothing.dto.ClothingDto;
-import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
-import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
+import com.team3.otboo.domain.clothing.dto.ClothesDto;
+import com.team3.otboo.domain.clothing.dto.request.ClothesCreateRequest;
+import com.team3.otboo.domain.clothing.dto.request.ClothesUpdateRequest;
 import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.entity.Clothing;
 import com.team3.otboo.domain.user.entity.User;
@@ -15,7 +15,7 @@ public interface ClothingService {
 
   List<Clothing> getClothesByOwner(User user);
 
-  ClothingDto registerClothing(User user, ClothingCreateRequest request, MultipartFile image);
+  ClothesDto registerClothing(User user, ClothesCreateRequest request, MultipartFile image);
 
   ClothingDtoCursorResponse getClothesByCursor(
           UUID ownerId,
@@ -28,5 +28,5 @@ public interface ClothingService {
 
   void deleteClothing(UUID clothesId);
 
-  ClothingDto updateClothing(UUID id, ClothingUpdateRequest req, MultipartFile image);
+  ClothesDto updateClothing(UUID id, ClothesUpdateRequest req, MultipartFile image);
 }

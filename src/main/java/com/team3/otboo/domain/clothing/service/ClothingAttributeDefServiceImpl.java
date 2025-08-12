@@ -1,7 +1,7 @@
 package com.team3.otboo.domain.clothing.service;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeDefDto;
-import com.team3.otboo.domain.clothing.dto.request.ClothingAttributeDefCreateRequest;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeDefDto;
+import com.team3.otboo.domain.clothing.dto.request.ClothesAttributeDefCreateRequest;
 import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.mapper.ClothingAttributeDefMapper;
@@ -27,7 +27,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
 
     @Override
     @Transactional
-    public ClothingAttributeDefDto create(ClothingAttributeDefCreateRequest request) {
+    public ClothesAttributeDefDto create(ClothesAttributeDefCreateRequest request) {
         if (attributeRepository.existsByName(request.name())) {
             throw new AttributeNameDuplicatedException();
         }
@@ -43,7 +43,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
     }
 
     @Override
-    public CursorPageResponse<ClothingAttributeDefDto> getAttributes(
+    public CursorPageResponse<ClothesAttributeDefDto> getAttributes(
             String cursor,
             UUID idAfter,
             int limit,
@@ -55,7 +55,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
                 cursor, idAfter, limit, sortBy, direction, keyword
         );
 
-        List<ClothingAttributeDefDto> dtoList = result.data().stream()
+        List<ClothesAttributeDefDto> dtoList = result.data().stream()
                 .map(mapper::toDto)
                 .toList();
 
@@ -81,8 +81,8 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
 
     @Override
     @Transactional
-    public ClothingAttributeDefDto updateAttribute(UUID definitionId,
-            ClothingAttributeDefCreateRequest request) {
+    public ClothesAttributeDefDto updateAttribute(UUID definitionId,
+            ClothesAttributeDefCreateRequest request) {
         Attribute attribute = attributeRepository.findById(definitionId)
                 .orElseThrow(AttributeNotFoundException::new);
 

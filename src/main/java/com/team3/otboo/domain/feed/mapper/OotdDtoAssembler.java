@@ -1,6 +1,6 @@
 package com.team3.otboo.domain.feed.mapper;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeWithDefDto;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeWithDefDto;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import com.team3.otboo.domain.clothing.entity.Clothing;
@@ -34,7 +34,7 @@ public class OotdDtoAssembler {
 			.toList();
 	}
 
-	private List<ClothingAttributeWithDefDto> getAttributes(UUID clothesId) {
+	private List<ClothesAttributeWithDefDto> getAttributes(UUID clothesId) {
 		// clothesId 로 clothing 찾아서 거기서 attribute 랑 attribute option 을 꺼낸다 .
 		Clothing clothing = clothingRepository.findById(clothesId).orElseThrow(
 			() -> new EntityNotFoundException("clothes not found. clothesId: " + clothesId)
