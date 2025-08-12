@@ -114,8 +114,7 @@ public class S3ImageStorage implements ImageStorage{
 
     @Override
     public String getPatch(UUID binaryContentId, String contentType) {
-        String[] parts = contentType.split("/");
-        return baseUrl.concat("/").concat(binaryContentId.toString()).concat(".").concat(parts[1]);
+        return baseUrl.concat("/").concat(binaryContentId.toString());
     }
 
 

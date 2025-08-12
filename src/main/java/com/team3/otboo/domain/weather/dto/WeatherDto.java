@@ -16,13 +16,13 @@ public class WeatherDto {
     private LocalDateTime forecastAt;
     private WeatherLocation location;
     private SkyStatus skyStatus;
-    private Precipitation precipitation;
-    private Humidity humidity;
-    private Temperature temperature;
-    private WindSpeed windSpeed;
+    private PrecipitationDto precipitation;
+    private HumidityDto humidity;
+    private TemperatureDto temperature;
+    private WindSpeedDto windSpeed;
 
     @Builder
-    private WeatherDto(UUID id, LocalDateTime forecastedAt, LocalDateTime forecastAt, WeatherLocation location, SkyStatus skyStatus, Precipitation precipitation, Humidity humidity, Temperature temperature, WindSpeed windSpeed) {
+    private WeatherDto(UUID id, LocalDateTime forecastedAt, LocalDateTime forecastAt, WeatherLocation location, SkyStatus skyStatus, PrecipitationDto precipitation, HumidityDto humidity, TemperatureDto temperature, WindSpeedDto windSpeed) {
         this.id = id;
         this.forecastedAt = forecastedAt;
         this.forecastAt = forecastAt;
@@ -35,16 +35,21 @@ public class WeatherDto {
     }
 
     public static WeatherDto from(Weather weather) {
+        PrecipitationDto precipitationDto = PrecipitationDto.create(weather.getPrecipitation());
+        HumidityDto humidityDto = HumidityDto.create(weather.getHumidity());
+        TemperatureDto temperatureDto = TemperatureDto.create(weather.getTemperature());
+        WindSpeedDto windSpeedDto = WindSpeedDto.create(weather.getWindSpeed());
+
         return WeatherDto.builder()
                 .id(weather.getId())
                 .forecastedAt(weather.getForecastedAt())
                 .forecastAt(weather.getForecastAt())
                 .location(weather.getLocation())
                 .skyStatus(weather.getSkyStatus())
-                .precipitation(weather.getPrecipitation())
-                .humidity(weather.getHumidity())
-                .temperature(weather.getTemperature())
-                .windSpeed(weather.getWindSpeed())
+                .precipitation(precipitationDto)
+                .humidity(humidityDto)
+                .temperature(temperatureDto)
+                .windSpeed(windSpeedDto)
                 .build();
     }
 }
