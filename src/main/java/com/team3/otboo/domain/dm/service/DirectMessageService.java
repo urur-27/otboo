@@ -34,15 +34,16 @@ public class DirectMessageService {
 	private final ApplicationEventPublisher eventPublisher;
 
 	private final DirectMessageMapper directMessageMapper;
-	
+
 	private final DMOutboxEventPublisher outboxEventPublisher;
 
 
 	@Transactional
-	public void save(DirectMessageCreateRequest request) {
-	public DirectMessageSendPayload save(DirectMessageCreateRequest request) {
-		User sender = userRepository.findById(request.senderId()).orElseThrow(UserNotFoundException::new);
-		User receiver = userRepository.findById(request.receiverId()).orElseThrow(UserNotFoundException::new);
+	public DirectMessageSentPayload save(DirectMessageCreateRequest request) {
+		User sender = userRepository.findById(request.senderId())
+			.orElseThrow(UserNotFoundException::new);
+		User receiver = userRepository.findById(request.receiverId())
+			.orElseThrow(UserNotFoundException::new);
 
 		DirectMessage directMessage = directMessageRepository.save(
 			DirectMessage.create(
@@ -69,7 +70,7 @@ public class DirectMessageService {
 		);
 		eventPublisher.publishEvent(new DmReceivedEvent(receiver, sender.getUsername()));
 
-		return new DirectMessageSendPayload(dmKey, directMessageMapper.toDto(directMessage));
+		return new DirectMessageSentPayload(dmKey, directMessageMapper.toDto(directMessage));
 	}
 
 	public DirectMessageDtoCursorResponse getDirectMessages(UUID userId, UUID currentUserId,
