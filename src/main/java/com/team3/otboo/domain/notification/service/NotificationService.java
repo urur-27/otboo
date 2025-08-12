@@ -9,6 +9,7 @@ import com.team3.otboo.domain.user.entity.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationService {
 
   private final NotificationRepository notificationRepository;
-  private final SseService sseService;
+  private final RedisTemplate<String, Object> redisTemplate;
   private final NotificationMapper notificationMapper;
   private final List<NotificationStrategy<?>> strategies;
 
@@ -37,7 +38,7 @@ public class NotificationService {
     for (Notification notification : notifications) {
       notificationRepository.save(notification);
       NotificationDto dto = notificationMapper.toDto(notification);
-      sseService.sendNotification(notification.getReceiver().getId(), dto);
+      redisTemplate.convertAndSend("notification-channel", dto);
     }
   }
 
