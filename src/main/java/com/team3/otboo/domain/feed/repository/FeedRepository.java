@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
 	@Query(
-		value = "select f.author_id from feed f where f.id = :id",
+		value = "select f.author_id from feeds f where f.id = :id",
 		nativeQuery = true
 	)
 	Optional<UUID> findAuthorIdById(UUID feedId);
