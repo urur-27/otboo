@@ -38,7 +38,7 @@ public class RedisConfig {
 	@Bean
 	@Qualifier("chatPubSub")
 	public RedisTemplate<String, Object> redisTemplate(
-		@Qualifier("chatPubSub") RedisConnectionFactory redisConnectionFactory) {
+			@Qualifier("chatPubSub") RedisConnectionFactory redisConnectionFactory) {
 		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(redisConnectionFactory);
 		redisTemplate.setKeySerializer(new StringRedisSerializer());
