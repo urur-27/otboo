@@ -40,7 +40,7 @@ public class ProfileDto {
                 .name(name)
                 .gender(gender)
                 .birthDate(birthDate)
-                .location(location)
+                .location( location.getX() != null ? location : null)
                 .temperatureSensitivity(temperatureSensitivity)
                 .profileImageUrl(binaryContent != null ? binaryContent.getImageUrl() : null)
                 .build();
