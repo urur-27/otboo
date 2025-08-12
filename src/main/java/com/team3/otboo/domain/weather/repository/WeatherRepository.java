@@ -30,9 +30,9 @@ public interface WeatherRepository extends JpaRepository<Weather, UUID> {
 
     Optional<Weather> findByLocationLatitudeAndLocationLongitudeAndForecastAt(Double latitude, Double longitude, LocalDateTime forecastAt);
 
-    List<Weather> findByLocation_LatitudeAndLocation_LongitudeAndForecastAtGreaterThanEqualAndForecastAtLessThan(
-            double latitude,
-            double longitude,
+    List<Weather> findByLocation_XAndLocation_YAndForecastAtGreaterThanEqualAndForecastAtLessThan(
+            Integer x,
+            Integer y,
             LocalDateTime from,
             LocalDateTime toExclusive
     );
