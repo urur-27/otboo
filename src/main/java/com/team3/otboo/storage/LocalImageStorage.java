@@ -79,11 +79,34 @@ public class LocalImageStorage implements ImageStorage {
 
     @Override
     public String getPatch(UUID binaryContentId, String contentType) {
-        Path filePath = resolvePath(binaryContentId);
-        String[] parts = contentType.split("/");
-        return filePath.toString().concat(".").concat(parts[1]);
+        String ext = toExt(contentType); // image/jpeg -> jpg 등
+        Path base = resolvePath(binaryContentId);                 // root/{uuid}
+        Path finalFile = base.resolveSibling(base.getFileName() + "." + ext); // root/{uuid}.jpg
+
+        try {
+            // 최초 호출 시 확장자 없는 파일을 확장자 있는 파일명으로 이동
+            if (Files.exists(base) && Files.notExists(finalFile)) {
+                Files.move(base, finalFile);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 파일명 변경 실패", e);
+        }
+
+        // 웹에서 접근 가능한 URL (/uploads/**)
+        Path rel = root.relativize(finalFile);
+        return "/uploads/" + rel.toString().replace("\\", "/");
     }
 
+    private String toExt(String contentType) {
+        if (contentType == null) return "bin";
+        return switch (contentType) {
+            case "image/jpeg" -> "jpg";
+            case "image/png"  -> "png";
+            case "image/gif"  -> "gif";
+            case "image/webp" -> "webp";
+            default -> "bin";
+        };
+    }
 
     private Path resolvePath(UUID key) {
         return root.resolve(key.toString());
