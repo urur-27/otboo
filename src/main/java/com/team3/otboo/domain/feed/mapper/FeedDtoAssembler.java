@@ -144,7 +144,7 @@ public class FeedDtoAssembler {
 			.weatherId(weather.getId().toString())
 			.skyStatus(weather.getSkyStatus().toString())
 			.precipitation(PrecipitationDto.builder()
-				.type(precipitation.getType().toString())
+				.type(precipitation.getType())
 				.amount(precipitation.getAmount())
 				.probability(precipitation.getProbability())
 				.build()
