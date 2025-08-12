@@ -1,19 +1,20 @@
 package com.team3.otboo.domain.dm.service;
 
-import com.team3.otboo.domain.dm.dto.DirectMessageSendPayload;
-import lombok.RequiredArgsConstructor;
+import com.team3.otboo.domain.dm.event.payload.DirectMessageSentPayload;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class PublishService {
 
-	@Qualifier("chatPubSub")
 	private final RedisTemplate<String, Object> redisTemplate;
 
-	public void publish(DirectMessageSendPayload payload) {
+	public PublishService(@Qualifier("chatPubSub") RedisTemplate<String, Object> redisTemplate) {
+		this.redisTemplate = redisTemplate;
+	}
+
+	public void publish(DirectMessageSentPayload payload) {
 		redisTemplate.convertAndSend("direct-messages", payload);
 	}
 }

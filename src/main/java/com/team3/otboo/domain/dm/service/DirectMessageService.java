@@ -1,10 +1,11 @@
 package com.team3.otboo.domain.dm.service;
 
+import com.team3.otboo.common.event.EventType;
 import com.team3.otboo.domain.dm.dto.DirectMessageDto;
 import com.team3.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
-import com.team3.otboo.domain.dm.dto.DirectMessageSendPayload;
 import com.team3.otboo.domain.dm.entity.DirectMessage;
 import com.team3.otboo.domain.dm.entity.DirectMessageCount;
+import com.team3.otboo.domain.dm.event.payload.DirectMessageSentPayload;
 import com.team3.otboo.domain.dm.mapper.DirectMessageMapper;
 import com.team3.otboo.domain.dm.repository.DirectMessageCountRepository;
 import com.team3.otboo.domain.dm.repository.DirectMessageRepository;
@@ -28,15 +29,21 @@ public class DirectMessageService {
 
 	private final DirectMessageRepository directMessageRepository;
 	private final DirectMessageCountRepository directMessageCountRepository;
+
 	private final UserRepository userRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
 	private final DirectMessageMapper directMessageMapper;
 
+	private final DMOutboxEventPublisher outboxEventPublisher;
+
+
 	@Transactional
-	public DirectMessageSendPayload save(DirectMessageCreateRequest request) {
-		User sender = userRepository.findById(request.senderId()).orElseThrow(UserNotFoundException::new);
-		User receiver = userRepository.findById(request.receiverId()).orElseThrow(UserNotFoundException::new);
+	public DirectMessageSentPayload save(DirectMessageCreateRequest request) {
+		User sender = userRepository.findById(request.senderId())
+			.orElseThrow(UserNotFoundException::new);
+		User receiver = userRepository.findById(request.receiverId())
+			.orElseThrow(UserNotFoundException::new);
 
 		DirectMessage directMessage = directMessageRepository.save(
 			DirectMessage.create(
@@ -52,9 +59,18 @@ public class DirectMessageService {
 			directMessageCountRepository.save(DirectMessageCount.init(dmKey, 1L));
 		}
 
+		DirectMessageSentPayload payload = new DirectMessageSentPayload(
+			dmKey,
+			directMessageMapper.toDto(directMessage)
+		);
+
+		outboxEventPublisher.publish(
+			EventType.DIRECT_MESSAGE_SENT,
+			payload
+		);
 		eventPublisher.publishEvent(new DmReceivedEvent(receiver, sender.getUsername()));
 
-		return new DirectMessageSendPayload(dmKey, directMessageMapper.toDto(directMessage));
+		return new DirectMessageSentPayload(dmKey, directMessageMapper.toDto(directMessage));
 	}
 
 	public DirectMessageDtoCursorResponse getDirectMessages(UUID userId, UUID currentUserId,
