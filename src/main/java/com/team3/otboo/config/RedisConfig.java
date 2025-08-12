@@ -1,6 +1,7 @@
 package com.team3.otboo.config;
 
 import com.team3.otboo.domain.dm.service.SubscribeService;
+import com.team3.otboo.domain.notification.service.RedisSubscriber;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -49,19 +50,25 @@ public class RedisConfig {
 	@Bean
 	public RedisMessageListenerContainer redisMessageListenerContainer(
 		@Qualifier("chatPubSub") RedisConnectionFactory redisConnectionFactory,
-		MessageListenerAdapter messageListenerAdapter
+		MessageListenerAdapter dmListenerAdapter,
+			RedisSubscriber redisSubscriber
 	) {
 		RedisMessageListenerContainer container = new RedisMessageListenerContainer();
 		container.setConnectionFactory(redisConnectionFactory);
 		container.addMessageListener(
-			messageListenerAdapter,
+				dmListenerAdapter,
 			new PatternTopic("direct-messages") // 수신 엔드 포인트 .
+		);
+		container.addMessageListener(
+				redisSubscriber,
+				new PatternTopic("notification-channel") // 수신 엔드 포인트 .
 		);
 		return container;
 	}
 
 	@Bean
-	public MessageListenerAdapter messageListenerAdapter(SubscribeService subscribeService) {
+	public MessageListenerAdapter dmListenerAdapter(SubscribeService subscribeService) {
 		return new MessageListenerAdapter(subscribeService, "onMessage");
 	}
+
 }
