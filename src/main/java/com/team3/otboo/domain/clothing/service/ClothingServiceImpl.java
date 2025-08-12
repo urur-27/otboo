@@ -22,11 +22,18 @@ import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
 import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
+import com.team3.otboo.storage.dto.ImageMaybeOrphanedEvent;
+import com.team3.otboo.storage.entity.BinaryContent;
+import com.team3.otboo.storage.entity.BinaryContentUploadStatus;
+import com.team3.otboo.storage.repository.BinaryContentRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -132,12 +139,17 @@ public class ClothingServiceImpl implements ClothingService {
     if (req.type() != null) clothing.setType(req.type());
 
     if(image != null && !image.isEmpty()){
-      // 기존 이미지 삭제
-      if (clothing.getImageUrl() != null) {
-        imageStorage.delete(clothing.getImageUrl());
-      }
-      String imageUrl = imageStorage.upload(image);
-      clothing.setUrl(imageUrl);
+      // 이전 이미지 참조 보관(정리용)
+      BinaryContent old = clothing.getImage();
+
+      // 새 이미지 업로드 → FK 교체
+      BinaryContent fresh = uploadThroughBinaryContent(image);
+      clothing.changeImage(fresh);
+
+      // 커밋 후 안전 삭제 예약 (다른 곳에서 참조할 경우 주의)
+      if (old != null) applicationEventPublisher.publishEvent(
+              new ImageMaybeOrphanedEvent(old.getId())
+      );
     }
 
     // 속성 업데이트(전체 교체)
