@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.UUID;
 
 import com.team3.otboo.global.exception.BusinessException;
@@ -17,24 +16,20 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 @ConditionalOnProperty(name = "otboo.storage.type", havingValue = "local")
 @Component
 public class LocalImageStorage implements ImageStorage {
 
     private final Path root;
-    private final String publicPath;       // URL prefix
 
     public LocalImageStorage(
-            @Value("${otboo.storage.local.root-path}") String rootProp,
-            @Value("${otboo.storage.local.public-path:/uploads/}") String publicPath) {
+            @Value("${otboo.storage.local.root-path}") String rootProp) {
         Path r = Paths.get(rootProp);
         if (!r.isAbsolute()) {
             r = Paths.get(System.getProperty("user.dir")).resolve(r).toAbsolutePath();
         }
         this.root = r.normalize();
-        this.publicPath = publicPath.endsWith("/") ? publicPath : publicPath + "/";
     }
 
     @PostConstruct
@@ -46,22 +41,6 @@ public class LocalImageStorage implements ImageStorage {
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
-        }
-    }
-
-    @Override
-    public String upload(MultipartFile file) {
-        try {
-            String original = Optional.ofNullable(file.getOriginalFilename()).orElse("file");
-            String safeName = original.replaceAll("[\\\\/\\s]+", "_"); // 간단 sanitizing
-            String filename = UUID.randomUUID() + "_" + safeName;
-
-            Path targetPath = root.resolve(filename).normalize();
-            file.transferTo(targetPath.toFile());
-
-            return publicPath + filename;
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED, e.getMessage());
         }
     }
 

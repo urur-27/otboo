@@ -22,8 +22,12 @@ import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
 import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
-import jakarta.persistence.EntityNotFoundException;
+import com.team3.otboo.storage.entity.BinaryContent;
+import com.team3.otboo.storage.entity.BinaryContentUploadStatus;
+import com.team3.otboo.storage.repository.BinaryContentRepository;
+import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +47,7 @@ public class ClothingServiceImpl implements ClothingService {
   private final AttributeRepository attributeRepository;
   private final AttributeOptionRepository attributeOptionRepository;
   private final UserRepository userRepository;
+  private final BinaryContentRepository binaryContentRepository;
 
   @Override
   public List<Clothing> getClothesByOwner(User user) {
@@ -54,8 +59,11 @@ public class ClothingServiceImpl implements ClothingService {
   public ClothingDto registerClothing(User user, ClothingCreateRequest request,
           MultipartFile image) {
     log.info("의상 등록 서비스 시작");
-    log.info("이미지 업로드");
-    String imageUrl = (image != null) ? imageStorage.upload(image) : null;
+
+    String imageUrl = null;
+    if (image != null && !image.isEmpty()) {
+      imageUrl = uploadThroughBinaryContent(image);
+    }
 
     Clothing clothing = clothingMapper.toEntity(request);
 
@@ -74,7 +82,7 @@ public class ClothingServiceImpl implements ClothingService {
     }
 
     clothingRepository.save(clothing);
-      return clothingMapper.toDto(clothing);
+    return clothingMapper.toDto(clothing);
   }
 
   @Override
@@ -135,7 +143,7 @@ public class ClothingServiceImpl implements ClothingService {
       if (clothing.getImageUrl() != null) {
         imageStorage.delete(clothing.getImageUrl());
       }
-      String imageUrl = imageStorage.upload(image);
+      String imageUrl = uploadThroughBinaryContent(image);
       clothing.setUrl(imageUrl);
     }
 
@@ -154,5 +162,68 @@ public class ClothingServiceImpl implements ClothingService {
     }
 
     return clothingMapper.toDto(clothing);
+  }
+
+  // BinaryContent 생성(WAITING) → S3 put(id, bytes) → getPath(id, contentType) → SUCCESS
+  private String uploadThroughBinaryContent(MultipartFile image) {
+    final String originalName = safeFileName(image.getOriginalFilename());
+    final String contentType = safeContentType(image.getContentType(), originalName);
+    final byte[] bytes = toBytes(image);
+
+    // BinaryContent 저장 (WAITING)
+    BinaryContent bin = new BinaryContent(
+            originalName,
+            (long) bytes.length,
+            contentType,
+            BinaryContentUploadStatus.WAITING
+    );
+    binaryContentRepository.save(bin); // UUID 발급
+
+    try {
+      // 업로드
+      imageStorage.put(bin.getId(), bytes);
+
+      // URL 생성
+      String url = imageStorage.getPatch(bin.getId(), contentType);
+
+      // 엔티티 갱신
+      bin.updateImageUrl(url);
+      bin.markCompleted(url);
+
+      return url;
+    } catch (RuntimeException ex) {
+      bin.markFailed();
+      throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED, ex.getMessage());
+    }
+  }
+
+  // --- 유틸들 ---
+
+  private String safeFileName(String original) {
+    String base = (original == null || original.isBlank()) ? "file" : original;
+    return base.replaceAll("[\\\\/\\s]+", "_");
+  }
+
+  private String safeContentType(String raw, String fileName) {
+    if (raw != null && !raw.isBlank())
+      return raw;
+    String lower = fileName.toLowerCase(Locale.ROOT);
+    if (lower.endsWith(".png"))
+      return "image/png";
+    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg"))
+      return "image/jpeg";
+    if (lower.endsWith(".gif"))
+      return "image/gif";
+    if (lower.endsWith(".webp"))
+      return "image/webp";
+    return "application/octet-stream";
+  }
+
+  private byte[] toBytes(MultipartFile image) {
+    try {
+      return image.getBytes();
+    } catch (IOException e) {
+      throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED, "파일 읽기 실패: " + e.getMessage());
+    }
   }
 }
