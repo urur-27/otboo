@@ -1,14 +1,13 @@
 package com.team3.otboo.domain.clothing.mapper;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeDefDto;
-import com.team3.otboo.domain.clothing.dto.request.ClothingAttributeDefCreateRequest;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeDefDto;
+import com.team3.otboo.domain.clothing.dto.request.ClothesAttributeDefCreateRequest;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring")
 public interface ClothingAttributeDefMapper {
@@ -16,13 +15,13 @@ public interface ClothingAttributeDefMapper {
     // request → entity
     @Mapping(target = "name", source = "name")
     @Mapping(target = "options", source = "selectableValues", qualifiedByName = "toOptions")
-    Attribute toEntity(ClothingAttributeDefCreateRequest request);
+    Attribute toEntity(ClothesAttributeDefCreateRequest request);
 
     // entity → dto
     @Mapping(target = "selectableValues", source = "options", qualifiedByName = "toValueList")
-    ClothingAttributeDefDto toDto(Attribute attribute);
+    ClothesAttributeDefDto toDto(Attribute attribute);
 
-    List<ClothingAttributeDefDto> toDtoList(List<Attribute> attributes);
+    List<ClothesAttributeDefDto> toDtoList(List<Attribute> attributes);
 
     // 커스텀 매핑 메서드
     @Named("toOptions")

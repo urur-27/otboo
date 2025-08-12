@@ -1,12 +1,12 @@
 package com.team3.otboo.domain.clothing.dto.request;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeDto;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeDto;
 import java.util.List;
 import java.util.UUID;
 
-public record ClothingCreateRequest(
+public record ClothesCreateRequest(
         UUID ownerId,
         String name,
         String type,
-        List<ClothingAttributeDto> attributes
+        List<ClothesAttributeDto> attributes
 ) {}

@@ -1,9 +1,9 @@
 package com.team3.otboo.domain.clothing.service;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeDto;
-import com.team3.otboo.domain.clothing.dto.ClothingDto;
-import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
-import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeDto;
+import com.team3.otboo.domain.clothing.dto.ClothesDto;
+import com.team3.otboo.domain.clothing.dto.request.ClothesCreateRequest;
+import com.team3.otboo.domain.clothing.dto.request.ClothesUpdateRequest;
 import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
@@ -22,7 +22,6 @@ import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
 import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +50,7 @@ public class ClothingServiceImpl implements ClothingService {
 
   @Override
   @Transactional
-  public ClothingDto registerClothing(User user, ClothingCreateRequest request,
+  public ClothesDto registerClothing(User user, ClothesCreateRequest request,
           MultipartFile image) {
     log.info("의상 등록 서비스 시작");
     log.info("이미지 업로드");
@@ -64,7 +63,7 @@ public class ClothingServiceImpl implements ClothingService {
     clothing.setUrl(imageUrl);    // 업로드 url
 
     // attributeValues 직접 생성 및 연관관계 연결
-    for (ClothingAttributeDto attrReq : request.attributes()) {
+    for (ClothesAttributeDto attrReq : request.attributes()) {
       Attribute attribute = attributeRepository.findById(attrReq.definitionId())
               .orElseThrow(AttributeNotFoundException::new);
       AttributeOption option = attributeOptionRepository.findByAttributeIdAndValue(attribute.getId(), attrReq.value())
@@ -91,9 +90,9 @@ public class ClothingServiceImpl implements ClothingService {
             ownerId, cursor, idAfter, limit, typeEqual, direction
     );
     // 엔티티 → DTO 변환
-    List<ClothingDto> data = page.data().stream()
+    List<ClothesDto> data = page.data().stream()
             .map(clothing -> {
-              ClothingDto dto = clothingMapper.toDto(clothing);
+              ClothesDto dto = clothingMapper.toDto(clothing);
               if (dto == null) {
                 throw new BusinessException(ErrorCode.CLOTHING_MAPPER_CONVERSION_FAILED, "Clothing → DTO 변환 실패");
               }
@@ -122,7 +121,7 @@ public class ClothingServiceImpl implements ClothingService {
 
   @Override
   @Transactional
-  public ClothingDto updateClothing(UUID id, ClothingUpdateRequest req, MultipartFile image){
+  public ClothesDto updateClothing(UUID id, ClothesUpdateRequest req, MultipartFile image){
     Clothing clothing = clothingRepository.findById(id)
             .orElseThrow(ClothingNotFoundException::new);
 
@@ -143,7 +142,7 @@ public class ClothingServiceImpl implements ClothingService {
     if (req.attributes() != null) {
       clothing.getAttributeValues().clear();
 
-      for (ClothingAttributeDto attrDto : req.attributes()) {
+      for (ClothesAttributeDto attrDto : req.attributes()) {
         Attribute attribute = attributeRepository.findById(attrDto.definitionId())
                 .orElseThrow(AttributeNotFoundException::new);
         AttributeOption option = attributeOptionRepository.findByAttributeAndValue(attribute, attrDto.value())
