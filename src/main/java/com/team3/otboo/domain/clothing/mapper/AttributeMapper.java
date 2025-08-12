@@ -1,6 +1,6 @@
 package com.team3.otboo.domain.clothing.mapper;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeWithDefDto;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeWithDefDto;
 import com.team3.otboo.domain.clothing.dto.response.VisionAnalysisResult;
 import com.team3.otboo.domain.clothing.dto.response.VisionAttributeItem;
 import com.team3.otboo.domain.clothing.entity.Attribute;
@@ -31,7 +31,7 @@ public class AttributeMapper {
     // 옵션값 유사 매칭 임계치
     private static final double OPT_SIM_THRESH = 0.65;
 
-    public List<ClothingAttributeWithDefDto> mapFromVision(VisionAnalysisResult vision) {
+    public List<ClothesAttributeWithDefDto> mapFromVision(VisionAnalysisResult vision) {
         if (vision == null || vision.attributes() == null) return List.of();
 
         // DB 정의 로드 (캐싱 고려 가능)
@@ -48,7 +48,7 @@ public class AttributeMapper {
                         (a,b)->a
                 ));
 
-        List<ClothingAttributeWithDefDto> result = new ArrayList<>();
+        List<ClothesAttributeWithDefDto> result = new ArrayList<>();
 
         for (VisionAttributeItem item : vision.attributes()) {
             if (item == null) continue;
@@ -93,7 +93,7 @@ public class AttributeMapper {
                 finalValue = valueRaw;
             }
 
-            result.add(new ClothingAttributeWithDefDto(
+            result.add(new ClothesAttributeWithDefDto(
                     def.getId(),
                     def.getName(),
                     selectableValues,  // 드롭다운 목록

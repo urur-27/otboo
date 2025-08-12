@@ -1,7 +1,7 @@
 package com.team3.otboo.domain.clothing.service;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeWithDefDto;
-import com.team3.otboo.domain.clothing.dto.ClothingDto;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeWithDefDto;
+import com.team3.otboo.domain.clothing.dto.ClothesDto;
 import com.team3.otboo.domain.clothing.dto.response.HtmlExtractionResult;
 import com.team3.otboo.domain.clothing.dto.response.VisionAnalysisResult;
 import com.team3.otboo.domain.clothing.entity.Attribute;
@@ -34,7 +34,7 @@ public class ClothingExtractionServiceImpl implements ClothingExtractionService 
     private final AttributeOptionRepository attributeOptionRepository;
 
     @Override
-    public ClothingDto extractFromUrl(String url) {
+    public ClothesDto extractFromUrl(String url) {
         HtmlExtractionResult html = htmlExtractor.extract(url);
 
         // DB 정의/값 목록 조회 → 프롬프트 재료
@@ -66,7 +66,7 @@ public class ClothingExtractionServiceImpl implements ClothingExtractionService 
         );
 
         // DB 매핑/유사매칭으로 정규화
-        List<ClothingAttributeWithDefDto> mappedAttrs = attributeMapper.mapFromVision(vision);
+        List<ClothesAttributeWithDefDto> mappedAttrs = attributeMapper.mapFromVision(vision);
 
         // merge 시 attributes를 mappedAttrs로 교체
         return clothingDtoMerger.merge(html, vision, mappedAttrs);

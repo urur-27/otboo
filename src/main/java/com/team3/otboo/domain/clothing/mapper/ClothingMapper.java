@@ -1,8 +1,8 @@
 package com.team3.otboo.domain.clothing.mapper;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeWithDefDto;
-import com.team3.otboo.domain.clothing.dto.ClothingDto;
-import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeWithDefDto;
+import com.team3.otboo.domain.clothing.dto.ClothesDto;
+import com.team3.otboo.domain.clothing.dto.request.ClothesCreateRequest;
 import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import com.team3.otboo.domain.clothing.entity.ClothesType;
 import com.team3.otboo.domain.clothing.entity.Clothing;
@@ -42,9 +42,9 @@ public interface ClothingMapper {
   }
 
   @Named("toAttributeDto")
-  default List<ClothingAttributeWithDefDto> toAttributeDto(List<ClothingAttributeValue> values) {
+  default List<ClothesAttributeWithDefDto> toAttributeDto(List<ClothingAttributeValue> values) {
     return values.stream()
-        .map(value -> new ClothingAttributeWithDefDto(
+        .map(value -> new ClothesAttributeWithDefDto(
             value.getAttribute().getId(),
             value.getAttribute().getName(),
             value.getAttribute().getOptions().stream().map(AttributeOption::getValue)
@@ -56,12 +56,12 @@ public interface ClothingMapper {
 
   @Mapping(source = "owner.id", target = "ownerId")
   @Mapping(source = "attributeValues", target = "attributes", qualifiedByName = "toAttributeDto")
-  ClothingDto toDto(Clothing clothing);
+  ClothesDto toDto(Clothing clothing);
 
   @Mapping(target = "id", ignore = true) // PK 자동 생성
   @Mapping(target = "owner", ignore = true) // 서비스에서 세팅
   @Mapping(target = "imageUrl", ignore = true) // 서비스에서 세팅
   @Mapping(target = "purchaseUrl", ignore = true) // (옵션) 추후 추가
   @Mapping(target = "attributeValues", ignore = true) // 속성값 매핑은 별도 처리(서비스 계층)
-  Clothing toEntity(ClothingCreateRequest request);
+  Clothing toEntity(ClothesCreateRequest request);
 }

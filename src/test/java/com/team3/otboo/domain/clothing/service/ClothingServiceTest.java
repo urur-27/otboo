@@ -1,9 +1,9 @@
 package com.team3.otboo.domain.clothing.service;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeDto;
-import com.team3.otboo.domain.clothing.dto.ClothingDto;
-import com.team3.otboo.domain.clothing.dto.request.ClothingCreateRequest;
-import com.team3.otboo.domain.clothing.dto.request.ClothingUpdateRequest;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeDto;
+import com.team3.otboo.domain.clothing.dto.ClothesDto;
+import com.team3.otboo.domain.clothing.dto.request.ClothesCreateRequest;
+import com.team3.otboo.domain.clothing.dto.request.ClothesUpdateRequest;
 import com.team3.otboo.domain.clothing.dto.response.ClothingDtoCursorResponse;
 import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
@@ -80,12 +80,12 @@ public class ClothingServiceTest {
             UUID clothingId = UUID.randomUUID();
 
             User mockUser = mock(User.class);
-            ClothingCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
+            ClothesCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
             Attribute mockAttribute = mock(Attribute.class);
             when(mockAttribute.getId()).thenReturn(attributeId);
             AttributeOption mockOption = mock(AttributeOption.class);
             Clothing mockClothing = mock(Clothing.class);
-            ClothingDto expectedDto = ClothingDtoFixture.sampleExpectedDto(clothingId, userId, attributeId, imageUrl);
+            ClothesDto expectedDto = ClothingDtoFixture.sampleExpectedDto(clothingId, userId, attributeId, imageUrl);
 
             // stub 정의
             when(imageStorage.upload(image)).thenReturn(imageUrl);
@@ -95,7 +95,7 @@ public class ClothingServiceTest {
             when(attributeOptionRepository.findByAttributeIdAndValue(attributeId, "청색")).thenReturn(Optional.of(mockOption));
 
             // when
-            ClothingDto result = clothingService.registerClothing(mockUser, request, image);
+            ClothesDto result = clothingService.registerClothing(mockUser, request, image);
 
             // then
             verify(clothingRepository).save(mockClothing);
@@ -121,7 +121,7 @@ public class ClothingServiceTest {
         void registerClothing_fail_whenImageUploadFails() {
             // given
             MultipartFile image = mock(MultipartFile.class);
-            ClothingCreateRequest request = ClothingDtoFixture.sampleCreateRequest(UUID.randomUUID());
+            ClothesCreateRequest request = ClothingDtoFixture.sampleCreateRequest(UUID.randomUUID());
             User user = mock(User.class);
 
             when(imageStorage.upload(image)).thenThrow(new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED));
@@ -141,7 +141,7 @@ public class ClothingServiceTest {
             // given
             MultipartFile image = mock(MultipartFile.class);
             UUID attributeId = UUID.randomUUID();
-            ClothingCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
+            ClothesCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
             User user = mock(User.class);
 
             String imageUrl = "http://mocked-image-url.com";
@@ -168,7 +168,7 @@ public class ClothingServiceTest {
             MultipartFile image = mock(MultipartFile.class);
             UUID attributeId = UUID.randomUUID();
             User user = mock(User.class);
-            ClothingCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
+            ClothesCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
 
             Attribute mockAttribute = mock(Attribute.class);
             when(mockAttribute.getId()).thenReturn(attributeId);
@@ -226,8 +226,8 @@ public class ClothingServiceTest {
             );
 
             // ClothingDto mock 리스트
-            ClothingDto dto1 = mock(ClothingDto.class);
-            ClothingDto dto2 = mock(ClothingDto.class);
+            ClothesDto dto1 = mock(ClothesDto.class);
+            ClothesDto dto2 = mock(ClothesDto.class);
             when(clothingRepository.findAllByCursor(ownerId, cursor, idAfter, limit, typeEqual, direction))
                     .thenReturn(mockPage);
             when(clothingMapper.toDto(clothing1)).thenReturn(dto1);
@@ -339,8 +339,8 @@ public class ClothingServiceTest {
             AttributeOption option = mock(AttributeOption.class);
             MultipartFile image = new MockMultipartFile("image", "shirt.jpg", "image/jpeg", "data".getBytes());
           
-            ClothingUpdateRequest request = ClothingDtoFixture.sampleUpdateRequest(attributeId);
-            ClothingDto expectedDto = ClothingDtoFixture.sampleUpdatedDto(clothingId, userId, attributeId, "/uploads/shirt.jpg");
+            ClothesUpdateRequest request = ClothingDtoFixture.sampleUpdateRequest(attributeId);
+            ClothesDto expectedDto = ClothingDtoFixture.sampleUpdatedDto(clothingId, userId, attributeId, "/uploads/shirt.jpg");
 
             when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
             when(imageStorage.upload(any())).thenReturn("/uploads/shirt.jpg");
@@ -349,7 +349,7 @@ public class ClothingServiceTest {
             when(clothingMapper.toDto(clothing)).thenReturn(expectedDto);
 
             // when
-            ClothingDto result = clothingService.updateClothing(clothingId, request, image);
+            ClothesDto result = clothingService.updateClothing(clothingId, request, image);
 
             // then
             assertThat(result).isEqualTo(expectedDto);
@@ -367,14 +367,14 @@ public class ClothingServiceTest {
             UUID clothingId = UUID.randomUUID();
             Clothing clothing = mock(Clothing.class);
 
-            ClothingUpdateRequest request = new ClothingUpdateRequest("셔츠", "TOP", null);
+            ClothesUpdateRequest request = new ClothesUpdateRequest("셔츠", "TOP", null);
             MultipartFile image = null;
 
             when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
-            when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothingDto.class));
+            when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothesDto.class));
 
             // when
-            ClothingDto result = clothingService.updateClothing(clothingId, request, image);
+            ClothesDto result = clothingService.updateClothing(clothingId, request, image);
 
             // then
             verify(clothing).setName("셔츠");
@@ -395,10 +395,10 @@ public class ClothingServiceTest {
 
             when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
             when(imageStorage.upload(any())).thenReturn("/uploads/shirt.jpg");
-            when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothingDto.class));
+            when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothesDto.class));
 
             // when
-            ClothingDto result = clothingService.updateClothing(clothingId, new ClothingUpdateRequest(null, null, null), image);
+            ClothesDto result = clothingService.updateClothing(clothingId, new ClothesUpdateRequest(null, null, null), image);
 
             // then
             verify(imageStorage).delete("/uploads/old.jpg");
@@ -416,10 +416,10 @@ public class ClothingServiceTest {
             MultipartFile emptyImage = new MockMultipartFile("image", "", "image/jpeg", new byte[0]); // isEmpty = true
 
             when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
-            when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothingDto.class));
+            when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothesDto.class));
 
             // when
-            ClothingDto result = clothingService.updateClothing(clothingId, new ClothingUpdateRequest(null, null, null), emptyImage);
+            ClothesDto result = clothingService.updateClothing(clothingId, new ClothesUpdateRequest(null, null, null), emptyImage);
 
             // then
             verify(imageStorage, never()).upload(any());
@@ -435,7 +435,7 @@ public class ClothingServiceTest {
 
             // when
             Throwable thrown = catchThrowable(() ->
-                    clothingService.updateClothing(clothingId, mock(ClothingUpdateRequest.class), null)
+                    clothingService.updateClothing(clothingId, mock(ClothesUpdateRequest.class), null)
             );
 
             // then
@@ -453,9 +453,9 @@ public class ClothingServiceTest {
             when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
 
             UUID attributeId = UUID.randomUUID();
-            ClothingUpdateRequest request = new ClothingUpdateRequest(
+            ClothesUpdateRequest request = new ClothesUpdateRequest(
                     "셔츠", "TOP",
-                    List.of(new ClothingAttributeDto(attributeId, "청색"))
+                    List.of(new ClothesAttributeDto(attributeId, "청색"))
             );
 
             when(attributeRepository.findById(attributeId)).thenReturn(Optional.empty());
@@ -486,9 +486,9 @@ public class ClothingServiceTest {
             when(attributeOptionRepository.findByAttributeAndValue(attribute, "청색"))
                     .thenReturn(Optional.empty());
 
-            ClothingUpdateRequest request = new ClothingUpdateRequest(
+            ClothesUpdateRequest request = new ClothesUpdateRequest(
                     "셔츠", "TOP",
-                    List.of(new ClothingAttributeDto(attributeId, "청색"))
+                    List.of(new ClothesAttributeDto(attributeId, "청색"))
             );
 
             // when

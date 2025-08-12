@@ -1,15 +1,15 @@
 package com.team3.otboo.domain.clothing.service;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeDefDto;
-import com.team3.otboo.domain.clothing.dto.request.ClothingAttributeDefCreateRequest;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeDefDto;
+import com.team3.otboo.domain.clothing.dto.request.ClothesAttributeDefCreateRequest;
 import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import java.util.UUID;
 
 
 public interface ClothingAttributeDefService {
-    ClothingAttributeDefDto create(ClothingAttributeDefCreateRequest request);
+    ClothesAttributeDefDto create(ClothesAttributeDefCreateRequest request);
 
-    CursorPageResponse<ClothingAttributeDefDto> getAttributes(
+    CursorPageResponse<ClothesAttributeDefDto> getAttributes(
             String cursor,
             UUID idAfter,
             int limit,
@@ -20,5 +20,5 @@ public interface ClothingAttributeDefService {
 
     void deleteAttribute(UUID definitionId);
 
-    ClothingAttributeDefDto updateAttribute(UUID definitionId, ClothingAttributeDefCreateRequest request);
+    ClothesAttributeDefDto updateAttribute(UUID definitionId, ClothesAttributeDefCreateRequest request);
 }

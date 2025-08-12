@@ -1,6 +1,6 @@
 package com.team3.otboo.domain.clothing.controller;
 
-import com.team3.otboo.domain.clothing.dto.ClothingDto;
+import com.team3.otboo.domain.clothing.dto.ClothesDto;
 import com.team3.otboo.domain.clothing.service.ClothingExtractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +17,10 @@ public class ClothingExtractionController {
     private final ClothingExtractionService extractionService;
 
     @GetMapping
-    public ResponseEntity<ClothingDto> extractClothingInfo(
+    public ResponseEntity<ClothesDto> extractClothingInfo(
             @RequestParam("url") String url
     ) {
-        ClothingDto clothingDto = extractionService.extractFromUrl(url);
+        ClothesDto clothingDto = extractionService.extractFromUrl(url);
         return ResponseEntity.ok(clothingDto);
     }
 }

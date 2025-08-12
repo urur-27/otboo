@@ -1,7 +1,7 @@
 package com.team3.otboo.domain.clothing.controller;
 
-import com.team3.otboo.domain.clothing.dto.ClothingAttributeDefDto;
-import com.team3.otboo.domain.clothing.dto.request.ClothingAttributeDefCreateRequest;
+import com.team3.otboo.domain.clothing.dto.ClothesAttributeDefDto;
+import com.team3.otboo.domain.clothing.dto.request.ClothesAttributeDefCreateRequest;
 import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.service.ClothingAttributeDefService;
 import com.team3.otboo.domain.clothing.service.Direction;
@@ -30,14 +30,14 @@ public class ClothingAttributeDefController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<ClothingAttributeDefDto> create(
-            @RequestBody @Valid ClothingAttributeDefCreateRequest request) {
-        ClothingAttributeDefDto dto = service.create(request);
+    public ResponseEntity<ClothesAttributeDefDto> create(
+            @RequestBody @Valid ClothesAttributeDefCreateRequest request) {
+        ClothesAttributeDefDto dto = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @GetMapping
-    public ResponseEntity<CursorPageResponse<ClothingAttributeDefDto>> getAttributes(
+    public ResponseEntity<CursorPageResponse<ClothesAttributeDefDto>> getAttributes(
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) UUID idAfter,
             @RequestParam int limit,
@@ -62,11 +62,11 @@ public class ClothingAttributeDefController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{definitionId}")
-    public ResponseEntity<ClothingAttributeDefDto> updateAttributeDef(
+    public ResponseEntity<ClothesAttributeDefDto> updateAttributeDef(
             @PathVariable UUID definitionId,
-            @RequestBody ClothingAttributeDefCreateRequest request) {
+            @RequestBody ClothesAttributeDefCreateRequest request) {
 
-        ClothingAttributeDefDto response = service.updateAttribute(definitionId, request);
+        ClothesAttributeDefDto response = service.updateAttribute(definitionId, request);
         return ResponseEntity.ok(response);
     }
 
