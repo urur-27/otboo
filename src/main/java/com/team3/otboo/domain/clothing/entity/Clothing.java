@@ -1,8 +1,10 @@
 package com.team3.otboo.domain.clothing.entity;
 
 import com.team3.otboo.domain.base.entity.BaseEntity;
+import com.team3.otboo.storage.entity.BinaryContent;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
@@ -28,6 +30,15 @@ public class Clothing extends BaseEntity {
 
     @OneToMany(mappedBy = "clothing", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClothingAttributeValue> attributeValues = new ArrayList<>(); // 의상 속성
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "image_id")
+    private BinaryContent image; // 이미지 fk
+
+    public void changeImage(BinaryContent newImage) {
+        this.image = newImage;
+        this.imageUrl = (newImage != null) ? newImage.getImageUrl() : null;
+    }
 
     public static Clothing of(String name, User owner) {
         Clothing clothing = new Clothing();

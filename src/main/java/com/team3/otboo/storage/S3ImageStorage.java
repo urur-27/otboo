@@ -51,14 +51,16 @@ public class S3ImageStorage implements ImageStorage{
     }
 
     @Override
-    public String upload(MultipartFile file) {
-        // TODO: S3 업로드 구현 예정
-        throw new UnsupportedOperationException("S3 업로드는 아직 구현되지 않았습니다.");
-    }
-
-    @Override
-    public void delete(String imageUrl) {
-        throw new UnsupportedOperationException("S3 삭제는 아직 구현되지 않았습니다.");
+    public void delete(UUID id) {
+        String key = id.toString();
+        try {
+            S3Client s3 = getS3Client();
+            s3.deleteObject(b -> b.bucket(bucket).key(key));
+            log.info("S3 삭제 성공: {}", key);
+        } catch (S3Exception e) {
+            log.error("S3 삭제 실패: {}", e.getMessage());
+            // 필요시 재시도/보류 상태 마킹
+        }
     }
 
     @Override
@@ -114,8 +116,7 @@ public class S3ImageStorage implements ImageStorage{
 
     @Override
     public String getPatch(UUID binaryContentId, String contentType) {
-        String[] parts = contentType.split("/");
-        return baseUrl.concat("/").concat(binaryContentId.toString()).concat(".").concat(parts[1]);
+        return baseUrl.concat("/").concat(binaryContentId.toString());
     }
 
 

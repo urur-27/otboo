@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.UUID;
 
 public interface ImageStorage {
-    void delete(String imageUrl);
+    void delete(UUID id);
 
     UUID put(UUID binaryContentId, byte[] bytes);
 

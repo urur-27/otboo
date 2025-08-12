@@ -22,6 +22,7 @@ import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
 import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
+import com.team3.otboo.storage.dto.ImageMaybeOrphanedEvent;
 import com.team3.otboo.storage.entity.BinaryContent;
 import com.team3.otboo.storage.entity.BinaryContentUploadStatus;
 import com.team3.otboo.storage.repository.BinaryContentRepository;
@@ -31,6 +32,7 @@ import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,8 +48,8 @@ public class ClothingServiceImpl implements ClothingService {
   private final ImageStorage imageStorage;
   private final AttributeRepository attributeRepository;
   private final AttributeOptionRepository attributeOptionRepository;
-  private final UserRepository userRepository;
   private final BinaryContentRepository binaryContentRepository;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
   public List<Clothing> getClothesByOwner(User user) {
@@ -60,16 +62,13 @@ public class ClothingServiceImpl implements ClothingService {
           MultipartFile image) {
     log.info("의상 등록 서비스 시작");
 
-    String imageUrl = null;
-    if (image != null && !image.isEmpty()) {
-      imageUrl = uploadThroughBinaryContent(image);
-    }
-
     Clothing clothing = clothingMapper.toEntity(request);
+    clothing.setOwner(user);
+    if (image != null && !image.isEmpty()) {
 
-    // 연관관계 세팅
-    clothing.setOwner(user);           // 로그인 사용자
-    clothing.setUrl(imageUrl);    // 업로드 url
+      BinaryContent bin = uploadThroughBinaryContent(image);
+      clothing.changeImage(bin); // ← FK + url 동시 세팅
+    }
 
     // attributeValues 직접 생성 및 연관관계 연결
     for (ClothingAttributeDto attrReq : request.attributes()) {
@@ -139,12 +138,17 @@ public class ClothingServiceImpl implements ClothingService {
     if (req.type() != null) clothing.setType(req.type());
 
     if(image != null && !image.isEmpty()){
-      // 기존 이미지 삭제
-      if (clothing.getImageUrl() != null) {
-        imageStorage.delete(clothing.getImageUrl());
-      }
-      String imageUrl = uploadThroughBinaryContent(image);
-      clothing.setUrl(imageUrl);
+      // 이전 이미지 참조 보관(정리용)
+      BinaryContent old = clothing.getImage();
+
+      // 새 이미지 업로드 → FK 교체
+      BinaryContent fresh = uploadThroughBinaryContent(image);
+      clothing.changeImage(fresh);
+
+      // 커밋 후 안전 삭제 예약 (다른 곳에서 참조할 경우 주의)
+      if (old != null) applicationEventPublisher.publishEvent(
+              new ImageMaybeOrphanedEvent(old.getId())
+      );
     }
 
     // 속성 업데이트(전체 교체)
@@ -165,7 +169,7 @@ public class ClothingServiceImpl implements ClothingService {
   }
 
   // BinaryContent 생성(WAITING) → S3 put(id, bytes) → getPath(id, contentType) → SUCCESS
-  private String uploadThroughBinaryContent(MultipartFile image) {
+  private BinaryContent uploadThroughBinaryContent(MultipartFile image) {
     final String originalName = safeFileName(image.getOriginalFilename());
     final String contentType = safeContentType(image.getContentType(), originalName);
     final byte[] bytes = toBytes(image);
@@ -187,10 +191,9 @@ public class ClothingServiceImpl implements ClothingService {
       String url = imageStorage.getPatch(bin.getId(), contentType);
 
       // 엔티티 갱신
-      bin.updateImageUrl(url);
       bin.markCompleted(url);
 
-      return url;
+      return bin;
     } catch (RuntimeException ex) {
       bin.markFailed();
       throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED, ex.getMessage());
