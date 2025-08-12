@@ -17,6 +17,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  messages:
+    basename: messages
   # SMTP = Simple Mail Transfer Protocol
   mail:
     host: smtp.gmail.com        # gmail로 발송하겠다는 뜻

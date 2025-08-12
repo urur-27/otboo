@@ -1,7 +1,9 @@
 package com.team3.otboo.domain.follow.repository;
 
 import com.team3.otboo.domain.follow.entity.Follow;
+import com.team3.otboo.domain.user.entity.User;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -97,4 +99,6 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
 		@Param("limit") Integer limit,
 		@Param("nameLike") String nameLike
 	);
+
+	List<Follow> findAllByFolloweeId(UUID followeeId);
 }

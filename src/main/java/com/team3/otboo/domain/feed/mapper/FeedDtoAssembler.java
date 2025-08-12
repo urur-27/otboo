@@ -13,6 +13,11 @@ import com.team3.otboo.domain.feed.repository.LikeRepository;
 import com.team3.otboo.domain.feed.service.OotdService;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.domain.weather.dto.PrecipitationDto;
+import com.team3.otboo.domain.weather.dto.TemperatureDto;
+import com.team3.otboo.domain.weather.dto.WeatherSummaryDto;
+import com.team3.otboo.domain.weather.entity.Precipitation;
+import com.team3.otboo.domain.weather.entity.Temperature;
 import com.team3.otboo.domain.weather.entity.Weather;
 import com.team3.otboo.domain.weather.repository.WeatherRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -50,15 +55,15 @@ public class FeedDtoAssembler {
 			user.getProfile().getBinaryContent().getImageUrl()
 		);
 
-		// TODO: weather 쪽 구현(repository) 완료 후 코드 완성하기
-//		UUID weatherId = feed.getWeatherId();
-//		Weather weather = weatherRepository.findById(weatherId).orElseThrow(
-//			() -> new EntityNotFoundException("weather not found. weatherId: " + weatherId)
-//		);
+		UUID weatherId = feed.getWeatherId();
+		Weather weather = weatherRepository.findById(weatherId).orElseThrow(
+			() -> new EntityNotFoundException("weather not found. weatherId: " + weatherId)
+		);
+
+		WeatherSummaryDto weatherSummaryDto = getWeatherSummaryDto(weather);
 
 		List<OotdDto> ootdDtos = ootdService.getOotdDtos(feedId);
 
-		// comment count, like count
 		Integer commentCount = feedCommentCountRepository.findById(feedId)
 			.map(FeedCommentCount::getCommentCount)
 			.map(Long::intValue)
@@ -75,8 +80,8 @@ public class FeedDtoAssembler {
 			feed.getCreatedAt(),
 			feed.getUpdatedAt(),
 			authorDto,
-			null, // weather 구현 완료 후 weatherDto
-			ootdDtos, // ootds
+			weatherSummaryDto,
+			ootdDtos,
 			feed.getContent(),
 			likeCount,
 			commentCount,
@@ -106,7 +111,7 @@ public class FeedDtoAssembler {
 			() -> new EntityNotFoundException("weather not found. weather id: " + weatherId)
 		);
 
-		// TODO weather 쪽 구현 이후 weather dto 만들기 .
+		WeatherSummaryDto weatherSummaryDto = getWeatherSummaryDto(weather);
 
 		List<OotdDto> ootdDtos = ootdService.getOotdDtos(feedId);
 
@@ -122,12 +127,35 @@ public class FeedDtoAssembler {
 			feed.getCreatedAt(),
 			feed.getUpdatedAt(),
 			authorDto,
-			null, // weatherDto
+			weatherSummaryDto,
 			ootdDtos,
 			feed.getContent(),
 			likeCount,
 			commentCount,
 			likeByMe
 		);
+	}
+
+	private WeatherSummaryDto getWeatherSummaryDto(Weather weather) {
+		Precipitation precipitation = weather.getPrecipitation();
+		Temperature temperature = weather.getTemperature();
+
+		WeatherSummaryDto weatherSummaryDto = WeatherSummaryDto.builder()
+			.weatherId(weather.getId().toString())
+			.skyStatus(weather.getSkyStatus().toString())
+			.precipitation(PrecipitationDto.builder()
+				.type(precipitation.getType())
+				.amount(precipitation.getAmount())
+				.probability(precipitation.getProbability())
+				.build()
+			)
+			.temperature(TemperatureDto.builder()
+				.current(temperature.getTemperatureCurrent())
+				.comparedToDayBefore(temperature.getTemperatureComparedToDayBefore())
+				.min(temperature.getMin())
+				.max(temperature.getMax())
+				.build())
+			.build();
+		return weatherSummaryDto;
 	}
 }

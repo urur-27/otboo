@@ -1,5 +1,7 @@
 package com.team3.otboo.domain.notification.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -8,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.team3.otboo.domain.notification.dto.NotificationDto;
+import com.team3.otboo.domain.notification.dto.NotificationDtoCursorResponse;
+import com.team3.otboo.domain.notification.enums.SortDirection;
 import com.team3.otboo.domain.notification.service.NotificationService;
 import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.entity.User;
@@ -36,26 +40,24 @@ public class NotificationControllerTest {
   @DisplayName("인증된 사용자가 알림 목록 조회를 요청하면, 성공(200 OK) 상태와 함께 알림 DTO 목록을 반환한다")
   void getNotifications_Success() throws Exception {
     // given:
-    // 1. 테스트에 사용할 로그인된 사용자 정보를 준비합니다.
     CustomUserDetails userPrincipal = new CustomUserDetails(UserFixture.createDefaultUser());
-    UserDto userDto = userPrincipal.getUserDto();
     UUID userId = userPrincipal.getId();
 
-    // 2. 가짜 NotificationService가 반환할 가짜 알림 목록을 미리 만들어 둡니다.
-    List<NotificationDto> expectedResult = List.of(
-        new NotificationDto(UUID.randomUUID(), null, userId, "알림 제목 1", "내용 1", null),
-        new NotificationDto(UUID.randomUUID(), null, userId, "알림 제목 2", "내용 2", null)
+    NotificationDtoCursorResponse expectedResponse = new NotificationDtoCursorResponse(
+        List.of(), null, null, false, 0, "createdAt", SortDirection.DESC
     );
-    when(notificationService.findNotificationsByUser(userDto)).thenReturn(expectedResult);
+
+    when(notificationService.findNotificationsByUserId(eq(userId), any()))
+        .thenReturn(expectedResponse);
 
     // when & then:
-    // 3. /api/notifications 엔드포인트로 GET 요청을 보내고 응답을 검증합니다.
     mockMvc.perform(get("/api/notifications")
-            .with(user(userPrincipal)))
+            .with(user(userPrincipal))
+            .param("limit", "10")
+            .param("sortBy", "createdAt")
+            .param("sortDirection", "DESC"))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON)) // 응답 타입이 JSON인지 확인
-        .andExpect(jsonPath("$").isArray()) // 응답 본문이 배열인지 확인
-        .andExpect(jsonPath("$.length()").value(2)) // 배열의 크기가 2인지 확인
-        .andExpect(jsonPath("$[0].title").value("알림 제목 1")); // 첫 번째 알림의 제목 확인
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.hasNext").value(false));
   }
 }

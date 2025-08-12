@@ -22,8 +22,9 @@ public class RecommendationRuleRepositoryImpl implements RecommendationRuleRepos
     BooleanBuilder builder = new BooleanBuilder();
 
     // 1. 온도 조건
-    if (weather.getTemperature() != null && weather.getTemperature().getTemperatureCurrent() != null) {
-      Double currentTemp = weather.getTemperature().getTemperatureCurrent();
+    if (weather.getTemperature() != null && weather.getTemperature()
+            .getComparedToDayBefore() != null) {
+      Double currentTemp = weather.getTemperature().getComparedToDayBefore();
       builder.and(recommendationRule.minTemp.loe(currentTemp).or(recommendationRule.minTemp.isNull()));
       builder.and(recommendationRule.maxTemp.goe(currentTemp).or(recommendationRule.maxTemp.isNull()));
     }
@@ -48,8 +49,8 @@ public class RecommendationRuleRepositoryImpl implements RecommendationRuleRepos
     }
 
     // 5. 습도 조건
-    if (weather.getHumidity() != null && weather.getHumidity().getHumidityCurrent() != null) {
-      Double currentHumidity = weather.getHumidity().getHumidityCurrent();
+    if (weather.getHumidity() != null && weather.getHumidity().getComparedToDayBefore() != null) {
+      Double currentHumidity = weather.getHumidity().getComparedToDayBefore();
       builder.and(recommendationRule.minHumidity.loe(currentHumidity).or(recommendationRule.minHumidity.isNull()));
       builder.and(recommendationRule.maxHumidity.goe(currentHumidity).or(recommendationRule.maxHumidity.isNull()));
     }

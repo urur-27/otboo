@@ -7,6 +7,7 @@ import com.team3.otboo.common.event.payload.FeedLikedEventPayload;
 import com.team3.otboo.common.event.payload.FeedUnlikedEventPayload;
 import com.team3.otboo.common.event.payload.FeedUpdatedEventPayload;
 import com.team3.otboo.common.event.payload.FeedViewedEventPayload;
+import com.team3.otboo.domain.dm.event.payload.DirectMessageSentPayload;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ public enum EventType {
 	COMMENT_CREATED(CommentCreatedEventPayload.class, Topic.OTBOO_FEED_COMMENT),
 	FEED_LIKED(FeedLikedEventPayload.class, Topic.OTBOO_FEED_LIKE),
 	FEED_UNLIKED(FeedUnlikedEventPayload.class, Topic.OTBOO_FEED_LIKE),
+	DIRECT_MESSAGE_SENT(DirectMessageSentPayload.class, Topic.OTBOO_DIRECT_MESSAGE),
 	// 나중에 view service 만들기 .
 	FEED_VIEWED(FeedViewedEventPayload.class, Topic.OTBOO_FEED_VIEW);
 
@@ -43,5 +45,6 @@ public enum EventType {
 		public static final String OTBOO_FEED_COMMENT = "otboo-feed-comment";
 		public static final String OTBOO_FEED_LIKE = "otboo-feed-like";
 		public static final String OTBOO_FEED_VIEW = "otboo-feed-view";
+		public static final String OTBOO_DIRECT_MESSAGE = "otboo-message-direct";
 	}
 }

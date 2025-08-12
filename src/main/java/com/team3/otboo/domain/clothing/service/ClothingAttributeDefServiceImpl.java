@@ -6,6 +6,7 @@ import com.team3.otboo.domain.clothing.dto.response.CursorPageResponse;
 import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.mapper.ClothingAttributeDefMapper;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
+import com.team3.otboo.event.NewAttributeAddedEvent;
 import com.team3.otboo.global.exception.attribute.AttributeNameDuplicatedException;
 import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attribute.AttributeOptionEmptyException;
@@ -13,6 +14,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,6 +23,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
 
     private final AttributeRepository attributeRepository;
     private final ClothingAttributeDefMapper mapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -33,6 +36,9 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
         // 연관관계 보완
         attribute.getOptions().forEach(option -> option.assignAttribute(attribute));
         Attribute saved = attributeRepository.save(attribute);
+
+        eventPublisher.publishEvent(new NewAttributeAddedEvent(saved.getName()));
+
         return mapper.toDto(saved);
     }
 

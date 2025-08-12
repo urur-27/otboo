@@ -8,6 +8,9 @@ import com.team3.otboo.domain.recommendation.entity.RecommendationRule;
 import com.team3.otboo.domain.weather.dto.PrecipitationDto;
 import com.team3.otboo.domain.weather.dto.TemperatureDto;
 import com.team3.otboo.domain.weather.dto.WeatherDto;
+import com.team3.otboo.domain.weather.entity.Precipitation;
+import com.team3.otboo.domain.weather.entity.Temperature;
+import com.team3.otboo.domain.weather.entity.Weather;
 import com.team3.otboo.domain.weather.enums.PrecipitationType;
 import com.team3.otboo.domain.weather.enums.SkyStatus;
 import java.util.List;
@@ -45,14 +48,16 @@ public class RecommendationRuleRepositoryTest {
 
     recommendationRuleRepository.saveAll(List.of(hotAndClearRule, coolAndSnowRule));
 
-    // when: 춥고 눈 오는 날에 해당하는 날씨로 규칙을 조회
-    WeatherDto snowyWeather = WeatherDto.builder()
-        .temperature(TemperatureDto.builder().current(-2.0).build())
-        .precipitation(PrecipitationDto.builder().type(PrecipitationType.SNOW.name()).build())
-        .skyStatus(SkyStatus.CLOUDY.name())
+    // when:
+    Weather mockWeatherEntity = Weather.builder()
+        .temperature(new Temperature(-2.0, null, null, null))
+        .precipitation(new Precipitation(PrecipitationType.SNOW, null, null))
+        .skyStatus(SkyStatus.CLOUDY)
         .build();
 
-    List<RecommendationRule> result = recommendationRuleRepository.findMatchingRules(snowyWeather);
+    WeatherDto snowyWeatherDto = WeatherDto.from(mockWeatherEntity);
+
+    List<RecommendationRule> result = recommendationRuleRepository.findMatchingRules(snowyWeatherDto);
 
     // then: '춥고 눈 오는 날' 규칙 하나만 조회되어야 함
     assertThat(result).hasSize(1);
