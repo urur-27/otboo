@@ -1,5 +1,6 @@
 package com.team3.otboo.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.domain.dm.service.SubscribeService;
 import com.team3.otboo.domain.notification.service.RedisSubscriber;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -38,11 +39,12 @@ public class RedisConfig {
 	@Bean
 	@Qualifier("chatPubSub")
 	public RedisTemplate<String, Object> redisTemplate(
-		@Qualifier("chatPubSub") RedisConnectionFactory redisConnectionFactory) {
+		@Qualifier("chatPubSub") RedisConnectionFactory redisConnectionFactory,
+			ObjectMapper objectMapper) {
 		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(redisConnectionFactory);
 		redisTemplate.setKeySerializer(new StringRedisSerializer());
-		redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+		redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
 
 		return redisTemplate;
 	}
