@@ -15,7 +15,7 @@ public record FeedDto(
 	List<OotdDto> ootds, // 중간 테이블 이름을 왜 ootd로 했을까
 	String content,
 	Long likeCount,
-	Integer CommentCount,
+	Integer commentCount,
 	Boolean likedByMe
 ) {
 

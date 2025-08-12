@@ -68,12 +68,13 @@ public class WeatherServiceImpl implements WeatherService {
     LocalDateTime from = startKst.toLocalDateTime();
     LocalDateTime toExclusive = endKstExclusive.toLocalDateTime();
 
+    LocationResponse lr = getLocationForUser(locationRequest);
+
     List<Weather> weathers = weatherRepository
-            .findByLocation_LatitudeAndLocation_LongitudeAndForecastAtGreaterThanEqualAndForecastAtLessThan(
-                    locationRequest.latitude(), locationRequest.longitude(), from, toExclusive
+            .findByLocation_XAndLocation_YAndForecastAtGreaterThanEqualAndForecastAtLessThan(
+                    lr.getX(), lr.getY(), from, toExclusive
             );
 
-    LocationResponse lr = getLocationForUser(locationRequest);
     Location location = new Location(lr.getLatitude(), lr.getLongitude(), lr.getX(), lr.getY(), lr.getLocationNames());
 
     if (!hasFiveDistinctDays(weathers, startDate)) {
@@ -304,42 +305,74 @@ public class WeatherServiceImpl implements WeatherService {
   }
 
 
-  private Precipitation getPrecipitation(Map.Entry<LocalDate, Map<Category, ForecastItem>> currentForecastItem) {
-    int precipitationCode = Integer.parseInt(currentForecastItem.getValue().get(PTY).getFcstValue());
-    PrecipitationType precipitationType = PrecipitationType.fromCode(precipitationCode);
+  private Precipitation getPrecipitation(Map.Entry<LocalDate, Map<Category, ForecastItem>> entry) {
+    Map<Category, ForecastItem> m = entry.getValue();
 
-    // 2) 강수 확률 (%)
-    double precipitationProbability = Double.parseDouble(currentForecastItem.getValue().get(POP).getFcstValue());
+    // 안전 파싱
+    String ptyStr = m.getOrDefault(PTY, new ForecastItem()).getFcstValue();
+    String popStr = m.getOrDefault(POP, new ForecastItem()).getFcstValue();
+    String pcpRaw = m.getOrDefault(PCP, new ForecastItem()).getFcstValue();
 
-    // 3) 강수량 (mm) — “강수없음” 같은 값 처리
-    String pcpRaw = currentForecastItem.getValue().get(PCP).getFcstValue();
-    double precipitationAmount = getPrecipitationAmount(pcpRaw);
-    return new Precipitation(precipitationType, precipitationProbability, precipitationAmount);
+    int ptyCode = safeParseInt(ptyStr, 0);
+    PrecipitationType type = PrecipitationType.fromCode(ptyCode);
+
+    // POP은 0~1 스케일로 통일
+    double prob01 = parsePop01(popStr); // 0~1
+
+    // PCP(1시간 강수량) 파싱
+    double amount = getPrecipitationAmount(pcpRaw); // mm
+
+    // 보정 규칙
+    if (amount > 0 && prob01 == 0.0) prob01 = 1.0;                 // 강수량>0인데 확률 0 → 100%
+    if (amount > 0 && type == PrecipitationType.NONE) type = PrecipitationType.RAIN;  // PTY 미스 보정
+    if (amount == 0 && type != PrecipitationType.NONE) amount = 0.1; // 의미상 강수 있음을 표시하고 싶다면
+
+    prob01 = clamp01(prob01);
+
+    // 생성자 순서: (type, amount, probability[0~1])
+    return new Precipitation(type, amount, prob01);
+  }
+
+  private static int safeParseInt(String s, int def) {
+    try { return (s == null || s.isBlank()) ? def : Integer.parseInt(s.trim()); }
+    catch (NumberFormatException e) { return def; }
+  }
+
+  private static double parsePop01(String raw) {
+    if (raw == null || raw.isBlank()) return 0.0;
+    double v;
+    try { v = Double.parseDouble(raw.trim()); } catch (NumberFormatException e) { return 0.0; }
+    // 입력이 0~100으로 온다고 가정 → 0~1로 정규화
+    return clamp01(v / 100.0);
+  }
+
+  private static double clamp01(double v) {
+    return Math.max(0.0, Math.min(1.0, v));
   }
 
   private double getPrecipitationAmount(String raw) {
     if (raw == null) return 0.0;
     raw = raw.trim();
-    if (raw.isEmpty() || raw.contains("없음")) return 0.0;
+    // 기상청 응답: "강수없음", "1.0mm 미만", "-", "" 등
+    if (raw.isEmpty() || raw.contains("없음") || raw.equals("-")) return 0.0;
 
-    boolean isBelow = raw.contains("미만"); // 예: "1 미만", "1.0mm 미만"
+    boolean isBelow = raw.contains("미만");     // "1.0mm 미만"
+    boolean isOver  = raw.contains("이상");     // "150.0mm 이상" 같은 케이스 대비
 
-    String num = raw.replaceAll("[^0-9.]", "");
+    String num = raw.replaceAll("[^0-9.]", ""); // 숫자/소수점만 추출
     if (num.isEmpty()) return 0.0;
 
     double v;
-    try {
-      v = Double.parseDouble(num);
-    } catch (NumberFormatException e) {
+    try { v = Double.parseDouble(num); }
+    catch (NumberFormatException e) {
       log.warn("PCP parse failed: '{}'", raw, e);
       return 0.0;
     }
 
-    if (isBelow) {
-      return 0.0;
-    }
+    if (isBelow)  return 0.0;   // 정책: '미만'은 0.0으로 처리 (원하면 0.5 등으로 조정)
+    if (isOver)   return v;     // '이상'은 하한선으로 그대로 사용
 
-    return v;
+    return v; // 단위:mm
   }
 
   private LinkedHashMap<LocalDate, Map<Category, ForecastItem>> getWeatherListDateMap(List<ForecastItem> items, Map<LocalDate, String> earliestTimePerDate) {

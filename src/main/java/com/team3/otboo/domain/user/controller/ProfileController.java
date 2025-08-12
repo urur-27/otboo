@@ -34,18 +34,17 @@ public class ProfileController {
     }
 
 
-    @PostMapping("/{userId}/profiles")
-    public ResponseEntity<ProfileDto> updateProfile(
-            @PathVariable("userId") UUID userId,
-            @RequestPart("profileUpdateRequest") @Valid ProfileUpdateRequest request,
-            @RequestPart(value = "profile", required = false) MultipartFile profile
+    @PatchMapping(
+            value = "/{userId}/profiles") public ResponseEntity<ProfileDto> updateProfile(
+            @PathVariable UUID userId,
+            @RequestPart("request") @Valid ProfileUpdateRequest request,   // ← 이름 맞춤
+            @RequestPart(value = "image", required = false) MultipartFile image // ← 이름 맞춤
     ){
-        Optional<BinaryContentCreateRequest> profileImageRequest = Optional.ofNullable(profile)
-                        .flatMap(binaryContentFactory::resolveProfileRequest);
+        Optional<BinaryContentCreateRequest> profileImageRequest =
+                Optional.ofNullable(image).flatMap(binaryContentFactory::resolveProfileRequest);
 
         ProfileDto profileDto = profileService.updateProfile(userId, request, profileImageRequest);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(profileDto);
+        return ResponseEntity.ok(profileDto); // 200으로
     }
 
 }

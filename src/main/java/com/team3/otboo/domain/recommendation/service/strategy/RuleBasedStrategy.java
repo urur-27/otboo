@@ -26,7 +26,7 @@ public class RuleBasedStrategy implements RecommendationStrategy {
   @Override
   public RecommendationDto recommend(ProfileDto profile, WeatherDto weather, List<Clothing> clothes) {
     List<Clothing> recommendedItems;
-    double currentTemp = weather.getTemperature().getTemperatureCurrent();
+    double currentTemp = weather.getTemperature().getCurrent();
 
     if (currentTemp >= HOT_WEATHER_THRESHOLD) {
       recommendedItems = findHotWeatherClothes(clothes);
