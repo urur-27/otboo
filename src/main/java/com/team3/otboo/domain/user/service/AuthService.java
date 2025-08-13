@@ -10,5 +10,5 @@ import java.util.UUID;
 
 public interface AuthService {
     UserDto initAdmin();
-
+    String setTempPassword(String email);
 }
