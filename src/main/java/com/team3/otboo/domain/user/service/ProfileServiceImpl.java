@@ -2,6 +2,8 @@ package com.team3.otboo.domain.user.service;
 
 import com.team3.otboo.domain.user.dto.ProfileDto;
 
+import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.domain.user.mapper.ProfileMapper;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,24 +31,18 @@ public class ProfileServiceImpl implements ProfileService{
     private final BinaryContentRepository binaryContentRepository;
     private final UserRepository userRepository;
     private final ImageStorage imageStorage;
+  private final ProfileMapper profileMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public ProfileDto getProfile(UUID userId) {
-        userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         Profile profile = profileRepository.findByUser_Id(userId)
                 .orElseThrow(ProfileNotFoundException::new);
 
-        return ProfileDto.of(
-                  profile.getUser().getId(),
-                  profile.getUser().getUsername(),
-                  profile.getGender(),
-                  profile.getBirthDate(),
-                  profile.getLocation(),
-                  profile.getTemperatureSensitivity(),
-                  profile.getBinaryContent()
-                );
+      return profileMapper.toDto(user, profile);
     }
 
     @Override
