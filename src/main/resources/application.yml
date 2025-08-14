@@ -33,7 +33,7 @@ spring:
             enable: true        # 통신 보호
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: otboo-hot-feed-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
