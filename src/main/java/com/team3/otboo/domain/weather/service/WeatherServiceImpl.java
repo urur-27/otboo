@@ -152,14 +152,14 @@ public class WeatherServiceImpl implements WeatherService {
     List<Profile> profiles = profileRepository.findAll();
 
     for (Profile profile : profiles) {
-        Location location = profile.getLocation();
-        if(location == null || location.getLatitude() == null || location.getLongitude() == null || location.getX() == null || location.getY() == null) {
-          continue;
-        }
+      Location location = profile.getLocation();
+      if(location == null || location.getLatitude() == null || location.getLongitude() == null || location.getX() == null || location.getY() == null) {
+        continue;
+      }
 
-        computeDailyForecastMap(profile.getLocation()).ifPresent(byDate -> {
-            upsertForecastsForProfile(profile.getLocation(), byDate);
-        });
+      computeDailyForecastMap(profile.getLocation()).ifPresent(byDate -> {
+        upsertForecastsForProfile(profile.getLocation(), byDate);
+      });
     }
   }
 
@@ -174,8 +174,8 @@ public class WeatherServiceImpl implements WeatherService {
             .orElseThrow();
 
     Optional<Weather> prevDbOfFirst = weatherRepository
-            .findLatestByLocationAndForecastDate(
-                    loc.getLatitude(), loc.getLongitude(),
+            .findxByyAndForecastDate(
+                    loc.getX(), loc.getY(),
                     firstDate.minusDays(1)
             );
 
@@ -283,9 +283,9 @@ public class WeatherServiceImpl implements WeatherService {
    */
   private Weather upsertWeatherReturning(Weather weather) {
     return weatherRepository
-            .findByLocationLatitudeAndLocationLongitudeAndForecastAt(
-                    weather.getLocation().getLatitude(),
-                    weather.getLocation().getLongitude(),
+            .findByLocation_XAndLocation_YAndForecastAt(
+                    weather.getLocation().getX(),
+                    weather.getLocation().getY(),
                     weather.getForecastAt()
             )
             .map(e -> {
