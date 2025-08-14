@@ -70,10 +70,11 @@ public class WeatherServiceImpl implements WeatherService {
 
     LocationResponse lr = getLocationForUser(locationRequest);
 
+    var base = WeatherApiParams.currentBase();
+    LocalDateTime forecastedAt = LocalDateTime.parse(base.date() + base.time(), DATE_TIME_PARSER);
+
     List<Weather> weathers = weatherRepository
-            .findByLocation_XAndLocation_YAndForecastAtGreaterThanEqualAndForecastAtLessThan(
-                    lr.getX(), lr.getY(), from, toExclusive
-            );
+            .findWeathersWithForecastedAt(lr.getX(), lr.getY(), forecastedAt, from, toExclusive);
 
     Location location = new Location(lr.getLatitude(), lr.getLongitude(), lr.getX(), lr.getY(), lr.getLocationNames());
 
