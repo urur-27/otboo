@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ClothingRepository extends JpaRepository<Clothing, UUID>, ClothingRepositoryCustom {
+    long countByImageId(UUID imageId);
 
   @EntityGraph(attributePaths = {"attributeValues,", "attributeValues.attribute", "attributeValues.option"})
   List<Clothing> findByOwner(User owner);

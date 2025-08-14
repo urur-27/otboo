@@ -16,24 +16,21 @@ import java.util.UUID;
 @Table(name = "jwt_sessions")
 @NoArgsConstructor
 @AllArgsConstructor
-// 서버가 Refresh Token을 추적하고 관리하기 위해 사용하는 DB table
-// JWT의 Stateless 특성을 보완하기 위함
-// 토큰 재발급, 강제 로그아웃 기능 구현을 위함
 public class JwtSession extends BaseEntity {
 
     @Column(updatable = false, nullable = false)
     private UUID userId;
-    @Column(nullable = false, unique = true)
+    // 기본길이 255
+    @Column(nullable = false, unique = true, length = 1024)
     private String refreshToken;
     @Column(nullable = false)
-    private Instant expirationTime; // refresh token의 만료시간
+    private Instant expirationTime;
 
     // 현재 Refresh token이 만료되었는지
     public boolean isExpired() {
         return this.expirationTime.isBefore(Instant.now());
     }
 
-    // token 재발급 시 새로운 토큰 정보로 세션 업데이트
     public void update(UUID userId, String refreshToken, Instant expirationTime) {
         this.userId = userId;
         this.refreshToken = refreshToken;

@@ -86,6 +86,10 @@ dependencies {
 
     // JWT
     implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
+
+    // Email 전송
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
 }
 
 tasks.named('test') {

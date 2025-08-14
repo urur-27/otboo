@@ -133,12 +133,12 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateUserRole(UserRoleUpdateRequest request, UUID userId){
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
-
-        if(!Role.contains(request.newRole())){
+        log.info("user role: {}, request role: {}", user.getRole(), request.role());
+        if(!Role.contains(request.role())){
             throw new RoleNotFoundException();
         }
 
-        user.updateRole(request.newRole());
+        user.updateRole(request.role());
 
         // 권한 변경 후 해당 사용자가 로그인한 세션 만료 처리
         jwtService.invalidateJwtSession(user.getId());
@@ -147,13 +147,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void updateUserPassword(UserPasswordUpdateRequest request, UUID userId) {
+    public void changeUserPassword(UUID userId, String newPassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        String encodedPassword = passwordEncoder.encode(request.newPassword());
-        user.updatePassword(encodedPassword);
-
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.changePassword(encodedPassword);
     }
 
     @Override

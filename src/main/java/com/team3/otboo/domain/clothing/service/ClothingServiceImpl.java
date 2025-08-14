@@ -22,10 +22,18 @@ import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
 import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
+import com.team3.otboo.storage.dto.ImageMaybeOrphanedEvent;
+import com.team3.otboo.storage.entity.BinaryContent;
+import com.team3.otboo.storage.entity.BinaryContentUploadStatus;
+import com.team3.otboo.storage.repository.BinaryContentRepository;
+import jakarta.persistence.EntityNotFoundException;
+import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +49,8 @@ public class ClothingServiceImpl implements ClothingService {
   private final ImageStorage imageStorage;
   private final AttributeRepository attributeRepository;
   private final AttributeOptionRepository attributeOptionRepository;
-  private final UserRepository userRepository;
+  private final BinaryContentRepository binaryContentRepository;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
   @Transactional(readOnly = true)
@@ -54,14 +63,14 @@ public class ClothingServiceImpl implements ClothingService {
   public ClothesDto registerClothing(User user, ClothesCreateRequest request,
           MultipartFile image) {
     log.info("의상 등록 서비스 시작");
-    log.info("이미지 업로드");
-    String imageUrl = (image != null) ? imageStorage.upload(image) : null;
 
     Clothing clothing = clothingMapper.toEntity(request);
+    clothing.setOwner(user);
+    if (image != null && !image.isEmpty()) {
 
-    // 연관관계 세팅
-    clothing.setOwner(user);           // 로그인 사용자
-    clothing.setUrl(imageUrl);    // 업로드 url
+      BinaryContent bin = uploadThroughBinaryContent(image);
+      clothing.changeImage(bin); // ← FK + url 동시 세팅
+    }
 
     // attributeValues 직접 생성 및 연관관계 연결
     for (ClothesAttributeDto attrReq : request.attributes()) {
@@ -74,7 +83,7 @@ public class ClothingServiceImpl implements ClothingService {
     }
 
     clothingRepository.save(clothing);
-      return clothingMapper.toDto(clothing);
+    return clothingMapper.toDto(clothing);
   }
 
   @Override
@@ -131,12 +140,17 @@ public class ClothingServiceImpl implements ClothingService {
     if (req.type() != null) clothing.setType(req.type());
 
     if(image != null && !image.isEmpty()){
-      // 기존 이미지 삭제
-      if (clothing.getImageUrl() != null) {
-        imageStorage.delete(clothing.getImageUrl());
-      }
-      String imageUrl = imageStorage.upload(image);
-      clothing.setUrl(imageUrl);
+      // 이전 이미지 참조 보관(정리용)
+      BinaryContent old = clothing.getImage();
+
+      // 새 이미지 업로드 → FK 교체
+      BinaryContent fresh = uploadThroughBinaryContent(image);
+      clothing.changeImage(fresh);
+
+      // 커밋 후 안전 삭제 예약 (다른 곳에서 참조할 경우 주의)
+      if (old != null) applicationEventPublisher.publishEvent(
+              new ImageMaybeOrphanedEvent(old.getId())
+      );
     }
 
     // 속성 업데이트(전체 교체)
@@ -154,5 +168,67 @@ public class ClothingServiceImpl implements ClothingService {
     }
 
     return clothingMapper.toDto(clothing);
+  }
+
+  // BinaryContent 생성(WAITING) → S3 put(id, bytes) → getPath(id, contentType) → SUCCESS
+  private BinaryContent uploadThroughBinaryContent(MultipartFile image) {
+    final String originalName = safeFileName(image.getOriginalFilename());
+    final String contentType = safeContentType(image.getContentType(), originalName);
+    final byte[] bytes = toBytes(image);
+
+    // BinaryContent 저장 (WAITING)
+    BinaryContent bin = new BinaryContent(
+            originalName,
+            (long) bytes.length,
+            contentType,
+            BinaryContentUploadStatus.WAITING
+    );
+    binaryContentRepository.save(bin); // UUID 발급
+
+    try {
+      // 업로드
+      imageStorage.put(bin.getId(), bytes);
+
+      // URL 생성
+      String url = imageStorage.getPatch(bin.getId(), contentType);
+
+      // 엔티티 갱신
+      bin.markCompleted(url);
+
+      return bin;
+    } catch (RuntimeException ex) {
+      bin.markFailed();
+      throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED, ex.getMessage());
+    }
+  }
+
+  // --- 유틸들 ---
+
+  private String safeFileName(String original) {
+    String base = (original == null || original.isBlank()) ? "file" : original;
+    return base.replaceAll("[\\\\/\\s]+", "_");
+  }
+
+  private String safeContentType(String raw, String fileName) {
+    if (raw != null && !raw.isBlank())
+      return raw;
+    String lower = fileName.toLowerCase(Locale.ROOT);
+    if (lower.endsWith(".png"))
+      return "image/png";
+    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg"))
+      return "image/jpeg";
+    if (lower.endsWith(".gif"))
+      return "image/gif";
+    if (lower.endsWith(".webp"))
+      return "image/webp";
+    return "application/octet-stream";
+  }
+
+  private byte[] toBytes(MultipartFile image) {
+    try {
+      return image.getBytes();
+    } catch (IOException e) {
+      throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED, "파일 읽기 실패: " + e.getMessage());
+    }
   }
 }

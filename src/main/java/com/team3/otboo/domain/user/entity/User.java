@@ -5,6 +5,7 @@ import com.team3.otboo.domain.user.enums.OAuthProvider;
 import com.team3.otboo.domain.user.enums.Role;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
 
@@ -36,6 +37,10 @@ public class User extends BaseEntity {
 
     @Column
 	boolean locked;
+
+    // 임시 비밀번호, 만료시간
+    private String tempPassword;
+    private LocalDateTime tempPasswordExpirationDate;
 
     // mappedBy - 연관관계 주인 = user
     // fetch - user 조회할 때 profile 지연로딩(실제 사용시에만),
@@ -72,5 +77,16 @@ public class User extends BaseEntity {
         if (profile != null && profile.getUser() != this) {
             profile.setUser(this);
         }
+    }
+
+    public void setTempPassword(String tempPassword) {
+        this.tempPassword = tempPassword;
+        this.tempPasswordExpirationDate = LocalDateTime.now().plusMinutes(3);
+    }
+
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+        this.tempPassword = null;
+        this.tempPasswordExpirationDate = null;
     }
 }

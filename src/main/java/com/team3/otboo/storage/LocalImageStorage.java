@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.UUID;
 
 import com.team3.otboo.global.exception.BusinessException;
@@ -17,24 +16,20 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 @ConditionalOnProperty(name = "otboo.storage.type", havingValue = "local")
 @Component
 public class LocalImageStorage implements ImageStorage {
 
     private final Path root;
-    private final String publicPath;       // URL prefix
 
     public LocalImageStorage(
-            @Value("${otboo.storage.local.root-path}") String rootProp,
-            @Value("${otboo.storage.local.public-path:/uploads/}") String publicPath) {
+            @Value("${otboo.storage.local.root-path}") String rootProp) {
         Path r = Paths.get(rootProp);
         if (!r.isAbsolute()) {
             r = Paths.get(System.getProperty("user.dir")).resolve(r).toAbsolutePath();
         }
         this.root = r.normalize();
-        this.publicPath = publicPath.endsWith("/") ? publicPath : publicPath + "/";
     }
 
     @PostConstruct
@@ -50,37 +45,8 @@ public class LocalImageStorage implements ImageStorage {
     }
 
     @Override
-    public String upload(MultipartFile file) {
-        try {
-            String original = Optional.ofNullable(file.getOriginalFilename()).orElse("file");
-            String safeName = original.replaceAll("[\\\\/\\s]+", "_"); // 간단 sanitizing
-            String filename = UUID.randomUUID() + "_" + safeName;
-
-            Path targetPath = root.resolve(filename).normalize();
-            file.transferTo(targetPath.toFile());
-
-            return publicPath + filename;
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED, e.getMessage());
-        }
-    }
-
-    @Override
-    public void delete(String imageUrl) {
-        try {
-            // "/uploads/xxx.jpg" → "xxx.jpg" 추출
-            String filename = Paths.get(imageUrl).getFileName().toString();
-            Path filePath = root.resolve(filename);
-
-            // uploads 디렉토리 내 파일만 삭제하도록 제한
-            if (!filePath.normalize().startsWith(root.normalize())) {
-                throw new BusinessException(ErrorCode.INVALID_IMAGE_PATH);
-            }
-
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.IMAGE_DELETE_FAILED, "이미지 삭제 실패: " + imageUrl);
-        }
+    public void delete(UUID id) {
+            throw new BusinessException(ErrorCode.IMAGE_DELETE_FAILED, "로컬 이미지 삭제 로직 구현되지 않음" );
     }
 
     @Override
@@ -113,11 +79,34 @@ public class LocalImageStorage implements ImageStorage {
 
     @Override
     public String getPatch(UUID binaryContentId, String contentType) {
-        Path filePath = resolvePath(binaryContentId);
-        String[] parts = contentType.split("/");
-        return filePath.toString().concat(".").concat(parts[1]);
+        String ext = toExt(contentType); // image/jpeg -> jpg 등
+        Path base = resolvePath(binaryContentId);                 // root/{uuid}
+        Path finalFile = base.resolveSibling(base.getFileName() + "." + ext); // root/{uuid}.jpg
+
+        try {
+            // 최초 호출 시 확장자 없는 파일을 확장자 있는 파일명으로 이동
+            if (Files.exists(base) && Files.notExists(finalFile)) {
+                Files.move(base, finalFile);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 파일명 변경 실패", e);
+        }
+
+        // 웹에서 접근 가능한 URL (/uploads/**)
+        Path rel = root.relativize(finalFile);
+        return "/uploads/" + rel.toString().replace("\\", "/");
     }
 
+    private String toExt(String contentType) {
+        if (contentType == null) return "bin";
+        return switch (contentType) {
+            case "image/jpeg" -> "jpg";
+            case "image/png"  -> "png";
+            case "image/gif"  -> "gif";
+            case "image/webp" -> "webp";
+            default -> "bin";
+        };
+    }
 
     private Path resolvePath(UUID key) {
         return root.resolve(key.toString());

@@ -6,6 +6,7 @@ import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import lombok.Getter;
@@ -23,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class CustomUserDetailsService implements UserDetailsService {
 
 	private final UserRepository userRepository;
-	private final UserMapper userMapper;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -57,6 +57,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 			return user.getId();
 		}
 
+		public String getTempPassword() {
+			return user.getTempPassword();
+		}
+
+		public LocalDateTime getTempPasswordExpirationDate() {
+			return user.getTempPasswordExpirationDate();
+		}
+
 		// override하여 메서드 명은 getUsername이지만, 실상 구현은 getEmail 역할
 		@Override
 		public String getUsername() {
@@ -74,10 +82,10 @@ public class CustomUserDetailsService implements UserDetailsService {
 			return true;
 		}
 
-		// 계정 잠금 여부 (현재는 모든 계정이 잠기지 않음)
+		// 계정 잠금 여부
 		@Override
 		public boolean isAccountNonLocked() {
-			return true;
+			return !user.isLocked();
 		}
 
 		// 자격 증명 만료 여부 (현재는 모든 자격 증명이 만료되지 않음)

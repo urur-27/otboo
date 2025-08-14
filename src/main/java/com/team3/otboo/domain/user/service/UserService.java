@@ -16,6 +16,6 @@ public interface UserService {
     UserDtoCursorResponse getUsers(UserSearchParams userSearchParams);
     UUID updateUserLock(UserLockUpdateRequest request, UUID id);
     UserResponse updateUserRole(UserRoleUpdateRequest request, UUID id);
-    void updateUserPassword(UserPasswordUpdateRequest request, UUID id);
+    void changeUserPassword(UUID id, String newPassword);
     void deleteUser(UUID id);
 }

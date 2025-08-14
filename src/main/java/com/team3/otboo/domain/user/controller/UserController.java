@@ -6,12 +6,14 @@ import com.team3.otboo.domain.user.dto.response.UserResponse;
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
+import com.team3.otboo.domain.user.service.CustomUserDetailsService;
 import com.team3.otboo.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,18 +40,19 @@ public class UserController {
             @PathVariable("userId") UUID userId,
             @RequestBody UserRoleUpdateRequest userRoleUpdateRequest
     ){
-        UserResponse userDto = userService.updateUserRole(userRoleUpdateRequest, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
+        UserResponse response = userService.updateUserRole(userRoleUpdateRequest, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PatchMapping("/{userId}/password")
-    public ResponseEntity<Void> updatePassword(
+    public ResponseEntity<String> updatePassword(
             @PathVariable("userId") UUID userId,
-            @RequestBody UserPasswordUpdateRequest userRoleUpdateRequest
-    ){
-        userService.updateUserPassword(userRoleUpdateRequest, userId);
-
-        return ResponseEntity.noContent().build();
+            @RequestBody ChangePasswordRequest changePasswordRequest
+    ) {
+        log.info("비밀번호 변경요청");
+        String newPassword = changePasswordRequest.password();
+        userService.changeUserPassword(userId, newPassword);
+        return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
     }
 
     @PatchMapping("/{userId}/lock")
