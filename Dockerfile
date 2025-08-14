@@ -1,26 +1,25 @@
-# 빌드 스테이지
+# ===== Build stage =====
 FROM eclipse-temurin:21-jdk-jammy AS build
 WORKDIR /workspace/app
 
+# gradle 파일 먼저 복사 → 캐시 활용
+COPY gradlew ./
 COPY gradle gradle
-COPY gradlew .
-COPY build.gradle .
-COPY settings.gradle .
-
-# Gradle wrapper 실행권한 부여 (UNIX 계열에서 필요)
+COPY build.gradle settings.gradle ./
 RUN chmod +x gradlew
 
-# 의존성 캐시
-RUN ./gradlew dependencies
+# 의존성만 먼저 받기 (소스 없이) → 캐시 레이어 생성
+RUN ./gradlew dependencies --no-daemon || true
 
-# 소스코드 복사 및 빌드
+# 소스 복사 후 빌드
 COPY src src
-RUN ./gradlew build -x test
+RUN ./gradlew clean bootJar -x test --no-daemon
 
-# 런타임 스테이지
+# ===== Runtime stage =====
 FROM eclipse-temurin:21-jre-jammy
-VOLUME /tmp
-
+WORKDIR /app
 COPY --from=build /workspace/app/build/libs/*.jar app.jar
 
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+EXPOSE 8080
+
+ENTRYPOINT ["java","-jar","/app/app.jar"]

@@ -33,9 +33,11 @@ spring:
             enable: true        # 통신 보호
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+#    bootstrap-servers: localhost:9092
     consumer:
-      group-id: kuke-board-hot-article-service
+      group-id: ${KAFKA_GROUP_ID:kuke-board-hot-article-service}
+#      group-id: kuke-board-hot-article-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: false
@@ -55,11 +57,11 @@ otboo:
       root-path: ${STORAGE_LOCAL_ROOT_PATH:.otboo}
       public-path: ${STORAGE_LOCAL_PUBLIC_PATH:/uploads/}  # 브라우저가 접근할 URL prefix
     s3:
-      access-key: ${AWS_S3_ACCESS_KEY}
-      secret-key: ${AWS_S3_SECRET_KEY}
+      access-key: ${AWS_S3_ACCESS_KEY:}
+      secret-key: ${AWS_S3_SECRET_KEY:}
       region: ${AWS_S3_REGION}
       bucket: ${AWS_S3_BUCKET}
-      baseUrl: ${AWS_S3_BUCKET_URL}
+      baseUrl: ${AWS_S3_BUCKET_URL:}
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
 
 external:
