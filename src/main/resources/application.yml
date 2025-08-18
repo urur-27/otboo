@@ -12,6 +12,8 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  ssl:
+    enabled: true
   jpa:
     show-sql: false
     properties:
@@ -34,12 +36,25 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
       group-id: otboo-hot-feed-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: false
-
+    admin: # admin
+      properties:
+        security.protocol: SASL_SSL
+        sasl.mechanism: AWS_MSK_IAM
+        sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+        sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+    properties: # 전체 공통 설정
+      security.protocol: SASL_SSL
+      sasl.mechanism: AWS_MSK_IAM
+      sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+      sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
 server:
   port: 8080
 
