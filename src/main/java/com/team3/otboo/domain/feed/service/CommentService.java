@@ -45,10 +45,10 @@ public class CommentService {
 			throw new IllegalArgumentException("feed not found. feed id: " + request.feedId());
 		}
 		Feed feed = feedRepository.findById(request.feedId())
-				.orElseThrow(IllegalArgumentException::new);
+			.orElseThrow(IllegalArgumentException::new);
 
 		User feedOwner = userRepository.findById(feed.getAuthorId())
-				.orElseThrow(EntityNotFoundException::new);
+			.orElseThrow(EntityNotFoundException::new);
 
 		User author = userRepository.findById(request.authorId()).orElseThrow(
 			() -> new EntityNotFoundException("user not found. user Id: " + request.authorId())
@@ -68,9 +68,9 @@ public class CommentService {
 		}
 
 		eventPublisher.publishEvent(new NewCommentEvent(
-				feedOwner,
-				author.getUsername(),
-				feed.getId()));
+			feedOwner,
+			author.getUsername(),
+			feed.getId()));
 		return commentMapper.toDto(comment, author);
 	}
 
@@ -136,6 +136,11 @@ public class CommentService {
 
 	public void deleteAllByFeedId(UUID feedId) {
 		commentRepository.deleteAllByFeedId(feedId);
+	}
+
+	public Long count(UUID feedId) {
+		return feedCommentCountRepository.findById(feedId)
+			.map(FeedCommentCount::getCommentCount).orElse(0L);
 	}
 
 	// 테스트 데이터 생성용 ..

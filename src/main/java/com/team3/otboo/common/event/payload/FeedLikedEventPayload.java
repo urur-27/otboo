@@ -19,4 +19,6 @@ public class FeedLikedEventPayload implements EventPayload {
 	private Instant updatedAt;
 	private UUID feedId;
 	private UUID userId;
+
+	private Long likeCount;
 }
