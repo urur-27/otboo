@@ -46,7 +46,7 @@ public class HotFeedMessageRelay {
 				outbox.getPayload()
 			).get(1, TimeUnit.SECONDS); // 1초 동안 전송 완료 메시지를 기다림 .
 
-			outboxRepository.delete(outbox);
+			outboxRepository.delete(outbox); // 여기서 충돌 발생..
 		} catch (Exception e) {
 			log.error("[MessageRelay.publishEvent] outbox={}", outbox, e);
 		}
