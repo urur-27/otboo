@@ -12,6 +12,7 @@ import com.team3.otboo.domain.weather.dto.response.LocationResponse;
 import com.team3.otboo.domain.weather.entity.*;
 import com.team3.otboo.domain.weather.enums.*;
 import com.team3.otboo.domain.weather.repository.WeatherRepository;
+import com.team3.otboo.event.WeatherAlert;
 import com.team3.otboo.external.WeatherExternal;
 import com.team3.otboo.global.exception.weather.ExternalApiException;
 import com.team3.otboo.global.exception.weather.WeatherApiException;
@@ -21,15 +22,13 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,15 +50,16 @@ public class WeatherServiceImpl implements WeatherService {
   private final ProfileRepository profileRepository;
   private final WeatherRepository weatherRepository;
   private final WeatherExternal weatherExternal;
+  private final TemperatureDeltaRule temperatureDeltaRule;
+  private final ApplicationEventPublisher eventPublisher;
 
   private static final DateTimeFormatter DATE_PARSER = DateTimeFormatter.BASIC_ISO_DATE;
   private static final DateTimeFormatter DATE_TIME_PARSER = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+  private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
   @Override
   @Transactional
   public List<WeatherDto> getWeatherForUser(LocationRequest locationRequest) {
-    ZoneId KST = ZoneId.of("Asia/Seoul");
-
     ZonedDateTime nowKst = ZonedDateTime.now(KST);
     ZonedDateTime startKst = nowKst.toLocalDate().atStartOfDay(KST); // 오늘 00:00 KST
     ZonedDateTime endKstExclusive = startKst.plusDays(5);            // +5일 00:00 KST
@@ -189,8 +189,25 @@ public class WeatherServiceImpl implements WeatherService {
       Optional<Weather> prevDb = entry.getKey().equals(firstDate) ? prevDbOfFirst : Optional.empty();
 
       Weather weather = buildWeatherFromForecast(loc, entry, byDate, prevDb, base);
-      Weather persisted = upsertWeatherReturning(weather);
-      resultWeather.add(persisted);
+
+
+      Optional<Weather> prevWeather= weatherRepository.findByLocation_XAndLocation_YAndForecastAt(weather.getLocation().getX(), weather.getLocation().getY(), weather.getForecastAt());
+
+      // 존재하면 update, 없으면 insert
+      if(prevWeather.isPresent()) {
+        Weather prev = prevWeather.get();
+
+        LocalDate todayKst = LocalDate.now(KST);
+        if (weather.getForecastAt().toLocalDate().equals(todayKst)) {
+          detectAndPublishAlerts(prev, weather);
+        }
+
+        prev.updateFrom(weather.getForecastedAt(), weather.getForecastAt(), weather.getSkyStatus(), weather.getLocation(), weather.getPrecipitation(), weather.getHumidity(), weather.getTemperature(), weather.getWindSpeed());
+        resultWeather.add(prev);
+
+      }else{
+        resultWeather.add(weatherRepository.save(weather));
+      }
     }
 
     return resultWeather;
@@ -278,33 +295,6 @@ public class WeatherServiceImpl implements WeatherService {
 
     return Weather.of(forecastedAt, forecastAt, sky, location, precipitation, humidity, temperature, windSpeed);
   }
-
-  /**
-   * 존재하면 update, 없으면 insert
-   */
-  private Weather upsertWeatherReturning(Weather weather) {
-    return weatherRepository
-            .findByLocation_XAndLocation_YAndForecastAt(
-                    weather.getLocation().getX(),
-                    weather.getLocation().getY(),
-                    weather.getForecastAt()
-            )
-            .map(e -> {
-              e.updateFrom(
-                      weather.getForecastedAt(),
-                      weather.getForecastAt(),
-                      weather.getSkyStatus(),
-                      weather.getLocation(),
-                      weather.getPrecipitation(),
-                      weather.getHumidity(),
-                      weather.getTemperature(),
-                      weather.getWindSpeed()
-              );
-              return e; // 영속 엔티티
-            })
-            .orElseGet(() -> weatherRepository.save(weather)); // 새로 저장된 영속 엔티티
-  }
-
 
   private Precipitation getPrecipitation(Map.Entry<LocalDate, Map<Category, ForecastItem>> entry) {
     Map<Category, ForecastItem> m = entry.getValue();
@@ -451,6 +441,24 @@ public class WeatherServiceImpl implements WeatherService {
                     (a, b) -> a,
                     LinkedHashMap::new
             ));
+  }
+
+
+  private void detectAndPublishAlerts(Weather prev, Weather next) {
+    List<WeatherAlert> alerts = temperatureDeltaRule.evaluate(prev, next);
+    if (alerts.isEmpty()) return;
+
+    for (WeatherAlert a : alerts) {
+      // 같은 '오늘(forecastAt)'에 대해 이전 발표본 -> 이번 발표본 쌍으로 디듀프
+//      String key = "wa:%s:%d:%d:%s>%s".formatted(
+//              a.type(), a.x(), a.y(),
+//              prev.getForecastedAt(), a.forecastedAt()
+//      );
+//      if (onceDeduper.acquireOnce(key, Duration.ofHours(4))) {
+        // 도메인 이벤트 발행 (아래 #3 리스너가 받아서 Notification 생성/전송)
+        eventPublisher.publishEvent(a);
+//      }
+    }
   }
 
   public LocationResponse fallbackLocation(LocationRequest locationRequest, Throwable ex) {
