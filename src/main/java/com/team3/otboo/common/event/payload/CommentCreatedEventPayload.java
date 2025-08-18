@@ -20,4 +20,5 @@ public class CommentCreatedEventPayload implements EventPayload {
 	private UUID feedId;
 	private UUID authorId;
 	private String content;
+	private Integer commentCount;
 }

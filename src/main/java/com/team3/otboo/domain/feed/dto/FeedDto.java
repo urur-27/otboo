@@ -12,11 +12,13 @@ public record FeedDto(
 	Instant updatedAt,
 	AuthorDto author,
 	WeatherSummaryDto weather,
-	List<OotdDto> ootds, // 중간 테이블 이름을 왜 ootd로 했을까
+	List<OotdDto> ootds,
 	String content,
 	Long likeCount,
 	Integer commentCount,
 	Boolean likedByMe
+	// Long viewCount
+	// 바뀌는 데이터 -> content, likeCount, commentCount, likedByMe, viewCount
 ) {
 
 }

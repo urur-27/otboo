@@ -19,8 +19,8 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +47,7 @@ public class FeedService {
 	public FeedDto create(UUID userId, FeedCreateRequest request) {
 
 		User author = userRepository.findById(request.authorId())
-				.orElseThrow(UserNotFoundException::new);
+			.orElseThrow(UserNotFoundException::new);
 
 		Feed feed = feedRepository.save(Feed.create(
 			request.authorId(),
