@@ -1,6 +1,7 @@
 package com.team3.otboo.domain.weather.service;
 
 import com.team3.otboo.converter.GridConverter;
+import com.team3.otboo.domain.notification.service.OnceDeduper;
 import com.team3.otboo.domain.user.entity.Location;
 import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.repository.ProfileRepository;
@@ -52,6 +53,7 @@ public class WeatherServiceImpl implements WeatherService {
   private final WeatherExternal weatherExternal;
   private final TemperatureDeltaRule temperatureDeltaRule;
   private final ApplicationEventPublisher eventPublisher;
+  private final OnceDeduper onceDeduper;
 
   private static final DateTimeFormatter DATE_PARSER = DateTimeFormatter.BASIC_ISO_DATE;
   private static final DateTimeFormatter DATE_TIME_PARSER = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
@@ -449,15 +451,10 @@ public class WeatherServiceImpl implements WeatherService {
     if (alerts.isEmpty()) return;
 
     for (WeatherAlert a : alerts) {
-      // 같은 '오늘(forecastAt)'에 대해 이전 발표본 -> 이번 발표본 쌍으로 디듀프
-//      String key = "wa:%s:%d:%d:%s>%s".formatted(
-//              a.type(), a.x(), a.y(),
-//              prev.getForecastedAt(), a.forecastedAt()
-//      );
-//      if (onceDeduper.acquireOnce(key, Duration.ofHours(4))) {
-        // 도메인 이벤트 발행 (아래 #3 리스너가 받아서 Notification 생성/전송)
+      String key = "wa:%s:%d:%d:%s>%s".formatted(a.type(), a.x(), a.y(), prev.getForecastedAt(), a.forecastedAt());
+      if (onceDeduper.acquireOnce(key, Duration.ofHours(3))) {
         eventPublisher.publishEvent(a);
-//      }
+      }
     }
   }
 
