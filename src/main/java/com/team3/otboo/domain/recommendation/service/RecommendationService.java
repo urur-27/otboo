@@ -14,10 +14,10 @@ import com.team3.otboo.global.exception.user.UserNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class RecommendationService {
 
   private final UserRepository userRepository;
@@ -25,6 +25,17 @@ public class RecommendationService {
   private final ClothingService clothesService;
   private final WeatherService weatherService;
   private final RecommendationStrategy recommendationStrategy;
+
+  public RecommendationService(UserRepository userRepository, ProfileService profileService,
+      ClothingService clothesService, WeatherService weatherService,
+      @Qualifier("scoringStrategy")
+      RecommendationStrategy recommendationStrategy) {
+    this.userRepository = userRepository;
+    this.profileService = profileService;
+    this.clothesService = clothesService;
+    this.weatherService = weatherService;
+    this.recommendationStrategy = recommendationStrategy;
+  }
 
   public RecommendationDto recommend(UUID weatherId, UUID userId) {
     User user = userRepository.findById(userId)
