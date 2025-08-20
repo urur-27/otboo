@@ -32,11 +32,11 @@ public class LikeService {
 	@Transactional
 	public FeedDto like(UUID userId, UUID feedId) {
 		User liker = userRepository.findById(userId)
-				.orElseThrow(UserNotFoundException::new);
+			.orElseThrow(UserNotFoundException::new);
 		Feed feed = feedRepository.findById(feedId)
-				.orElseThrow(UserNotFoundException::new);
+			.orElseThrow(UserNotFoundException::new);
 		User feedOwner = userRepository.findById(feed.getAuthorId())
-				.orElseThrow(UserNotFoundException::new);
+			.orElseThrow(UserNotFoundException::new);
 
 		likeRepository.save(
 			Like.create(
