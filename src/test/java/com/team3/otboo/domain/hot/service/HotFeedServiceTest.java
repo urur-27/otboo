@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventType;
-import com.team3.otboo.domain.hot.service.eventhandler.EventHandler;
+import com.team3.otboo.domain.hot.service.event.handler.EventHandler;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;

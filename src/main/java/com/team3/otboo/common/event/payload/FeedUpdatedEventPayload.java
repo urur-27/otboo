@@ -15,9 +15,6 @@ import lombok.NoArgsConstructor;
 public class FeedUpdatedEventPayload implements EventPayload {
 
 	private UUID id;
-	private Instant createdAt;
 	private Instant updatedAt;
-	private UUID authorId;
-	private UUID weatherId;
 	private String content;
 }

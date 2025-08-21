@@ -25,7 +25,9 @@ public class FeedQueryModel {
 	private String content;
 	private Long likeCount;
 	private Integer commentCount;
-	private Boolean likedByMe;
+//	private Boolean likedByMe; // likeByMe 는 QueryModel 에 넣지 않고 꺼낼때 계산해서 DTO 만들기 .
+
+	private Long viewCount;
 
 	// feed 생성시, kafka listener 에서 이벤트 받아서 FeedDto 생성하고, FeedQueryModel 생성
 	public static FeedQueryModel create(FeedDto feedDto) {
@@ -39,7 +41,6 @@ public class FeedQueryModel {
 		feedQueryModel.content = feedDto.content();
 		feedQueryModel.likeCount = feedDto.likeCount();
 		feedQueryModel.commentCount = feedDto.commentCount();
-		feedQueryModel.likedByMe = feedDto.likedByMe();
 		return feedQueryModel;
 	}
 

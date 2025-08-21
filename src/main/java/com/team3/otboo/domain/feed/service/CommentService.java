@@ -1,5 +1,8 @@
 package com.team3.otboo.domain.feed.service;
 
+import com.team3.otboo.common.event.EventType;
+import com.team3.otboo.common.event.payload.CommentCreatedEventPayload;
+import com.team3.otboo.common.outboxMessageRelay.OutboxEventPublisher;
 import com.team3.otboo.domain.feed.dto.CommentDto;
 import com.team3.otboo.domain.feed.dto.CommentDtoCursorResponse;
 import com.team3.otboo.domain.feed.entity.Comment;
@@ -33,7 +36,9 @@ public class CommentService {
 
 	private final CommentRepository commentRepository;
 	private final FeedCommentCountRepository feedCommentCountRepository;
+
 	private final ApplicationEventPublisher eventPublisher;
+	private final OutboxEventPublisher outboxEventPublisher;
 
 	private final CommentMapper commentMapper;
 	private final UserRepository userRepository;
@@ -71,6 +76,19 @@ public class CommentService {
 			feedOwner,
 			author.getUsername(),
 			feed.getId()));
+		outboxEventPublisher.publish(
+			EventType.COMMENT_CREATED,
+			CommentCreatedEventPayload.builder()
+				.id(comment.getId()) // comment id
+				.createdAt(comment.getCreatedAt())
+				.updatedAt(comment.getUpdatedAt())
+				.feedId(comment.getFeedId())
+				.authorId(comment.getAuthorId())
+				.content(comment.getContent())
+				.commentCount(count(comment.getFeedId()).intValue())
+				.build()
+		);
+
 		return commentMapper.toDto(comment, author);
 	}
 

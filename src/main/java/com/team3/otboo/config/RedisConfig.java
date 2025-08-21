@@ -11,7 +11,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.PatternTopic;
+import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
@@ -40,7 +40,7 @@ public class RedisConfig {
 	@Qualifier("chatPubSub")
 	public RedisTemplate<String, Object> redisTemplate(
 		@Qualifier("chatPubSub") RedisConnectionFactory redisConnectionFactory,
-			ObjectMapper objectMapper) {
+		ObjectMapper objectMapper) {
 		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(redisConnectionFactory);
 		redisTemplate.setKeySerializer(new StringRedisSerializer());
@@ -53,18 +53,12 @@ public class RedisConfig {
 	public RedisMessageListenerContainer redisMessageListenerContainer(
 		@Qualifier("chatPubSub") RedisConnectionFactory redisConnectionFactory,
 		MessageListenerAdapter dmListenerAdapter,
-			RedisSubscriber redisSubscriber
+		RedisSubscriber redisSubscriber
 	) {
 		RedisMessageListenerContainer container = new RedisMessageListenerContainer();
 		container.setConnectionFactory(redisConnectionFactory);
-		container.addMessageListener(
-				dmListenerAdapter,
-			new PatternTopic("direct-messages") // 수신 엔드 포인트 .
-		);
-		container.addMessageListener(
-				redisSubscriber,
-				new PatternTopic("notification-channel") // 수신 엔드 포인트 .
-		);
+		container.addMessageListener(dmListenerAdapter, new ChannelTopic("direct-messages"));
+		container.addMessageListener(redisSubscriber, new ChannelTopic("notification-channel"));
 		return container;
 	}
 
