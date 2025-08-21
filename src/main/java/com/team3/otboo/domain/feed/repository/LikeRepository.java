@@ -42,7 +42,7 @@ public interface LikeRepository extends JpaRepository<Like, UUID> {
 	);
 
 	@Query(
-		value = "select feed_id from likes where l.user_id = :userId and l.feed_id in :feedIds",
+		value = "select feed_id from likes where user_id = :userId and feed_id in :feedIds",
 		nativeQuery = true
 	)
 	Set<UUID> findLikedFeedIdsByUserAndFeedIn(
