@@ -3,6 +3,7 @@ package com.team3.otboo.domain.clothing.entity;
 import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.CascadeType;
@@ -10,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Table(name="attribute")
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
