@@ -63,7 +63,7 @@ public class FeedController {
 	}
 
 	@GetMapping("/api/feeds")
-	public ResponseEntity<FeedDtoCursorResponse> getFeeds(
+	public ResponseEntity<FeedDtoCursorResponse> readAllInfiniteScroll(
 		@AuthenticationPrincipal CustomUserDetails userDetails,
 		@RequestParam(value = "cursor", required = false) String cursor,
 		@RequestParam(value = "idAfter", required = false) UUID idAfter,
