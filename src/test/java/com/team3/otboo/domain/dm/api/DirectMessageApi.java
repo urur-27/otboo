@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.team3.otboo.domain.dm.dto.DirectMessageDto;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import java.util.List;
 import java.util.UUID;
 import lombok.Data;

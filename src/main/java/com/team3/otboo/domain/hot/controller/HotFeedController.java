@@ -2,7 +2,7 @@ package com.team3.otboo.domain.hot.controller;
 
 import com.team3.otboo.domain.feed.dto.FeedDto;
 import com.team3.otboo.domain.hot.service.HotFeedService;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

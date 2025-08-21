@@ -7,8 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.team3.otboo.domain.recommendation.dto.RecommendationDto;
 import com.team3.otboo.domain.recommendation.service.RecommendationService;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
-import com.team3.otboo.domain.weather.entity.Weather;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import com.team3.otboo.fixture.UserFixture;
 import java.util.List;
 import java.util.UUID;

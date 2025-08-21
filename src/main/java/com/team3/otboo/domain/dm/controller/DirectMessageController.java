@@ -2,7 +2,7 @@ package com.team3.otboo.domain.dm.controller;
 
 import com.team3.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
 import com.team3.otboo.domain.dm.service.DirectMessageService;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

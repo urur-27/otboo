@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.user.jwt;
+package com.team3.otboo.domain.user.jwt.login;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.domain.user.dto.Request.SignInRequest;
@@ -87,9 +87,19 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
     public static class Configurer extends
             AbstractAuthenticationFilterConfigurer<HttpSecurity, Configurer, JsonUsernamePasswordAuthenticationFilter> {
 
+        //private final AuthenticationManager authenticationManager;
+
         public Configurer(ObjectMapper objectMapper) {
             super(new JsonUsernamePasswordAuthenticationFilter(objectMapper), "/api/auth/sign-in");
+            //this.authenticationManager = authenticationManager;
         }
+
+//        @Override
+//        public void configure(HttpSecurity http) throws Exception {
+//            JsonUsernamePasswordAuthenticationFilter authenticationFilter = getAuthenticationFilter();
+//            authenticationFilter.setAuthenticationManager(authenticationManager);
+//            super.configure(http);
+//        }
 
         @Override
         protected RequestMatcher createLoginProcessingUrlMatcher(String loginProcessingUrl) {
@@ -98,9 +108,9 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
                     && HttpMethod.POST.name().equals(request.getMethod());
         }
 
-        @Override
-        public void init(HttpSecurity http) throws Exception {
-            loginProcessingUrl("/api/auth/sign-in");
-        }
+//        @Override
+//        public void init(HttpSecurity http) throws Exception {
+//            loginProcessingUrl("/api/auth/sign-in");
+//        }
     }
 }
