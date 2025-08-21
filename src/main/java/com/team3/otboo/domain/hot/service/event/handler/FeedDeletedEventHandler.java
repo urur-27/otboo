@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.hot.service.eventhandler;
+package com.team3.otboo.domain.hot.service.event.handler;
 
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventType;
@@ -9,7 +9,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-@Component
+@Component("hotFeedDeletedEventHandler")
 @RequiredArgsConstructor
 public class FeedDeletedEventHandler implements EventHandler<FeedDeletedEventPayload> {
 

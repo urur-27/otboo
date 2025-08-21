@@ -1,13 +1,13 @@
 package com.team3.otboo.domain.hot.service;
 
-import com.team3.otboo.domain.feed.dto.FeedDto;
-import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
-import com.team3.otboo.domain.hot.client.FeedClient;
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventPayload;
 import com.team3.otboo.common.event.EventType;
+import com.team3.otboo.domain.feed.dto.FeedDto;
+import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
+import com.team3.otboo.domain.feedread.client.FeedClient;
 import com.team3.otboo.domain.hot.repository.HotFeedListRepository;
-import com.team3.otboo.domain.hot.service.eventhandler.EventHandler;
+import com.team3.otboo.domain.hot.service.event.handler.EventHandler;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

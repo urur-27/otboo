@@ -1,11 +1,11 @@
 package com.team3.otboo.domain.hot.service;
 
-import com.team3.otboo.domain.feed.entity.Feed;
-import com.team3.otboo.domain.feed.service.FeedService;
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventPayload;
+import com.team3.otboo.domain.feed.entity.Feed;
+import com.team3.otboo.domain.feed.service.FeedService;
 import com.team3.otboo.domain.hot.repository.HotFeedListRepository;
-import com.team3.otboo.domain.hot.service.eventhandler.EventHandler;
+import com.team3.otboo.domain.hot.service.event.handler.EventHandler;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;

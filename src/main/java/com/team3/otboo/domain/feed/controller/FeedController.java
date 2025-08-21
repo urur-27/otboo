@@ -1,14 +1,15 @@
 package com.team3.otboo.domain.feed.controller;
 
 import com.team3.otboo.domain.feed.dto.FeedDto;
-import com.team3.otboo.domain.feed.dto.FeedDtoCursorResponse;
 import com.team3.otboo.domain.feed.service.FeedService;
 import com.team3.otboo.domain.feed.service.request.FeedCreateRequest;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.request.FeedUpdateRequest;
+import com.team3.otboo.domain.feed.service.response.FeedDtoCursorResponse;
+import com.team3.otboo.domain.feedread.service.FeedReadService;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.SortDirection;
-import com.team3.otboo.domain.user.user_details.CustomUserDetails;
+import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
 import com.team3.otboo.domain.weather.enums.PrecipitationType;
 import com.team3.otboo.domain.weather.enums.SkyStatus;
 import java.util.UUID;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class FeedController {
 
 	private final FeedService feedService;
+	private final FeedReadService feedReadService;
 
 	@PostMapping("/api/feeds")
 	public ResponseEntity<FeedDto> create(
@@ -67,7 +69,7 @@ public class FeedController {
 		@RequestParam(value = "idAfter", required = false) UUID idAfter,
 		@RequestParam(value = "limit") Integer limit,
 		@RequestParam(value = "sortBy", defaultValue = "createdAt") String sortBy,
-		@RequestParam(value = "sortDirection", defaultValue = "ASCENDING") SortDirection sortDirection,
+		@RequestParam(value = "sortDirection", defaultValue = "DESCENDING") SortDirection sortDirection,
 		@RequestParam(value = "keyWordLike", required = false) String keywordLike,
 		@RequestParam(value = "skyStatusEqual", required = false) SkyStatus skyStatusEqual,
 		@RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,
@@ -86,8 +88,25 @@ public class FeedController {
 			authorIdEqual
 		);
 
-		FeedDtoCursorResponse response = feedService.getFeeds(user.getId(), request);
+		if (isCacheable(request)) {
+			// 캐시 가능 -> FeedReadService 호출
+			FeedDtoCursorResponse response = feedReadService.readAllInfiniteScroll(user.getId(),
+				request);
+			return ResponseEntity.ok(response);
+		} else {
+			// 캐시 불가 -> FeedService 호출
+			FeedDtoCursorResponse response = feedService.readAllInfiniteScroll(user.getId(),
+				request);
+			return ResponseEntity.ok(response);
+		}
+	}
 
-		return ResponseEntity.ok(response);
+	// 필터링 조건이 따로 없을 때만 redis 에서 가져오기 (최신순 정렬 조건만 있을때 캐시 사용)
+	private boolean isCacheable(FeedListRequest request) {
+		return "createdAt".equals(request.sortBy()) &&
+			(request.keywordLike() == null || request.keywordLike().isBlank()) &&
+			request.skyStatusEqual() == null &&
+			request.precipitationTypeEqual() == null &&
+			request.authorIdEqual() == null;
 	}
 }
