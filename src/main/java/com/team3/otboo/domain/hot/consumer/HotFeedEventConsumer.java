@@ -17,7 +17,8 @@ public class HotFeedEventConsumer {
 
 	private final HotFeedService hotFeedService;
 
-	// String 으로 된 이벤트 받아서 객체로 바꾸고, hotFeedService 의 handle 메서드로 넘김 ..
+	// 현재는 통합 consumer 방식이지만, 나중에 view 서비스 같은 부분에서 처리량이 너무 많아진다면,
+	// view topic 에 대한 consumer 를 따로 분리할 수도 있음 .
 	@KafkaListener(topics = {
 		Topic.OTBOO_FEED,
 		Topic.OTBOO_FEED_COMMENT,
