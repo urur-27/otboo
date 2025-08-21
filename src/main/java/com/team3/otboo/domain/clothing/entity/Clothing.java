@@ -49,7 +49,7 @@ public class Clothing extends BaseEntity {
         return clothing;
     }
 
-    public void setUrl(String imageUrl) {
+    public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
 

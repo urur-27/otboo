@@ -7,6 +7,7 @@ import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.common.util.StringSimilarityUtils;
+import com.team3.otboo.domain.clothing.service.AttributeReadService.AttributeDefSnap;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,88 +32,74 @@ public class AttributeMapper {
     // 옵션값 유사 매칭 임계치
     private static final double OPT_SIM_THRESH = 0.65;
 
-    public List<ClothesAttributeWithDefDto> mapFromVision(VisionAnalysisResult vision) {
+    /**
+     * Vision 모델이 반환한 속성 리스트를, 미리 스냅샷(defs)으로 전달받은 속성 정의(AttributeDefSnap)들과 매핑한다.
+     *
+     * 동작 흐름:
+     *  1. Vision 결과(VisionAnalysisResult)의 각 attribute item(definitionName, value)을 순회한다.
+     *  2. definitionName을 기준으로 AttributeDefSnap을 찾는다:
+     *     - 정확 일치 → 정규화(normalize) 일치 → 유사도 매칭 순으로 탐색
+     *  3. 해당 정의(def)가 존재할 경우:
+     *     - def에 사전 정의된 옵션이 있으면 valueRaw를 가장 근접한 단일 옵션으로 매핑
+     *       (chooseSingleOption → fallback: best similarity)
+     *     - 옵션이 없으면 자유 입력형으로 valueRaw 그대로 사용
+     *  4. 매핑 결과를 ClothesAttributeWithDefDto(defId, defName, options, finalValue)로 만들어 반환 리스트에 추가
+     *
+     * 결과적으로 Vision 결과의 raw definitionName/value를
+     *  - DB/스냅샷 정의에 정규화·유사도 기반으로 매핑하고
+     *  - 선택 가능한 옵션이 있다면 단일 선택값으로 정리하여
+     * UI 드롭다운/속성 관리에 적합한 형태의 DTO 리스트를 반환한다.
+     *
+     * @param vision Vision 모델이 분석해 반환한 속성 결과
+     * @param defs   Attribute 정의 스냅샷 목록 (id, name, options)
+     * @return Vision 결과를 정의/옵션과 매핑한 ClothesAttributeWithDefDto 리스트
+     */
+    public List<ClothesAttributeWithDefDto> mapFromVision(
+            VisionAnalysisResult vision,
+            List<AttributeDefSnap> defs
+    ) {
         if (vision == null || vision.attributes() == null) return List.of();
 
-        // DB 정의 로드 (캐싱 고려 가능)
-        List<Attribute> allDefs = attributeRepository.findAll();
-        // DB에 저장된 원래 이름 기준으로 매핑
-        Map<String, Attribute> exactMap = allDefs.stream()
-                .collect(Collectors.toMap(Attribute::getName, Function.identity(), (a,b)->a));
+        Map<String, AttributeDefSnap> exactMap = defs.stream()
+                .collect(Collectors.toMap(AttributeDefSnap::name, Function.identity(), (a,b)->a));
 
-        // 소문자, 공백 제거 등 정규화된 이름 기준 매핑
-        Map<String, Attribute> normalizedMap = allDefs.stream()
+        Map<String, AttributeDefSnap> normalizedMap = defs.stream()
                 .collect(Collectors.toMap(
-                        a -> StringSimilarityUtils.normalize(a.getName()),
+                        d -> StringSimilarityUtils.normalize(d.name()),
                         Function.identity(),
                         (a,b)->a
                 ));
 
         List<ClothesAttributeWithDefDto> result = new ArrayList<>();
-
         for (VisionAttributeItem item : vision.attributes()) {
             if (item == null) continue;
 
             String defNameRaw = Optional.ofNullable(item.definitionName()).orElse("").trim();
             String valueRaw   = Optional.ofNullable(item.value()).orElse("").trim();
+            if (defNameRaw.isBlank() || valueRaw.isBlank()) continue;
 
-            if (defNameRaw.isBlank() || valueRaw.isBlank()) {
-                log.debug("속성 스킵(definitionName/value 누락): {}", item);
-                continue;
-            }
+            AttributeDefSnap def = exactMap.get(defNameRaw);
+            if (def == null) def = normalizedMap.get(StringSimilarityUtils.normalize(defNameRaw));
+            if (def == null) def = findBySimilarity(defNameRaw, defs);
+            if (def == null) continue;
 
-            // 속성 찾기: 정확 → 정규화 일치 → 유사 매칭
-            Attribute def = exactMap.get(defNameRaw);
-            if (def == null) {
-                def = normalizedMap.get(StringSimilarityUtils.normalize(defNameRaw));
-            }
-            if (def == null) {
-                def = findDefinitionBySimilarity(defNameRaw, allDefs);
-            }
-            if (def == null) {
-                log.warn("정의 매칭 실패 - Vision: [{}], value=[{}]", defNameRaw, valueRaw);
-                continue;
-            }
-
-            //  옵션 매칭: 정의에 옵션이 없으면 raw 값 그대로 사용
-            List<String> options = def.getOptions().stream()
-                    .map(AttributeOption::getValue)
-                    .toList();
-
-            List<String> selectableValues = options; // ← 드롭다운 리스트 그대로 내려줌
+            List<String> options = def.options();
 
             String finalValue;
             if (!options.isEmpty()) {
-                finalValue = chooseSingleOption(valueRaw, options); // ← 여러 값이 있는 경우 하나로 고정
+                finalValue = chooseSingleOption(valueRaw, options);
                 if (finalValue == null) {
-                    // 폴백 전략: 최고 유사 옵션 or raw
                     finalValue = StringSimilarityUtils.findBestBySimilarity(valueRaw, options);
                 }
             } else {
-                // 옵션이 아예 없는 자유입력형 속성이라면 raw 값을 그대로 사용
                 finalValue = valueRaw;
             }
 
             result.add(new ClothesAttributeWithDefDto(
-                    def.getId(),
-                    def.getName(),
-                    selectableValues,  // 드롭다운 목록
-                    finalValue         // 실제 선택 값(단일)
+                    def.id(), def.name(), options, finalValue
             ));
         }
-
         return result;
-    }
-
-    private Attribute findDefinitionBySimilarity(String targetName, List<Attribute> allDefs) {
-        String nTarget = StringSimilarityUtils.normalize(targetName);
-
-        return allDefs.stream()
-                .map(a -> Map.entry(a, StringSimilarityUtils.similarity(nTarget, StringSimilarityUtils.normalize(a.getName()))))
-                .filter(e -> e.getValue() >= DEF_SIM_THRESH)
-                .max(Comparator.comparingDouble(Map.Entry::getValue))
-                .map(Map.Entry::getKey)
-                .orElse(null);
     }
 
     private String chooseSingleOption(String valueRaw, List<String> options) {
@@ -150,6 +137,16 @@ public class AttributeMapper {
 
         // 가장 점수가 높은 옵션 1개 선택
         return score.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
+
+    private AttributeDefSnap findBySimilarity(String target, List<AttributeDefSnap> defs) {
+        String n = StringSimilarityUtils.normalize(target);
+        return defs.stream()
+                .map(d -> Map.entry(d, StringSimilarityUtils.similarity(n, StringSimilarityUtils.normalize(d.name()))))
+                .filter(e -> e.getValue() >= DEF_SIM_THRESH)
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElse(null);
