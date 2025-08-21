@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
                         //.requestMatchers(HttpMethod.PATCH, "/api/auth/change-password").hasRole("TEMP_USER") // 임시 비밀번호를 발급받은 사용자만 접근 가능
                         .requestMatchers("/uploads/**").permitAll() // 로컬 이미지 찾기 위한 url 경로 허용
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll() // 헬스체크 허용
                         .requestMatchers("/api/**").authenticated()
 
                         .requestMatchers("/", "/assets/**", "/**.html", "/**.css", "/**.js", "/favicon.ico").permitAll()

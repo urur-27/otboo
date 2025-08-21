@@ -12,6 +12,9 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      ssl:
+        enabled: true
+
   jpa:
     show-sql: false
     properties:
@@ -34,12 +37,25 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
       group-id: otboo-hot-feed-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: false
-
+    admin: # admin
+      properties:
+        security.protocol: SASL_SSL
+        sasl.mechanism: AWS_MSK_IAM
+        sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+        sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+    properties: # 전체 공통 설정
+      security.protocol: SASL_SSL
+      sasl.mechanism: AWS_MSK_IAM
+      sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+      sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
 server:
   port: 8080
 
@@ -55,11 +71,11 @@ otboo:
       root-path: ${STORAGE_LOCAL_ROOT_PATH:.otboo}
       public-path: ${STORAGE_LOCAL_PUBLIC_PATH:/uploads/}  # 브라우저가 접근할 URL prefix
     s3:
-      access-key: ${AWS_S3_ACCESS_KEY}
-      secret-key: ${AWS_S3_SECRET_KEY}
+      access-key: ${AWS_S3_ACCESS_KEY:}
+      secret-key: ${AWS_S3_SECRET_KEY:}
       region: ${AWS_S3_REGION}
       bucket: ${AWS_S3_BUCKET}
-      baseUrl: ${AWS_S3_BUCKET_URL}
+      baseUrl: ${AWS_S3_BUCKET_URL:}
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
 
 external:
@@ -105,3 +121,9 @@ admin:
   username: ${ADMIN_USERNAME}
   email: ${ADMIN_EMAIL}
   password: ${ADMIN_PASSWORD}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
