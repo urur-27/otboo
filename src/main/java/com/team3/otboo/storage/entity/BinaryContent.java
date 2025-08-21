@@ -36,8 +36,15 @@ public class BinaryContent extends BaseEntity {
         this.uploadStatus = uploadStatus;
     }
 
-
     public void updateImageUrl(String newImageUrl) {
         this.imageUrl = newImageUrl;
+    }
+
+    public void markCompleted(String url) {
+        this.imageUrl = url;
+        this.uploadStatus = BinaryContentUploadStatus.SUCCESS;
+    }
+    public void markFailed() {
+        this.uploadStatus = BinaryContentUploadStatus.FAILED;
     }
 }

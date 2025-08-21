@@ -92,6 +92,10 @@ dependencies {
 
     // OAuth
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // AWS IAM
+    implementation 'software.amazon.msk:aws-msk-iam-auth:2.0.2'
 }
 
 tasks.named('test') {

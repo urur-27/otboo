@@ -2,6 +2,8 @@ package com.team3.otboo.domain.clothing.infrastructure;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.config.OpenAiProperties;
+import com.team3.otboo.global.exception.BusinessException;
+import com.team3.otboo.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -60,7 +62,8 @@ public class OpenAiVisionClientImpl implements OpenAiVisionClient {
             return extractContentFromResponse(res.getBody());
 
         } catch (Exception e) {
-            throw new RuntimeException("OpenAI Vision 요청 실패", e);
+            log.error("[LLM] 호출 실패", e);
+            throw new BusinessException(ErrorCode.LLM_CALL_FAILED);
         }
     }
 
@@ -68,7 +71,8 @@ public class OpenAiVisionClientImpl implements OpenAiVisionClient {
         Map<?, ?> map = objectMapper.readValue(responseBody, Map.class);
         List<?> choices = (List<?>) map.get("choices");
         if (choices == null || choices.isEmpty()) {
-            throw new IllegalStateException("OpenAI 응답에 choices 없음");
+            log.warn("[LLM] 응답에 choices 없음.");
+            throw new BusinessException(ErrorCode.LLM_JSON_NOT_FOUND, "OpenAI 응답에 choices 없음");
         }
 
         Map<?, ?> choice = (Map<?, ?>) choices.getFirst();
