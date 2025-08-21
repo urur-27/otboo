@@ -37,17 +37,12 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    security:
-      protocol: PLAINTEXT
-      properties: { }   # 불필요한 SASL/SSL 항목 제거
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
       group-id: otboo-hot-feed-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: false
+
 server:
   port: 8080
 
