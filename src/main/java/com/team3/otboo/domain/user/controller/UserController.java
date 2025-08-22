@@ -6,14 +6,12 @@ import com.team3.otboo.domain.user.dto.response.UserResponse;
 import com.team3.otboo.domain.user.dto.Request.UserCreateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserLockUpdateRequest;
 import com.team3.otboo.domain.user.dto.Request.UserRoleUpdateRequest;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService;
 import com.team3.otboo.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 

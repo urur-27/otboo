@@ -5,7 +5,7 @@ import com.team3.otboo.domain.follow.dto.FollowSummaryDto;
 import com.team3.otboo.domain.follow.service.FollowService;
 import com.team3.otboo.domain.follow.service.request.FollowCreateRequest;
 import com.team3.otboo.domain.follow.service.response.FollowListResponse;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
