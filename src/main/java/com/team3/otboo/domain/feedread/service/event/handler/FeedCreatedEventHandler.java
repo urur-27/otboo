@@ -11,12 +11,10 @@ import com.team3.otboo.domain.feedread.repository.FeedQueryModelRepository;
 import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component("feedReadFeedCreatedEventHandler")
 @RequiredArgsConstructor
-@Slf4j
 public class FeedCreatedEventHandler implements EventHandler<FeedCreatedEventPayload> {
 
 	private final FeedQueryModelRepository feedQueryModelRepository;

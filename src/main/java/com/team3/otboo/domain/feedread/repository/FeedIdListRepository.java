@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.StringRedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-@Slf4j
 public class FeedIdListRepository {
 
 	private final StringRedisTemplate redisTemplate;
@@ -22,11 +20,6 @@ public class FeedIdListRepository {
 	private static final String KEY_FORMAT = "feed-read::all::feed-list";
 
 	public void add(UUID feedId, Instant createdAt, Long limit) {
-		/////////////////
-		System.out.println("[FeedIdListRepository.add] createdAt: " + createdAt);
-		System.out.println("[FeedIdListRepository.add] score: " + createdAt.toEpochMilli());
-		/////////////////
-
 		redisTemplate.executePipelined((RedisCallback<?>) action -> {
 			StringRedisConnection conn = (StringRedisConnection) action;
 			String key = generateKey();

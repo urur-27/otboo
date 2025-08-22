@@ -14,7 +14,6 @@ import com.team3.otboo.domain.weather.enums.PrecipitationType;
 import com.team3.otboo.domain.weather.enums.SkyStatus;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@Slf4j
 public class FeedController {
 
 	private final FeedService feedService;
@@ -91,12 +89,12 @@ public class FeedController {
 		);
 
 		if (isCacheable(request)) {
-			log.info("[FeedController.readAllInfiniteScroll] 조회용 DB 사용");
+			// 캐시 가능 -> FeedReadService 호출
 			FeedDtoCursorResponse response = feedReadService.readAllInfiniteScroll(user.getId(),
 				request);
 			return ResponseEntity.ok(response);
 		} else {
-			log.info("[FeedController.readAllInfiniteScroll] RDBMS 사용]");
+			// 캐시 불가 -> FeedService 호출
 			FeedDtoCursorResponse response = feedService.readAllInfiniteScroll(user.getId(),
 				request);
 			return ResponseEntity.ok(response);
