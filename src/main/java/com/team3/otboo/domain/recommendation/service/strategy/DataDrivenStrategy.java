@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 
 @Component("dataDrivenStrategy")
 @RequiredArgsConstructor
-@Primary
 public class DataDrivenStrategy implements RecommendationStrategy{
 
   private final RecommendationRuleRepository ruleRepository;

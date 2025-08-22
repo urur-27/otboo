@@ -23,8 +23,8 @@ public class RecommendationRuleRepositoryImpl implements RecommendationRuleRepos
 
     // 1. 온도 조건
     if (weather.getTemperature() != null && weather.getTemperature()
-            .getComparedToDayBefore() != null) {
-      Double currentTemp = weather.getTemperature().getComparedToDayBefore();
+            .getCurrent() != null) {
+      Double currentTemp = weather.getTemperature().getCurrent();
       builder.and(recommendationRule.minTemp.loe(currentTemp).or(recommendationRule.minTemp.isNull()));
       builder.and(recommendationRule.maxTemp.goe(currentTemp).or(recommendationRule.maxTemp.isNull()));
     }

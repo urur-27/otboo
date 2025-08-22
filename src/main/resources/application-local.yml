@@ -1,9 +1,11 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
 
 logging:
   level:
     com.team3: debug
     root: info
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace

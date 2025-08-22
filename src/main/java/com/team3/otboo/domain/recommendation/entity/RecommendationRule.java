@@ -31,6 +31,8 @@ public class RecommendationRule extends BaseEntity {
   private Double minHumidity;
   private Double maxHumidity;
 
+  private Integer score;
+
   @Enumerated(EnumType.STRING)
   private SkyStatus skyStatus;
 
@@ -46,7 +48,7 @@ public class RecommendationRule extends BaseEntity {
   @Builder
   public RecommendationRule(String ruleName, Double minTemp, Double maxTemp, Double minHumidity,
       Double maxHumidity, SkyStatus skyStatus, PrecipitationType precipitationType,
-      WindSpeedLevel windSpeedLevel) {
+      WindSpeedLevel windSpeedLevel, Integer score) {
     this.ruleName = ruleName;
     this.minTemp = minTemp;
     this.maxTemp = maxTemp;
@@ -55,5 +57,6 @@ public class RecommendationRule extends BaseEntity {
     this.skyStatus = skyStatus;
     this.precipitationType = precipitationType;
     this.windSpeedLevel = windSpeedLevel;
+    this.score = score;
   }
 }
