@@ -14,10 +14,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CommentCreatedEventPayload implements EventPayload {
 
-	private UUID id;
+	private UUID id; // comment_id
 	private Instant createdAt;
 	private Instant updatedAt;
 	private UUID feedId;
 	private UUID authorId;
 	private String content;
+	private Integer commentCount;
 }

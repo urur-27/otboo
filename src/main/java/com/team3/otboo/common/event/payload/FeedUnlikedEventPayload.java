@@ -14,9 +14,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FeedUnlikedEventPayload implements EventPayload {
 
-	private UUID id;
+	private UUID id; // FeedLikeId
 	private Instant createdAt;
 	private Instant updatedAt;
 	private UUID feedId;
 	private UUID userId;
+	private Long likeCount;
 }
