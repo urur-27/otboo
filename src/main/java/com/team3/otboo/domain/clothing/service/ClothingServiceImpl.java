@@ -50,8 +50,9 @@ public class ClothingServiceImpl implements ClothingService {
   private final BinaryContentUploader binaryContentUploader;
 
   @Override
+  @Transactional(readOnly = true)
   public List<Clothing> getClothesByOwner(User user) {
-    return List.of();
+    return clothingRepository.findByOwner(user);
   }
 
   @Override
