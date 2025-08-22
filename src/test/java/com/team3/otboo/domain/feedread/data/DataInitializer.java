@@ -84,7 +84,7 @@ public class DataInitializer {
 				User owner = getRandomUser();
 				Clothing clothing = Clothing.of("test_clothing_" + i, owner);
 				clothing.setType("OUTER");
-				clothing.setUrl("http://example.com/image" + i + ".png");
+				clothing.setImageUrl("http://example.com/image" + i + ".png");
 				entityManager.persist(clothing);
 				testClothes.add(clothing);
 			}
