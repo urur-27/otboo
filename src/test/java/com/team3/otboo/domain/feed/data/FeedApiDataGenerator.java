@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.feed.api;
+package com.team3.otboo.domain.feed.data;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
