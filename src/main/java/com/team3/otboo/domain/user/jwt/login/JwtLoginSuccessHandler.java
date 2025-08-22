@@ -1,8 +1,10 @@
-package com.team3.otboo.domain.user.jwt;
+package com.team3.otboo.domain.user.jwt.login;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.domain.user.dto.AccessRefreshToken;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
+import com.team3.otboo.domain.user.jwt.CookieUtil;
+import com.team3.otboo.domain.user.jwt.JwtService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
@@ -19,6 +22,7 @@ import java.io.IOException;
     새로운 JWT 세션(Access, Refresh token) 을 생성하고 사용자에게 전달
  */
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     // 인증에 성공한 사용자 정보를 바탕으로 createToken을 호출
@@ -34,7 +38,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
             Authentication authentication
     ) throws IOException, ServletException {
         // 인증된 사용자 정보를 가져온다
-        CustomUserDetailsService.CustomUserDetails user = (CustomUserDetailsService.CustomUserDetails) authentication.getPrincipal();
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
         // 기존에 이미 발급된 사용자의 JWT 세션이 있다면 모두 무효화처리
         // 동시 로그인 제한 및 이전에 사용하던 기기에서의 세션 만료 역할
         jwtService.invalidateJwtSession(user.getUser().getId());

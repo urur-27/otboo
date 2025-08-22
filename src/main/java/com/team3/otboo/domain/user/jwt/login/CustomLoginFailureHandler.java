@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.user.jwt;
+package com.team3.otboo.domain.user.jwt.login;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
@@ -23,6 +23,11 @@ public class CustomLoginFailureHandler implements AuthenticationFailureHandler {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(objectMapper.writeValueAsString(HttpServletResponse.SC_UNAUTHORIZED));
+
+        // 로그인 실패 시 리디렉션할 URL을 지정합니다.
+        String targetUrl = "/sign-in?error=true";
+
+        // 지정된 URL로 리디렉션합니다.
+        response.sendRedirect(targetUrl);
     }
 }
-

@@ -17,23 +17,33 @@ public interface WeatherRepository extends JpaRepository<Weather, UUID> {
     @Query("""
       SELECT w 
       FROM Weather w 
-      WHERE w.location.latitude  = :latitude
-        AND w.location.longitude = :longitude
+      WHERE w.location.x  = :x
+        AND w.location.y = :y
         AND FUNCTION('date', w.forecastAt) = :forecastDate
       ORDER BY w.forecastAt DESC
     """)
-    Optional<Weather> findLatestByLocationAndForecastDate(
-            @Param("latitude")     double latitude,
-            @Param("longitude")    double longitude,
+    Optional<Weather> findxByyAndForecastDate(
+            @Param("x")     double x,
+            @Param("y")    double y,
             @Param("forecastDate") LocalDate forecastDate
     );
 
-    Optional<Weather> findByLocationLatitudeAndLocationLongitudeAndForecastAt(Double latitude, Double longitude, LocalDateTime forecastAt);
+    Optional<Weather> findByLocation_XAndLocation_YAndForecastAt(Integer x, Integer y, LocalDateTime forecastAt);
 
-    List<Weather> findByLocation_XAndLocation_YAndForecastAtGreaterThanEqualAndForecastAtLessThan(
-            Integer x,
-            Integer y,
-            LocalDateTime from,
-            LocalDateTime toExclusive
+    @Query("""
+    SELECT w
+    FROM Weather w
+    WHERE w.location.x = :x
+      AND w.location.y = :y
+      AND w.forecastedAt = :forecastedAt
+      AND w.forecastAt >= :fromForecastAt
+      AND w.forecastAt < :toForecastAt
+    """)
+    List<Weather> findWeathersWithForecastedAt(
+            @Param("x") Integer x,
+            @Param("y") Integer y,
+            @Param("forecastedAt") LocalDateTime forecastedAt,
+            @Param("fromForecastAt") LocalDateTime fromForecastAt,
+            @Param("toForecastAt") LocalDateTime toForecastAt
     );
 }

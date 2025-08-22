@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,10 +18,8 @@ public class ClothingExtractionController {
     private final ClothingExtractionService extractionService;
 
     @GetMapping
-    public ResponseEntity<ClothesDto> extractClothingInfo(
-            @RequestParam("url") String url
-    ) {
-        ClothesDto clothingDto = extractionService.extractFromUrl(url);
-        return ResponseEntity.ok(clothingDto);
+    public Mono<ResponseEntity<ClothesDto>> extractClothingInfo(@RequestParam("url") String url) {
+        return extractionService.extractFromUrlReactive(url)
+                .map(ResponseEntity::ok);
     }
 }

@@ -1,7 +1,7 @@
-package com.team3.otboo.domain.user.jwt;
+package com.team3.otboo.domain.user.jwt.login;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,7 +20,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        CustomUserDetailsService.CustomUserDetails principal = (CustomUserDetailsService.CustomUserDetails) authentication.getPrincipal();
+        CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

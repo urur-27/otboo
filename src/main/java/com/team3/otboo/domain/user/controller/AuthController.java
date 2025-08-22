@@ -1,23 +1,16 @@
 package com.team3.otboo.domain.user.controller;
 
 import com.team3.otboo.domain.user.dto.AccessRefreshToken;
-import com.team3.otboo.domain.user.dto.Request.ChangePasswordRequest;
 import com.team3.otboo.domain.user.dto.Request.ResetPasswordRequest;
-import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.jwt.JwtService;
-import com.team3.otboo.domain.user.jwt.JwtSession;
 import com.team3.otboo.domain.user.service.AuthService;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService;
 import com.team3.otboo.domain.user.service.EmailService;
-import com.team3.otboo.domain.user.service.UserService;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,7 +34,7 @@ public class AuthController {
 
         log.info("이메일로 임시 비밀번호 전송");
         emailService.sendTempPasswordResetEmail(resetPasswordRequest.email(), tempPassword);
-        return ResponseEntity.ok("입력하신 이메일로 임시 비밀번호가 발송되었습니다.");
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/refresh")

@@ -9,13 +9,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.team3.otboo.domain.notification.dto.NotificationDto;
 import com.team3.otboo.domain.notification.dto.NotificationDtoCursorResponse;
 import com.team3.otboo.domain.notification.enums.SortDirection;
 import com.team3.otboo.domain.notification.service.NotificationService;
-import com.team3.otboo.domain.user.dto.UserDto;
-import com.team3.otboo.domain.user.entity.User;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import com.team3.otboo.fixture.UserFixture;
 import java.util.List;
 import java.util.UUID;

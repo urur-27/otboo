@@ -1,6 +1,7 @@
 package com.team3.otboo.domain.weather.service;
 
 import com.team3.otboo.converter.GridConverter;
+import com.team3.otboo.domain.notification.service.OnceDeduper;
 import com.team3.otboo.domain.user.entity.Location;
 import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.repository.ProfileRepository;
@@ -12,6 +13,7 @@ import com.team3.otboo.domain.weather.dto.response.LocationResponse;
 import com.team3.otboo.domain.weather.entity.*;
 import com.team3.otboo.domain.weather.enums.*;
 import com.team3.otboo.domain.weather.repository.WeatherRepository;
+import com.team3.otboo.event.WeatherAlert;
 import com.team3.otboo.external.WeatherExternal;
 import com.team3.otboo.global.exception.weather.ExternalApiException;
 import com.team3.otboo.global.exception.weather.WeatherApiException;
@@ -21,15 +23,13 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,15 +51,17 @@ public class WeatherServiceImpl implements WeatherService {
   private final ProfileRepository profileRepository;
   private final WeatherRepository weatherRepository;
   private final WeatherExternal weatherExternal;
+  private final TemperatureDeltaRule temperatureDeltaRule;
+  private final ApplicationEventPublisher eventPublisher;
+  private final OnceDeduper onceDeduper;
 
   private static final DateTimeFormatter DATE_PARSER = DateTimeFormatter.BASIC_ISO_DATE;
   private static final DateTimeFormatter DATE_TIME_PARSER = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+  private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
   @Override
   @Transactional
   public List<WeatherDto> getWeatherForUser(LocationRequest locationRequest) {
-    ZoneId KST = ZoneId.of("Asia/Seoul");
-
     ZonedDateTime nowKst = ZonedDateTime.now(KST);
     ZonedDateTime startKst = nowKst.toLocalDate().atStartOfDay(KST); // 오늘 00:00 KST
     ZonedDateTime endKstExclusive = startKst.plusDays(5);            // +5일 00:00 KST
@@ -70,10 +72,11 @@ public class WeatherServiceImpl implements WeatherService {
 
     LocationResponse lr = getLocationForUser(locationRequest);
 
+    var base = WeatherApiParams.currentBase();
+    LocalDateTime forecastedAt = LocalDateTime.parse(base.date() + base.time(), DATE_TIME_PARSER);
+
     List<Weather> weathers = weatherRepository
-            .findByLocation_XAndLocation_YAndForecastAtGreaterThanEqualAndForecastAtLessThan(
-                    lr.getX(), lr.getY(), from, toExclusive
-            );
+            .findWeathersWithForecastedAt(lr.getX(), lr.getY(), forecastedAt, from, toExclusive);
 
     Location location = new Location(lr.getLatitude(), lr.getLongitude(), lr.getX(), lr.getY(), lr.getLocationNames());
 
@@ -152,14 +155,14 @@ public class WeatherServiceImpl implements WeatherService {
     List<Profile> profiles = profileRepository.findAll();
 
     for (Profile profile : profiles) {
-        Location location = profile.getLocation();
-        if(location == null || location.getLatitude() == null || location.getLongitude() == null || location.getX() == null || location.getY() == null) {
-          continue;
-        }
+      Location location = profile.getLocation();
+      if(location == null || location.getLatitude() == null || location.getLongitude() == null || location.getX() == null || location.getY() == null) {
+        continue;
+      }
 
-        computeDailyForecastMap(profile.getLocation()).ifPresent(byDate -> {
-            upsertForecastsForProfile(profile.getLocation(), byDate);
-        });
+      computeDailyForecastMap(profile.getLocation()).ifPresent(byDate -> {
+        upsertForecastsForProfile(profile.getLocation(), byDate);
+      });
     }
   }
 
@@ -174,8 +177,8 @@ public class WeatherServiceImpl implements WeatherService {
             .orElseThrow();
 
     Optional<Weather> prevDbOfFirst = weatherRepository
-            .findLatestByLocationAndForecastDate(
-                    loc.getLatitude(), loc.getLongitude(),
+            .findxByyAndForecastDate(
+                    loc.getX(), loc.getY(),
                     firstDate.minusDays(1)
             );
 
@@ -188,8 +191,25 @@ public class WeatherServiceImpl implements WeatherService {
       Optional<Weather> prevDb = entry.getKey().equals(firstDate) ? prevDbOfFirst : Optional.empty();
 
       Weather weather = buildWeatherFromForecast(loc, entry, byDate, prevDb, base);
-      Weather persisted = upsertWeatherReturning(weather);
-      resultWeather.add(persisted);
+
+
+      Optional<Weather> prevWeather= weatherRepository.findByLocation_XAndLocation_YAndForecastAt(weather.getLocation().getX(), weather.getLocation().getY(), weather.getForecastAt());
+
+      // 존재하면 update, 없으면 insert
+      if(prevWeather.isPresent()) {
+        Weather prev = prevWeather.get();
+
+        LocalDate todayKst = LocalDate.now(KST);
+        if (weather.getForecastAt().toLocalDate().equals(todayKst)) {
+          detectAndPublishAlerts(prev, weather);
+        }
+
+        prev.updateFrom(weather.getForecastedAt(), weather.getForecastAt(), weather.getSkyStatus(), weather.getLocation(), weather.getPrecipitation(), weather.getHumidity(), weather.getTemperature(), weather.getWindSpeed());
+        resultWeather.add(prev);
+
+      }else{
+        resultWeather.add(weatherRepository.save(weather));
+      }
     }
 
     return resultWeather;
@@ -277,33 +297,6 @@ public class WeatherServiceImpl implements WeatherService {
 
     return Weather.of(forecastedAt, forecastAt, sky, location, precipitation, humidity, temperature, windSpeed);
   }
-
-  /**
-   * 존재하면 update, 없으면 insert
-   */
-  private Weather upsertWeatherReturning(Weather weather) {
-    return weatherRepository
-            .findByLocationLatitudeAndLocationLongitudeAndForecastAt(
-                    weather.getLocation().getLatitude(),
-                    weather.getLocation().getLongitude(),
-                    weather.getForecastAt()
-            )
-            .map(e -> {
-              e.updateFrom(
-                      weather.getForecastedAt(),
-                      weather.getForecastAt(),
-                      weather.getSkyStatus(),
-                      weather.getLocation(),
-                      weather.getPrecipitation(),
-                      weather.getHumidity(),
-                      weather.getTemperature(),
-                      weather.getWindSpeed()
-              );
-              return e; // 영속 엔티티
-            })
-            .orElseGet(() -> weatherRepository.save(weather)); // 새로 저장된 영속 엔티티
-  }
-
 
   private Precipitation getPrecipitation(Map.Entry<LocalDate, Map<Category, ForecastItem>> entry) {
     Map<Category, ForecastItem> m = entry.getValue();
@@ -450,6 +443,19 @@ public class WeatherServiceImpl implements WeatherService {
                     (a, b) -> a,
                     LinkedHashMap::new
             ));
+  }
+
+
+  private void detectAndPublishAlerts(Weather prev, Weather next) {
+    List<WeatherAlert> alerts = temperatureDeltaRule.evaluate(prev, next);
+    if (alerts.isEmpty()) return;
+
+    for (WeatherAlert a : alerts) {
+      String key = "wa:%s:%d:%d:%s>%s".formatted(a.type(), a.x(), a.y(), prev.getForecastedAt(), a.forecastedAt());
+      if (onceDeduper.acquireOnce(key, Duration.ofHours(3))) {
+        eventPublisher.publishEvent(a);
+      }
+    }
   }
 
   public LocationResponse fallbackLocation(LocationRequest locationRequest, Throwable ex) {

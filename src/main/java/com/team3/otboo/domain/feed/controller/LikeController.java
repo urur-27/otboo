@@ -2,7 +2,7 @@ package com.team3.otboo.domain.feed.controller;
 
 import com.team3.otboo.domain.feed.dto.FeedDto;
 import com.team3.otboo.domain.feed.service.LikeService;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
