@@ -20,7 +20,7 @@ public interface UserFollowerCountRepository extends JpaRepository<UserFollowerC
 	int increase(@Param("userId") UUID userId);
 
 	@Query(
-		value = "update user_following_count set following_count = following_count -1 where user_id = :userId",
+		value = "update user_follower_count set follower_count = follower_count - 1 where user_id = :userId",
 		nativeQuery = true
 	)
 	@Modifying
