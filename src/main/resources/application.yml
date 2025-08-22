@@ -114,3 +114,9 @@ management:
     web:
       exposure:
         include: health,info
+
+llm:
+  base-url: ${LLM_BASE_URL:http://localhost:8000}
+  timeout-ms: ${LLM_TIMEOUT_MS:40000}
+  default-provider: openai      # 없으면 null 허용
+  default-model: gpt-4o-mini   # 없으면 null 허용
