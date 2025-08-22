@@ -155,17 +155,6 @@ public class UserServiceImpl implements UserService {
         user.changePassword(encodedPassword);
     }
 
-    @Override
-    @Transactional
-    public void deleteUser(UUID id) {
-        log.debug("사용자 삭제 시작: {}", id);
-        if(!userRepository.existsById(id)){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-        userRepository.deleteById(id);
-        log.info("사용자 삭제 완료");
-    }
-
     public static boolean getHasNext(List<?> items, int limit) {
         return items.size() > limit;
     }

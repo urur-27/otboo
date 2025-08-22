@@ -37,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    // 인증을 건너뛸 경로와 메소드 목록을 Set으로 정의합니다.
+    // 인증을 건너뛸 경로와 메소드 목록 Set으로 정의
     private static final Set<PublicEndpoint> PUBLIC_ENDPOINTS = Set.of(
             new PublicEndpoint("/api/auth/sign-in", "POST"),
             new PublicEndpoint("/api/users", "POST"),
@@ -49,16 +49,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final ObjectMapper objectMapper;
 
-    // 모든 사용자의 요청이 들어올 때마다 한 번씩 실행되며, 다음과 같은 순서로 동작한다.
+    // 모든 사용자의 요청이 들어올 때마다 한 번씩 실행
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain chain
     ) throws IOException, ServletException {
-        // request에서 access token을 꺼낸다.
         Optional<String> optionalAccessToken = resolveAccessToken(request);
-        // 모두에게 허용되지 않는 api요청이고, 존재한다면
+
         if (optionalAccessToken.isPresent() && !isPermitAll(request)) {
             String accessToken = optionalAccessToken.get();
 

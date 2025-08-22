@@ -1,6 +1,5 @@
 package com.team3.otboo.domain.weather.service;
 
-
 import com.team3.otboo.domain.weather.dto.KakaoGeoResponse;
 import com.team3.otboo.domain.weather.dto.request.LocationRequest;
 import com.team3.otboo.domain.weather.dto.response.LocationResponse;

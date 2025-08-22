@@ -14,7 +14,6 @@ import java.util.Optional;
 /*
     사용자가 로그아웃을 요청할 때, 현재 요청의 Access Token을 무효화한다.
     서버에 저장된 refresh token도 함께 삭제한다.
-
     사용자와 서버 양쪽 모두에서 토큰의 흔적을 지우는 핸들러
 */
 

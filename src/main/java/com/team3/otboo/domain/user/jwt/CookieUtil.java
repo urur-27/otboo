@@ -15,7 +15,7 @@ public final class CookieUtil {
     private static long REFRESH_TOKEN_EXPIRATION_SECONDS;
 
     @Value("${security.jwt.refresh-token-validity-seconds}")
-    private long refreshTokenSeconds; // 30일
+    private long refreshTokenSeconds;
 
     @PostConstruct
     public void init() {
@@ -27,7 +27,7 @@ public final class CookieUtil {
         // 쿠키에 대한 모든 설정은 이 메소드에 캡슐화
         ResponseCookie cookie = ResponseCookie.from(JwtService.REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                 .path("/")
-                .maxAge(REFRESH_TOKEN_EXPIRATION_SECONDS) // 30일
+                .maxAge(REFRESH_TOKEN_EXPIRATION_SECONDS)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax") // CSRF 방어 관련 SameSite 설정
