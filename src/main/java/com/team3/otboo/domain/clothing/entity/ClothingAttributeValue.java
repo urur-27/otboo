@@ -4,10 +4,12 @@ import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Table(name="clothing_attribute_value")
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

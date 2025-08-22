@@ -14,13 +14,16 @@ import com.team3.otboo.domain.clothing.repository.AttributeOptionRepository;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.domain.clothing.repository.ClothingRepository;
 import com.team3.otboo.domain.user.entity.User;
-import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.fixture.BinaryContentFixture;
 import com.team3.otboo.global.exception.BusinessException;
 import com.team3.otboo.global.exception.ErrorCode;
 import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
 import com.team3.otboo.global.exception.attributeoption.AttributeOptionNotFoundException;
 import com.team3.otboo.global.exception.clothing.ClothingNotFoundException;
 import com.team3.otboo.storage.ImageStorage;
+import com.team3.otboo.storage.entity.BinaryContent;
+import com.team3.otboo.storage.entity.BinaryContentUploadStatus;
+import java.lang.reflect.Field;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -64,48 +68,68 @@ public class ClothingServiceTest {
     private AttributeOptionRepository attributeOptionRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private com.team3.otboo.storage.BinaryContentUploader binaryContentUploader;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @Nested
     @DisplayName("의상 등록 테스트")
     class RegisterClothingTest {
         @Test
         @DisplayName("registerClothing 성공 테스트")
-        void registerClothing_success() {
+        void registerClothing_success() throws Exception {
             // given
             MultipartFile image = mock(MultipartFile.class);
-            String imageUrl = "http://mocked-image-url.com";
             UUID attributeId = UUID.randomUUID();
             UUID userId = UUID.randomUUID();
             UUID clothingId = UUID.randomUUID();
 
             User mockUser = mock(User.class);
+
+            // 실제 엔티티를 사용해야 changeImage로 FK + url 세팅 상태를 검증할 수 있음
+            Clothing realClothing = new Clothing();
+            // (필요시 ID 세팅)
+            setId(realClothing, clothingId);
+
             ClothesCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
             Attribute mockAttribute = mock(Attribute.class);
             when(mockAttribute.getId()).thenReturn(attributeId);
             AttributeOption mockOption = mock(AttributeOption.class);
-            Clothing mockClothing = mock(Clothing.class);
-            ClothesDto expectedDto = ClothingDtoFixture.sampleExpectedDto(clothingId, userId, attributeId, imageUrl);
+
+            // 업로더가 반환할 BinaryContent (SUCCESS + url)
+            UUID binId = UUID.randomUUID();
+            String imageUrl = "http://cdn.example.com/" + binId;
+            BinaryContent bin = new BinaryContent("file.jpg", 3L, "image/jpeg", BinaryContentUploadStatus.SUCCESS);
+            setId(bin, binId);
+            bin.updateImageUrl(imageUrl);
 
             // stub 정의
-            when(imageStorage.upload(image)).thenReturn(imageUrl);
-            when(clothingMapper.toEntity(request)).thenReturn(mockClothing);
-            when(clothingMapper.toDto(mockClothing)).thenReturn(expectedDto);
+            when(binaryContentUploader.upload(image)).thenReturn(bin);
+            when(clothingMapper.toEntity(request)).thenReturn(realClothing);
             when(attributeRepository.findById(attributeId)).thenReturn(Optional.of(mockAttribute));
-            when(attributeOptionRepository.findByAttributeIdAndValue(attributeId, "청색")).thenReturn(Optional.of(mockOption));
+            when(attributeOptionRepository.findByAttributeIdAndValue(attributeId, "청색"))
+                    .thenReturn(Optional.of(mockOption));
+
+            ClothesDto expectedDto = ClothingDtoFixture.sampleExpectedDto(clothingId, userId, attributeId, imageUrl);
+            when(clothingMapper.toDto(realClothing)).thenReturn(expectedDto);
 
             // when
             ClothesDto result = clothingService.registerClothing(mockUser, request, image);
 
             // then
-            verify(clothingRepository).save(mockClothing);
-            verify(imageStorage).upload(image);
+            verify(binaryContentUploader).upload(image); // 업로더 호출 검증
+            verify(clothingRepository).save(realClothing);
             verify(attributeRepository).findById(attributeId);
             verify(attributeOptionRepository).findByAttributeIdAndValue(attributeId, "청색");
-            verify(clothingMapper).toDto(mockClothing);
-            verify(mockClothing).setOwner(mockUser);
-            verify(mockClothing).setUrl(imageUrl);
+            verify(clothingMapper).toDto(realClothing);
 
+            // changeImage에 의해 FK + url이 세팅됐는지 엔티티 상태로 검증
+            assertThat(realClothing.getImage()).isNotNull();
+            assertThat(realClothing.getImage().getId()).isEqualTo(binId);
+            assertThat(realClothing.getImageUrl()).isEqualTo(imageUrl);
+
+            // DTO 검증
             assertThat(result).isNotNull();
             assertThat(result.name()).isEqualTo("청바지");
             assertThat(result.ownerId()).isEqualTo(userId);
@@ -124,63 +148,76 @@ public class ClothingServiceTest {
             ClothesCreateRequest request = ClothingDtoFixture.sampleCreateRequest(UUID.randomUUID());
             User user = mock(User.class);
 
-            when(imageStorage.upload(image)).thenThrow(new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED));
+            // 엔티티 생성으로 NPE 방지
+            Clothing clothing = new Clothing();
+            when(clothingMapper.toEntity(request)).thenReturn(clothing);
+
+            // 업로더에서 예외 발생
+            when(binaryContentUploader.upload(image))
+                    .thenThrow(new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED));
 
             // when & then
             assertThatThrownBy(() -> clothingService.registerClothing(user, request, image))
                     .isInstanceOf(BusinessException.class)
                     .hasMessageContaining(ErrorCode.IMAGE_UPLOAD_FAILED.getMessage());
 
-            verify(imageStorage).upload(image);
-            verifyNoMoreInteractions(clothingRepository);
+            verify(binaryContentUploader).upload(image);
+            verifyNoInteractions(clothingRepository); // 저장 시도 없음
         }
+
 
         @Test
         @DisplayName("registerClothing 실패 테스트 - Attribute가 없는 경우")
-        void registerClothing_fail_whenAttributeNotFound() {
+        void registerClothing_fail_whenAttributeNotFound() throws Exception {
             // given
             MultipartFile image = mock(MultipartFile.class);
             UUID attributeId = UUID.randomUUID();
             ClothesCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
             User user = mock(User.class);
 
-            String imageUrl = "http://mocked-image-url.com";
-            Clothing mockClothing = mock(Clothing.class);
-            // 이전 로직
-            when(imageStorage.upload(image)).thenReturn(imageUrl);
-            when(clothingMapper.toEntity(request)).thenReturn(mockClothing);
+            // 엔티티 만들어 NPE 방지
+            Clothing clothing = new Clothing();
+            when(clothingMapper.toEntity(request)).thenReturn(clothing);
 
-            // 존재하지 않는 attributeId 처리
+            // 업로더는 성공 (서비스 흐름상 업로드 후 속성 검증)
+            BinaryContent bin = BinaryContentFixture.successWithUrl();
+            when(binaryContentUploader.upload(image)).thenReturn(bin);
+
+            // 존재하지 않는 attribute
             when(attributeRepository.findById(attributeId)).thenReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> clothingService.registerClothing(user, request, image))
                     .isInstanceOf(AttributeNotFoundException.class);
 
+            verify(binaryContentUploader).upload(image);
             verify(attributeRepository).findById(attributeId);
             verifyNoMoreInteractions(attributeOptionRepository, clothingRepository);
         }
 
+
         @Test
         @DisplayName("registerClothing 실패 테스트 - AttributeOption이 없는 경우")
-        void registerClothing_fail_whenAttributeOptionNotFound() {
+        void registerClothing_fail_whenAttributeOptionNotFound() throws Exception {
             // given
             MultipartFile image = mock(MultipartFile.class);
             UUID attributeId = UUID.randomUUID();
             User user = mock(User.class);
             ClothesCreateRequest request = ClothingDtoFixture.sampleCreateRequest(attributeId);
 
-            Attribute mockAttribute = mock(Attribute.class);
-            when(mockAttribute.getId()).thenReturn(attributeId);
-            when(mockAttribute.getId()).thenReturn(attributeId);
-            Clothing mockClothing = mock(Clothing.class);
+            Attribute attribute = mock(Attribute.class);
+            when(attribute.getId()).thenReturn(attributeId);
 
-            String imageUrl = "http://mocked-image-url.com";
-            when(imageStorage.upload(image)).thenReturn(imageUrl);
-            when(clothingMapper.toEntity(request)).thenReturn(mockClothing);
-            when(attributeRepository.findById(attributeId)).thenReturn(Optional.of(mockAttribute));
+            // 업로더 성공
+            BinaryContent bin = BinaryContentFixture.successWithUrl();
+            when(binaryContentUploader.upload(image)).thenReturn(bin);
 
-            // 옵션이 존재하지 않는 경우를 설정
+            // 엔티티 생성
+            Clothing clothing = new Clothing();
+            when(clothingMapper.toEntity(request)).thenReturn(clothing);
+
+            when(attributeRepository.findById(attributeId)).thenReturn(Optional.of(attribute));
+            // 옵션 없음
             when(attributeOptionRepository.findByAttributeIdAndValue(attributeId, "청색"))
                     .thenReturn(Optional.empty());
 
@@ -188,11 +225,12 @@ public class ClothingServiceTest {
             assertThatThrownBy(() -> clothingService.registerClothing(user, request, image))
                     .isInstanceOf(AttributeOptionNotFoundException.class);
 
-            // verify
+            verify(binaryContentUploader).upload(image);
             verify(attributeRepository).findById(attributeId);
             verify(attributeOptionRepository).findByAttributeIdAndValue(attributeId, "청색");
-            verifyNoMoreInteractions(clothingRepository); // 저장 안 돼야 함
+            verifyNoMoreInteractions(clothingRepository);
         }
+
     }
 
     @Nested
@@ -328,24 +366,34 @@ public class ClothingServiceTest {
     class UpdateClothingTest {
         @DisplayName("updateClothing 성공 테스트")
         @Test
-        void updateClothing_success() {
+        void updateClothing_success() throws Exception {
             // given
             UUID clothingId = UUID.randomUUID();
             UUID userId = UUID.randomUUID();
             UUID attributeId = UUID.randomUUID();
 
-            Clothing clothing = mock(Clothing.class);
+            Clothing clothing = new Clothing(); // ← 실제 엔티티로 상태 검증
             Attribute attribute = mock(Attribute.class);
             AttributeOption option = mock(AttributeOption.class);
             MultipartFile image = new MockMultipartFile("image", "shirt.jpg", "image/jpeg", "data".getBytes());
-          
+
             ClothesUpdateRequest request = ClothingDtoFixture.sampleUpdateRequest(attributeId);
-            ClothesDto expectedDto = ClothingDtoFixture.sampleUpdatedDto(clothingId, userId, attributeId, "/uploads/shirt.jpg");
+
+            // 업로더가 돌려줄 BinaryContent (SUCCESS + url)
+            UUID binId = UUID.randomUUID();
+            String imageUrl = "http://cdn.example.com/" + binId;
+            BinaryContent bin = new BinaryContent("shirt.jpg", 4L, "image/jpeg", BinaryContentUploadStatus.SUCCESS);
+            setId(bin, binId);
+            bin.updateImageUrl(imageUrl);
+
+            ClothesDto expectedDto =
+                    ClothingDtoFixture.sampleUpdatedDto(clothingId, userId, attributeId, imageUrl);
 
             when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
-            when(imageStorage.upload(any())).thenReturn("/uploads/shirt.jpg");
+            when(binaryContentUploader.upload(image)).thenReturn(bin);              // 업로더 사용
             when(attributeRepository.findById(attributeId)).thenReturn(Optional.of(attribute));
-            when(attributeOptionRepository.findByAttributeAndValue(attribute, "흰색")).thenReturn(Optional.of(option));
+            when(attributeOptionRepository.findByAttributeAndValue(attribute, "흰색"))
+                    .thenReturn(Optional.of(option));
             when(clothingMapper.toDto(clothing)).thenReturn(expectedDto);
 
             // when
@@ -353,11 +401,24 @@ public class ClothingServiceTest {
 
             // then
             assertThat(result).isEqualTo(expectedDto);
-            verify(clothing).setName("셔츠");
-            verify(clothing).setType("TOP");
-            verify(clothing).setUrl("/uploads/shirt.jpg");
+            // 이름/타입 세팅은 기존대로 검증 (실제 엔티티 사용 시 세터 호출 검증 대신 상태 검증 가능)
+            // 여기서는 기존 verify 스타일을 유지하려면 spy가 필요하므로, 상태 검증으로 대체:
+            // verify(clothing).setName("셔츠"); verify(clothing).setType("TOP");  ← mock일 때만 가능
+            // 상태 검증:
+            assertThat(clothing.getName()).isEqualTo("셔츠");
+            assertThat(clothing.getType()).isEqualTo("TOP");
+
+            // 이미지 변경 결과 검증
+            verify(binaryContentUploader).upload(image);
+            assertThat(clothing.getImage()).isNotNull();
+            assertThat(clothing.getImage().getId()).isEqualTo(binId);
+            assertThat(clothing.getImageUrl()).isEqualTo(imageUrl);
+
             verify(clothingRepository).findById(clothingId);
-            verify(imageStorage).upload(image);
+            verify(clothingMapper).toDto(clothing);
+
+            // 더 이상 ImageStorage는 관여 x
+            verifyNoInteractions(imageStorage);
         }
 
         @DisplayName("updateClothing 성공 테스트 - 이미지와 속성 없이 이름과 타입만 수정")
@@ -365,7 +426,7 @@ public class ClothingServiceTest {
         void updateClothing_onlyNameAndTypeChanged() {
             // given
             UUID clothingId = UUID.randomUUID();
-            Clothing clothing = mock(Clothing.class);
+            Clothing clothing = new Clothing();
 
             ClothesUpdateRequest request = new ClothesUpdateRequest("셔츠", "TOP", null);
             MultipartFile image = null;
@@ -377,33 +438,45 @@ public class ClothingServiceTest {
             ClothesDto result = clothingService.updateClothing(clothingId, request, image);
 
             // then
-            verify(clothing).setName("셔츠");
-            verify(clothing).setType("TOP");
-            verifyNoInteractions(imageStorage);
+            assertThat(clothing.getName()).isEqualTo("셔츠");
+            assertThat(clothing.getType()).isEqualTo("TOP");
+            verifyNoInteractions(binaryContentUploader); // 업로더 호출 없음
             verify(clothingMapper).toDto(clothing);
+            verifyNoInteractions(imageStorage);          // 더 이상 사용 안 함
         }
 
         @DisplayName("updateClothing 성공 테스트 - 이미지만 수정 (기존 이미지 존재)")
         @Test
-        void updateClothing_onlyImageChanged_withOldImage() {
+        void updateClothing_onlyImageChanged_withOldImage() throws Exception {
             // given
             UUID clothingId = UUID.randomUUID();
-            Clothing clothing = mock(Clothing.class);
+
+            // 실제 엔티티로 검증
+            Clothing clothing = new Clothing();
+            clothing.changeImage(existingBinWithUrl()); // 기존 이미지 있다고 가정
             MultipartFile image = new MockMultipartFile("image", "shirt.jpg", "image/jpeg", "data".getBytes());
 
-            when(clothing.getImageUrl()).thenReturn("/uploads/old.jpg");
-
             when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
-            when(imageStorage.upload(any())).thenReturn("/uploads/shirt.jpg");
             when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothesDto.class));
 
+            // 새 업로드 결과
+            UUID newBinId = UUID.randomUUID();
+            String newUrl = "http://cdn.example.com/" + newBinId;
+            BinaryContent newBin = new BinaryContent("shirt.jpg", 4L, "image/jpeg", BinaryContentUploadStatus.SUCCESS);
+            setId(newBin, newBinId);
+            newBin.updateImageUrl(newUrl);
+
+            when(binaryContentUploader.upload(image)).thenReturn(newBin);
+
             // when
-            ClothesDto result = clothingService.updateClothing(clothingId, new ClothesUpdateRequest(null, null, null), image);
+            ClothesDto result = clothingService.updateClothing(
+                    clothingId, new ClothesUpdateRequest(null, null, null), image);
 
             // then
-            verify(imageStorage).delete("/uploads/old.jpg");
-            verify(imageStorage).upload(image);
-            verify(clothing).setUrl("/uploads/shirt.jpg");
+            verify(binaryContentUploader).upload(image);
+            assertThat(clothing.getImage().getId()).isEqualTo(newBinId);
+            assertThat(clothing.getImageUrl()).isEqualTo(newUrl);
+            verifyNoInteractions(imageStorage);
         }
 
         @DisplayName("updateClothing 성공 테스트 - 이미지 파일이 비어 있을 때 이미지 변경 무시")
@@ -411,19 +484,21 @@ public class ClothingServiceTest {
         void updateClothing_skipImageUpdateWhenEmpty() {
             // given
             UUID clothingId = UUID.randomUUID();
-            Clothing clothing = mock(Clothing.class);
-
-            MultipartFile emptyImage = new MockMultipartFile("image", "", "image/jpeg", new byte[0]); // isEmpty = true
+            Clothing clothing = new Clothing();
+            MultipartFile emptyImage =
+                    new MockMultipartFile("image", "", "image/jpeg", new byte[0]); // isEmpty = true
 
             when(clothingRepository.findById(clothingId)).thenReturn(Optional.of(clothing));
             when(clothingMapper.toDto(clothing)).thenReturn(mock(ClothesDto.class));
 
             // when
-            ClothesDto result = clothingService.updateClothing(clothingId, new ClothesUpdateRequest(null, null, null), emptyImage);
+            ClothesDto result = clothingService.updateClothing(
+                    clothingId, new ClothesUpdateRequest(null, null, null), emptyImage);
 
             // then
-            verify(imageStorage, never()).upload(any());
+            verifyNoInteractions(binaryContentUploader); // 업로더 호출 없음
             verify(clothingMapper).toDto(clothing);
+            verifyNoInteractions(imageStorage);
         }
 
         @DisplayName("updateClothing 실패 테스트 - 존재하지 않는 의상 ID로 수정 시 예외 발생")
@@ -539,5 +614,22 @@ public class ClothingServiceTest {
             verify(clothingRepository).findById(clothingId);
             verify(clothingRepository, never()).delete(any());
         }
+    }
+
+
+    // 편의를 위한 ID 세팅 헬퍼 (BaseEntity.id에 리플렉션 접근)
+    private void setId(Object entity, UUID id) throws Exception {
+        Field idField = entity.getClass().getSuperclass().getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(entity, id);
+    }
+
+    private BinaryContent existingBinWithUrl() throws Exception {
+        UUID id = UUID.randomUUID();
+        String url = "http://cdn.example.com/" + id;
+        BinaryContent bin = new BinaryContent("old.jpg", 10L, "image/jpeg", BinaryContentUploadStatus.SUCCESS);
+        setId(bin, id);
+        bin.updateImageUrl(url);
+        return bin;
     }
 }
