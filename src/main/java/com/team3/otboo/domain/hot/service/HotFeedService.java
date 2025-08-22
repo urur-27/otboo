@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 public class HotFeedService {
 
 	private final FeedClient feedClient; // 원본 feed 를 조회해옴 . (hotFeedListRepository 는 id만 저장)
-	private final List<EventHandler<EventPayload>> eventHandlers;
+	private final List<EventHandler> eventHandlers;
 	private final HotFeedScoreUpdater hotFeedScoreUpdater;
 	private final HotFeedListRepository hotFeedListRepository;
 	private final FeedDtoAssembler feedDtoAssembler;

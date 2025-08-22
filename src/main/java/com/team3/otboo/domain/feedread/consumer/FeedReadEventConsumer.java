@@ -22,7 +22,8 @@ public class FeedReadEventConsumer {
 			Topic.OTBOO_FEED,
 			Topic.OTBOO_FEED_COMMENT,
 			Topic.OTBOO_FEED_LIKE
-		}
+		},
+		groupId = "feed-read-group"
 	)
 	public void listen(String message, Acknowledgment ack) {
 		log.info("[FeedReadEventConsumer.listen] message = {}", message);

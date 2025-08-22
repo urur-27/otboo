@@ -7,13 +7,16 @@ import com.team3.otboo.common.event.payload.FeedUpdatedEventPayload;
 import com.team3.otboo.common.outboxMessageRelay.OutboxEventPublisher;
 import com.team3.otboo.domain.feed.dto.FeedDto;
 import com.team3.otboo.domain.feed.entity.Feed;
+import com.team3.otboo.domain.feed.entity.FeedCommentCount;
 import com.team3.otboo.domain.feed.entity.FeedCount;
+import com.team3.otboo.domain.feed.entity.FeedLikeCount;
 import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
 import com.team3.otboo.domain.feed.repository.FeedCommentCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedLikeCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedRepository;
 import com.team3.otboo.domain.feed.repository.FeedRepositoryQueryDSL;
+import com.team3.otboo.domain.feed.repository.FeedViewCountBackUpRepository;
 import com.team3.otboo.domain.feed.service.request.FeedCreateRequest;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.request.FeedUpdateRequest;
@@ -48,6 +51,7 @@ public class FeedService {
 	private final UserRepository userRepository;
 	private final FeedCommentCountRepository feedCommentCountRepository;
 	private final FeedCountRepository feedCountRepository;
+	private final FeedViewCountBackUpRepository feedViewCountBackUpRepository;
 
 	private final OutboxEventPublisher outboxEventPublisher;
 
@@ -64,6 +68,10 @@ public class FeedService {
 			request.weatherId(),
 			request.content())
 		);
+
+		// 동시성 문제를 피하기 위해 미리 초기화 해두기 .
+		feedLikeCountRepository.save(FeedLikeCount.init(feed.getId(), 0L));
+		feedCommentCountRepository.save(FeedCommentCount.init(feed.getId(), 0L));
 
 		ootdService.create(feed.getId(), request.clothesIds());
 
@@ -144,7 +152,7 @@ public class FeedService {
 	@Transactional(readOnly = true)
 	public FeedDtoCursorResponse readAllInfiniteScroll(UUID userId, FeedListRequest request) {
 
-		List<Feed> feeds = feedRepositoryQueryDSL.getFeeds(request);
+		List<Feed> feeds = feedRepositoryQueryDSL.readAll(request);
 		int totalCount = feedRepositoryQueryDSL.countFeeds(request);
 
 		boolean hasNext = feeds.size() > request.limit();

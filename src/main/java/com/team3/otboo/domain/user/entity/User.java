@@ -3,13 +3,23 @@ package com.team3.otboo.domain.user.entity;
 import com.team3.otboo.domain.base.entity.BaseEntity;
 import com.team3.otboo.domain.user.enums.OAuthProvider;
 import com.team3.otboo.domain.user.enums.Role;
-import jakarta.persistence.*;
-
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.Set;
-
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -20,7 +30,7 @@ public class User extends BaseEntity {
 	@Column
 	private String username;
 
-	@Column
+	@Column(unique = true, nullable = false)
 	private String email;
 
 	@Column
@@ -35,58 +45,61 @@ public class User extends BaseEntity {
 	@Column(name = "provider")
 	private Set<OAuthProvider> linkedOAuthProviders;
 
-    @Column
+	@Column
 	boolean locked;
 
-    // 임시 비밀번호, 만료시간
-    private String tempPassword;
-    private LocalDateTime tempPasswordExpirationDate;
+	// 임시 비밀번호, 만료시간
+	private String tempPassword;
+	private LocalDateTime tempPasswordExpirationDate;
 
-    // mappedBy - 연관관계 주인 = user
-    // fetch - user 조회할 때 profile 지연로딩(실제 사용시에만),
-    // cascade - user의 저장, 삭제 등의 상태 변화를 profile에도 동일 적용
-    // orphanRemoval - User와의 연관관계가 끊어진 profile은 자동 삭제
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Profile profile;
+	// mappedBy - 연관관계 주인 = user
+	// fetch - user 조회할 때 profile 지연로딩(실제 사용시에만),
+	// cascade - user의 저장, 삭제 등의 상태 변화를 profile에도 동일 적용
+	// orphanRemoval - User와의 연관관계가 끊어진 profile은 자동 삭제
+	@OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	private Profile profile;
 
-    @Builder
-    public User(String username, String email, String password, Role role, Set<OAuthProvider> linkedOAuthProviders) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-        this.linkedOAuthProviders = linkedOAuthProviders;
-    }
+	@Builder
+	public User(String username, String email, String password, Role role,
+		Set<OAuthProvider> linkedOAuthProviders) {
+		this.username = username;
+		this.email = email;
+		this.password = password;
+		this.role = role;
+		this.linkedOAuthProviders = linkedOAuthProviders;
+	}
 
-    public void updatePassword(String newPassword) {
-        this.password = newPassword;
-    }
+	public void updatePassword(String newPassword) {
+		this.password = newPassword;
+	}
 
-    public void updateLocked(boolean locked) {
-        this.locked = locked;
-    }
+	public void updateLocked(boolean locked) {
+		this.locked = locked;
+	}
 
-    public void updateRole(Role role) {
-        this.role = role;
-    }
+	public void updateRole(Role role) {
+		this.role = role;
+	}
 
-    public void updateUserName(String username) {this.username = username;}
+	public void updateUserName(String username) {
+		this.username = username;
+	}
 
-    public void setProfile(Profile profile) {
-        this.profile = profile;
-        if (profile != null && profile.getUser() != this) {
-            profile.setUser(this);
-        }
-    }
+	public void setProfile(Profile profile) {
+		this.profile = profile;
+		if (profile != null && profile.getUser() != this) {
+			profile.setUser(this);
+		}
+	}
 
-    public void setTempPassword(String tempPassword) {
-        this.tempPassword = tempPassword;
-        this.tempPasswordExpirationDate = LocalDateTime.now().plusMinutes(3);
-    }
+	public void setTempPassword(String tempPassword) {
+		this.tempPassword = tempPassword;
+		this.tempPasswordExpirationDate = LocalDateTime.now().plusMinutes(3);
+	}
 
-    public void changePassword(String newPassword) {
-        this.password = newPassword;
-        this.tempPassword = null;
-        this.tempPasswordExpirationDate = null;
-    }
+	public void changePassword(String newPassword) {
+		this.password = newPassword;
+		this.tempPassword = null;
+		this.tempPasswordExpirationDate = null;
+	}
 }

@@ -96,53 +96,6 @@ public class FeedDtoAssembler {
 		);
 	}
 
-	// like api 에 대한 response 를 만드는 메서드, DB 조회를 1회 줄일 수 있음 .
-	public FeedDto assemble(UUID feedId, UUID userId, Long likeCount) {
-		Feed feed = feedRepository.findById(feedId).orElseThrow(
-			() -> new EntityNotFoundException("feed not found. feed id: " + feedId)
-		);
-
-		UUID authorId = feed.getAuthorId();
-		User user = userRepository.findById(authorId).orElseThrow(
-			() -> new EntityNotFoundException("user not found. userId: " + userId)
-		);
-
-		AuthorDto authorDto = new AuthorDto(
-			user.getId(),
-			user.getUsername(),
-			user.getProfile().getBinaryContent().getImageUrl()
-		);
-
-		UUID weatherId = feed.getWeatherId();
-		Weather weather = weatherRepository.findById(weatherId).orElseThrow(
-			() -> new EntityNotFoundException("weather not found. weather id: " + weatherId)
-		);
-
-		WeatherSummaryDto weatherSummaryDto = getWeatherSummaryDto(weather);
-
-		List<OotdDto> ootdDtos = ootdService.getOotdDtos(feedId);
-
-		Integer commentCount = feedCommentCountRepository.findById(feedId)
-			.map(FeedCommentCount::getCommentCount)
-			.map(Long::intValue)
-			.orElse(0);
-
-		boolean likeByMe = likeRepository.existsByUserIdAndFeedId(userId, feedId);
-
-		return new FeedDto(
-			feedId,
-			feed.getCreatedAt(),
-			feed.getUpdatedAt(),
-			authorDto,
-			weatherSummaryDto,
-			ootdDtos,
-			feed.getContent(),
-			likeCount,
-			commentCount,
-			likeByMe
-		);
-	}
-
 	public FeedDto assemble(UUID feedId) {
 		Feed feed = feedRepository.findById(feedId).orElseThrow(
 			() -> new EntityNotFoundException("feed not found. feedId:" + feedId)
@@ -153,10 +106,15 @@ public class FeedDtoAssembler {
 			() -> new EntityNotFoundException("user not found. user id: " + authorId)
 		);
 
+		String imageUrl = Optional.ofNullable(user.getProfile())
+			.map(Profile::getBinaryContent)
+			.map(BinaryContent::getImageUrl)
+			.orElse(null);
+
 		AuthorDto authorDto = new AuthorDto(
 			user.getId(),
 			user.getUsername(),
-			user.getProfile().getBinaryContent().getImageUrl()
+			imageUrl
 		);
 
 		UUID weatherId = feed.getWeatherId();

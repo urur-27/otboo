@@ -23,7 +23,6 @@ public class FeedMessageRelay {
 
 	private final OutboxRepository outboxRepository; // outbox repository 에 서 주기적으로 미전송 데이터 가져옴
 	private final KafkaTemplate<String, String> kafkaTemplate;
-
 	// commit 직전에 outbox 를 생성하고 . commit 직후에 message relay 에게 바로 OutboxEvent 전달.
 
 	// spring 은 AOP 프록시를 통해 @Transactional 의 전후를 감시함 (이벤트를 발행한 쪽의 트랜잭션 상태에 자신을 맞춤)
@@ -36,7 +35,7 @@ public class FeedMessageRelay {
 	@Async("messageRelayPublishEventExecutor")
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void publish(OutboxEvent outboxEvent) {
-		publishEvent(outboxEvent.getOutbox()); // outbox 만 전달 ..
+		publishEvent(outboxEvent.getOutbox());
 	}
 
 	private void publishEvent(Outbox outbox) {
@@ -46,7 +45,7 @@ public class FeedMessageRelay {
 				outbox.getPayload()
 			).get(1, TimeUnit.SECONDS); // 1초 동안 전송 완료 메시지를 기다림 .
 
-			outboxRepository.delete(outbox); // 여기서 충돌 발생..
+			outboxRepository.delete(outbox);
 		} catch (Exception e) {
 			log.error("[MessageRelay.publishEvent] outbox={}", outbox, e);
 		}
@@ -66,7 +65,8 @@ public class FeedMessageRelay {
 //		log.info("[FeedMessageRelay] Polling outbox messages. size={}", outboxes.size());
 
 		for (Outbox outbox : outboxes) {
-			publish(OutboxEvent.of(outbox));
+			publishEvent(outbox);
 		}
 	}
+
 }

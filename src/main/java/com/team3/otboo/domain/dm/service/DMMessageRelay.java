@@ -25,6 +25,7 @@ public class DMMessageRelay {
 	private final OutboxRepository outboxRepository; // outbox repository 에 서 주기적으로 미전송 데이터 가져옴
 
 	private final PublishService publishService;
+	private final DMOutboxProcessor dmOutboxProcessor;
 
 	// 이벤트를 발행시킨 작업의 트랜잭션이 특정 상태가 될때까지 기다렸다가 실행됨 .
 	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
@@ -35,7 +36,7 @@ public class DMMessageRelay {
 	@Async("messageRelayPublishEventExecutor")
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void publish(OutboxEvent outboxEvent) {
-		publishEvent(outboxEvent.getOutbox()); // outbox 만 전달 ..
+		dmOutboxProcessor.processAndLock(outboxEvent.getOutbox().getId());
 	}
 
 	private void publishEvent(Outbox outbox) {
@@ -67,7 +68,7 @@ public class DMMessageRelay {
 //		log.info("[MessageRelay] Polling outbox messages. size={}", outboxes.size());
 
 		for (Outbox outbox : outboxes) {
-			publish(OutboxEvent.of(outbox));
+			dmOutboxProcessor.processAndLock(outbox.getId());
 		}
 	}
 }

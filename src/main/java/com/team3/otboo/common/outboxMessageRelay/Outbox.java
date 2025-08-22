@@ -1,6 +1,7 @@
 package com.team3.otboo.common.outboxMessageRelay;
 
 import com.team3.otboo.common.event.EventType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -30,8 +31,10 @@ public class Outbox {
 	private Instant createdAt;
 	@Enumerated(EnumType.STRING)
 	private EventType eventType;
-	private String payload; // 해당 이벤트가 어떤 값을 가지고 있는가 .
 	
+	@Column(columnDefinition = "TEXT")
+	private String payload;
+
 
 	public static Outbox create(EventType eventType, String payload) {
 		Outbox outbox = new Outbox();

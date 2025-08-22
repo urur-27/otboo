@@ -9,7 +9,6 @@ import com.team3.otboo.domain.feed.repository.LikeRepository;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.response.FeedDtoCursorResponse;
 import com.team3.otboo.domain.feedread.client.FeedClient;
-import com.team3.otboo.domain.feedread.client.ViewClient;
 import com.team3.otboo.domain.feedread.repository.FeedIdListRepository;
 import com.team3.otboo.domain.feedread.repository.FeedQueryModel;
 import com.team3.otboo.domain.feedread.repository.FeedQueryModelRepository;
@@ -34,17 +33,16 @@ import org.springframework.stereotype.Service;
 public class FeedReadService {
 
 	private final FeedClient feedClient;
-	private final ViewClient viewClient;
 
 	private final FeedQueryModelRepository feedQueryModelRepository;
-	private final FeedIdListRepository feedidListRepository;
+	private final FeedIdListRepository feedIdListRepository;
 	private final FeedCountRepository feedCountRepository;
 
 	private final LikeRepository likeRepository; // likeByMe 를 위한 likeRepository
-	private final List<EventHandler<EventPayload>> eventHandlers;
+	private final List<EventHandler> eventHandlers;
 
 	public void handleEvent(Event<EventPayload> event) {
-		for (EventHandler<EventPayload> eventHandler : eventHandlers) {
+		for (EventHandler eventHandler : eventHandlers) {
 			if (eventHandler.supports(event)) {
 				eventHandler.handle(event);
 			}
@@ -88,8 +86,14 @@ public class FeedReadService {
 		}
 
 		if (data.isEmpty()) {
-			return new FeedDtoCursorResponse(Collections.emptyList(), null, null, false, 0,
-				request.sortBy(), request.sortDirection());
+			return new FeedDtoCursorResponse(
+				Collections.emptyList(),
+				null,
+				null,
+				false,
+				0,
+				request.sortBy(), request.sortDirection()
+			);
 		}
 
 		String nextCursor = data.getLast().createdAt().toString();
@@ -141,10 +145,16 @@ public class FeedReadService {
 		long limit) {
 		Instant cursor = null;
 		if (request.cursor() != null && !request.cursor().isBlank()) {
-			cursor = Instant.ofEpochMilli(Long.parseLong(request.cursor()));
+			cursor = Instant.parse(request.cursor());
 		}
 
-		List<UUID> feedIds = feedidListRepository.readAllInfiniteScroll(cursor, limit);
+		List<UUID> feedIds = feedIdListRepository.readAllInfiniteScroll(cursor, limit);
+
+		/////////////
+		System.out.println("limit: " + limit);
+		System.out.println("feedIds.size(): " + feedIds.size());
+		/////////////
+
 		if (limit == feedIds.size()) {
 			log.info("[FeedReadService.readAllInfiniteScrollFeedIds] return redis data");
 			return feedIds;
