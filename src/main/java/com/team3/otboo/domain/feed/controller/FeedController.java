@@ -9,7 +9,7 @@ import com.team3.otboo.domain.feed.service.response.FeedDtoCursorResponse;
 import com.team3.otboo.domain.feedread.service.FeedReadService;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.SortDirection;
-import com.team3.otboo.domain.user.service.CustomUserDetailsService.CustomUserDetails;
+import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import com.team3.otboo.domain.weather.enums.PrecipitationType;
 import com.team3.otboo.domain.weather.enums.SkyStatus;
 import java.util.UUID;
