@@ -34,9 +34,11 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
     // -> UsernamePasswordAuthenticationToken을 생성
     // -> 인증을 AuthenticationManager에게 위임한다.
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request,
-                                                HttpServletResponse response) throws AuthenticationException {
-        // 로그인 요청이 POST여야한다.
+    public Authentication attemptAuthentication(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws AuthenticationException
+    {
         if (!request.getMethod().equals("POST")) {
             throw new AuthenticationServiceException(
                     "Authentication method not supported: " + request.getMethod());
@@ -45,12 +47,10 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
             // JSON 요청 본문 -> 로그인 요청 DTO
             SignInRequest signInRequest = objectMapper.readValue(request.getInputStream(),
                     SignInRequest.class);
-            // 요청 본문으로부터 인증에 필요한 토큰 객체 생성
             UsernamePasswordAuthenticationToken authRequest =
                     new UsernamePasswordAuthenticationToken(signInRequest.email(), signInRequest.password());
             setDetails(request, authRequest);
             // 인증 관리자(Authentication Provider)에게 인증에 필요한 토큰 객체와 함께 인증 위임
-            // DaoAuthenticationProvider가 처리할 예정 (여러 provider중 아이디, 비번으로 인증 처리하는데에는 dao가 제격)
             return this.getAuthenticationManager().authenticate(authRequest);
         } catch (IOException e) {
             throw new AuthenticationServiceException("Request parsing failed", e);
@@ -70,7 +70,6 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
                 objectMapper);
         // 로그인에 대해서만 필터 작동
         filter.setRequiresAuthenticationRequestMatcher(
-                // request 객체를 받아 URI와 Method를 직접 비교합니다.
                 request -> "/api/auth/sign-in".equals(request.getRequestURI())
                         && "POST".equals(request.getMethod())
         );
@@ -87,19 +86,9 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
     public static class Configurer extends
             AbstractAuthenticationFilterConfigurer<HttpSecurity, Configurer, JsonUsernamePasswordAuthenticationFilter> {
 
-        //private final AuthenticationManager authenticationManager;
-
         public Configurer(ObjectMapper objectMapper) {
             super(new JsonUsernamePasswordAuthenticationFilter(objectMapper), "/api/auth/sign-in");
-            //this.authenticationManager = authenticationManager;
         }
-
-//        @Override
-//        public void configure(HttpSecurity http) throws Exception {
-//            JsonUsernamePasswordAuthenticationFilter authenticationFilter = getAuthenticationFilter();
-//            authenticationFilter.setAuthenticationManager(authenticationManager);
-//            super.configure(http);
-//        }
 
         @Override
         protected RequestMatcher createLoginProcessingUrlMatcher(String loginProcessingUrl) {
@@ -107,10 +96,5 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
             return request -> loginProcessingUrl.equals(request.getRequestURI())
                     && HttpMethod.POST.name().equals(request.getMethod());
         }
-
-//        @Override
-//        public void init(HttpSecurity http) throws Exception {
-//            loginProcessingUrl("/api/auth/sign-in");
-//        }
     }
 }

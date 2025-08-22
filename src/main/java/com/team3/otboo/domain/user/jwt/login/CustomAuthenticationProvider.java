@@ -1,6 +1,8 @@
 package com.team3.otboo.domain.user.jwt.login;
 
 import com.team3.otboo.domain.user.user_details.CustomUserDetails;
+import com.team3.otboo.global.exception.BusinessException;
+import com.team3.otboo.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -12,13 +14,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
-
 @RequiredArgsConstructor
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
@@ -36,11 +36,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         String tempPassword = userDetails.getTempPassword();
         LocalDateTime expiration = userDetails.getTempPasswordExpirationDate();
 
-        // 임시 비밀번호가 없는 경우 -> manager(daoprovider)
-        if(tempPassword == null || tempPassword.isEmpty()) {
-            log.info("임시비밀번호로 로그인 불가 확인 및 daoprovider 호출");
-            return null;
-        }
+        // manager가 provider를 알아서 찾아주기 때문에 임시비밀번호가 비어있는지 여부를 판단해서 null을 반환할 필요가 없다
 
         if (passwordEncoder.matches(password, tempPassword)) {
             // 임시 비밀번호가 일치하면, 만료 시간을 확인
@@ -51,10 +47,10 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                         userDetails, null, List.of(new SimpleGrantedAuthority("ROLE_TEMP_USER"))
                 );
             } else {
-                throw new CredentialsExpiredException("임시 비밀번호가 만료되었습니다.");
+                throw new BusinessException(ErrorCode.SIGN_IN_TIMEOUT, "임시 비밀번호가 만료되었습니다.");
             }
         } else {
-            throw new BadCredentialsException("임시 비밀번호가 일치하지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "임시 비밀번호가 일치하지 않습니다.");
         }
     }
 

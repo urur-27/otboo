@@ -42,7 +42,6 @@ public class CustomOAuthUserService extends DefaultOAuth2UserService {
         OAuthAttributes attributes = OAuthAttributes.of(registerationId, oAuth2User.getAttributes());
         // DB에서 사용자 조회 및 저장
         User user = saveOrUpdate(attributes, registerationId);
-        // 쿠키로 전송
 
         // 인증서 발급
         return new CustomUserDetails(user, attributes.getAttributes());
@@ -55,16 +54,12 @@ public class CustomOAuthUserService extends DefaultOAuth2UserService {
                 // 기존 회원일 경우
                 .map(entity -> {
                     Set<OAuthProvider> providers  = new HashSet<>(entity.getLinkedOAuthProviders());
-                    // GOOGLE, KAKAO로 저장해놔서 upper해야함
                     providers.add(OAuthProvider.valueOf(registerationId.toUpperCase()));
-                    // todo: 업데이트 로직 추가 ?
-                    // entity.updateProfile(attributes.getName(), attributes.getPicture());
                     return userRepository.save(entity);
                 })
                 // 신규 회원일 경우
                 .orElseGet(() -> {
                     String username = attributes.getName();
-                    // username이 null일 경우 이메일 앞부분을 이름으로 지정
                     if(username == null || username.isBlank()){
                         username = attributes.getEmail().split("@")[0];
                     }

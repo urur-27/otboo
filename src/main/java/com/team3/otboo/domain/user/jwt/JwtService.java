@@ -7,15 +7,11 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.team3.otboo.domain.user.dto.AccessRefreshToken;
-import com.team3.otboo.domain.user.dto.UserDto;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.enums.Role;
-import com.team3.otboo.domain.user.mapper.UserMapper;
 import com.team3.otboo.domain.user.repository.UserRepository;
 import com.team3.otboo.global.exception.BusinessException;
 import com.team3.otboo.global.exception.ErrorCode;
-import com.team3.otboo.global.exception.user.UserNotFoundException;
-import jakarta.persistence.Access;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +22,6 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-
 
 @Slf4j
 @Service
@@ -46,7 +41,6 @@ public class JwtService {
     private final JwtSessionRepository jwtSessionRepository;
     private final ObjectMapper objectMapper;
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
 
     /*
         <nimbus-jose-jwt 라이브러리 구성 요소 설명>
@@ -61,24 +55,20 @@ public class JwtService {
         JWSObject               -> JWT 문자열 -> 헤더, 페이로드, 시그니쳐 로 나누어 변환하는 역할
      */
 
-    // 사용자 정보와 유효 시간을 바탕으로 JWT 객체를 생성
-    private JwtObject generateJwtObject(
-            // JWT payload에 담을 사용자 정보
-            User user,
-            // token의 유효 시간
-            long tokenValiditySeconds
-    ) {
+    // JWT 객체 생성
+    private JwtObject generateJwtObject(User user, long tokenValiditySeconds) {
+
         Instant issueTime = Instant.now();
         Instant expirationTime = issueTime.plus(Duration.ofSeconds(tokenValiditySeconds));
 
         // JWT Payload 설정
         JWTClaimsSet claimSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())                               // 사용자 고유 식별자로 email
-                .claim("name", user.getUsername())                      // 필요한 정보만 주입 (UserDto X)
+                .claim("name", user.getUsername())                // 필요한 정보만 주입
                 .claim("role", user.getRole())
                 .claim("userId", user.getId())
-                .issueTime(new Date(issueTime.toEpochMilli()))            // 발급 시간
-                .expirationTime(new Date(expirationTime.toEpochMilli()))  // 만료 시간
+                .issueTime(new Date(issueTime.toEpochMilli()))           // 발급 시간
+                .expirationTime(new Date(expirationTime.toEpochMilli())) // 만료 시간
                 .build();
 
         // JWT Header 설정
@@ -89,13 +79,11 @@ public class JwtService {
         // Payload + Header + Sign = JWT 완성
         SignedJWT signedJWT = new SignedJWT(jwsHeader, claimSet);
 
-        // secret key를 이용해 token에 서명
         try {
-            // token에 서명
             signedJWT.sign(new MACSigner(secret));
         } catch (JOSEException e) {
             log.error(e.getMessage());
-            new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "jwt 서명에 실패했습니다.");
+            new BusinessException(ErrorCode.SESSION_ERROR, "jwt 서명에 실패했습니다.");
         }
 
         // 직렬화하여 최종적으로 token 생성
@@ -105,9 +93,8 @@ public class JwtService {
 
     @Transactional
     // 사용자의 로그인 성공 시 새로운 JWT 세션을 등록
-    // Access, Refresh Token을 모두 생성하고 DB에 저장한다.
     public AccessRefreshToken registerJwtSession(User user) {
-        // Access, Refresh Token 생성
+
         JwtObject accessJwtObject = generateJwtObject(user, accessTokenValiditySeconds);
         JwtObject refreshJwtObject = generateJwtObject(user, refreshTokenValiditySeconds);
 
@@ -116,71 +103,54 @@ public class JwtService {
                 refreshJwtObject.token(),
                 refreshJwtObject.expirationTime()
         );
-        // DB에 저장하여 Refresh Token을 관리
+
         jwtSessionRepository.save(jwtSession);
         log.info("session 저장 완료");
         return new AccessRefreshToken(accessJwtObject.token(), refreshJwtObject.token());
     }
 
-    // 주어진 토큰의 유효성을 종합적으로 검증
-    // JwtAuthenticationFilter 에서 모든 요청마다 호출
     public boolean validate(String token) {
         boolean verified;
-
         try {
             // 서명 검증
-            // verifier의 역할은 토큰 생성 시 동일한 Secrete Key를 활용하여 생성하는지 확인하는 역할
             JWSVerifier verifier = new MACVerifier(secret);
             // JWT token(문자열 형태) -> Header, Payload, Signature로 분리
             JWSObject jwsObject = JWSObject.parse(token);
             // 검증해달라고 전달 받은 token을 생성할 때 사용한 secret key -> JWSObject 에 들어있음
             // 서버에서 만들어놓은 secret key를 확인해주는 역할 -> verifier
-            // 이 두개가 서로 같다면 서명검증 성공, 다르다면 변조된 token이라는 뜻
             verified = jwsObject.verify(verifier);
-            log.info("서명 검증함.");
 
-            // 만료 시간 검증 (서명이 유효한 경우)
+            // 만료 시간 검증
             if (verified) {
                 log.info("서명이 유효함");
-                // token을 분석하여 JwtObject를 생성
                 JwtObject jwtObject = parse(token);
-                // 만료 시간을 넘었는지 확인
                 verified = !jwtObject.isExpired();
             }
         } catch (JOSEException | ParseException e) {
-            // parsing 또는 서명 검증 실패 시
             log.error("토큰 검증 실패: {}", e.getMessage());
-            verified = false;
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "토큰 검증에 실패했습니다.");
         }
-
         return verified;
     }
 
-    // token -> JwtObject 매핑 (token 분해 후 넣어준다.)
     public JwtObject parse(String token) {
-        UserDto userDto;
         try {
             // token -> JWSObject(헤더, 페이로드, 서명)
-            // 파싱 실패 시 -> ParseException 발생
             JWSObject jwsObject = JWSObject.parse(token);
             Payload payload = jwsObject.getPayload();
             // Payload -> Map형태의 json 객체로 변환
-            // 페이로드를 key-value 형태로 쌍으로 접근가능
             Map<String, Object> jsonObject = payload.toJSONObject();
 
-            // payload에서 가져온 정보들로 userDto 생성
             String email = (String) jsonObject.get("sub");
             String name = (String) jsonObject.get("name");
             Role role = Role.valueOf((String) jsonObject.get("role"));
 
-            // user의 내용과 일치하는지 위조여부 판단
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
             if(!user.getUsername().equals(name) || !user.getRole().equals(role)) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "토큰의 사용자 정보가 일치하지 않습니다.");
             }
 
-            // iat, exp는 정해져있는 타임스탬프
             return new JwtObject(
                     objectMapper.convertValue(jsonObject.get("iat"), Instant.class),
                     objectMapper.convertValue(jsonObject.get("exp"), Instant.class),
@@ -193,42 +163,22 @@ public class JwtService {
         }
     }
 
-    // JWT Session을 무효화 하는 메서드
     private void invalidate(JwtSession jwtSession) {
-        // DB에 저장된 Refresh Token 세션 정보 삭제
         jwtSessionRepository.delete(jwtSession);
         log.debug("session 삭제 완료");
-        // Access Token의 유효기간이 아직 남아있다면 즉시 무효화시키기 위해 블랙리스트에 추가
-        // 하지만 redis에 access token을 저장해놓고 관리할 정도로 그렇게 중요한 정보들을 다루는 서비스를 구현하는게 아니기 때문에
-        // access token의 만료시간을 짧게 가져가는 방향으로 구현하는게 오히려 효율적일 수 있다는 판단
     }
 
-    // 사용자의 Refresh Token을 기반으로 해당 세션을 무효화
-    // 일반적인 로그아웃
     @Transactional
     public void invalidateJwtSession(String refreshToken) {
         log.info("존재할 경우 삭제 시작");
-        // session을 찾아 invalidate 메서드 호출
         jwtSessionRepository.findByRefreshToken(refreshToken)
                 .ifPresent(this::invalidate);
     }
 
-    // 사용자 ID를 기반으로 사용자의 모든 세션을 무효화
-    // 관리자에 의한 강제 로그아웃
     @Transactional
     public void invalidateJwtSession(UUID userId) {
         jwtSessionRepository.findByUserId(userId)
                 .ifPresent(this::invalidate);
-    }
-
-    public List<JwtSession> getActiveJwtSessions() {
-        return jwtSessionRepository.findAllByExpirationTimeAfter(Instant.now());
-    }
-
-    public JwtSession getJwtSession(String refreshToken) {
-        return jwtSessionRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰을 찾을 수 없습니다."));
     }
 
     // access token 기간 만료 및 me 조회 요청에 따른 재발급
@@ -245,15 +195,13 @@ public class JwtService {
                     ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 이미 만료되었습니다.");
         }
 
-        // 토큰에서 사용자 ID 파싱 및 사용자 조회
         User user = parse(refreshToken).user();
-        // 새로운 JWT 객체 생성
         JwtObject accessJwtObject = generateJwtObject(user, accessTokenValiditySeconds);
 
         return new AccessRefreshToken(accessJwtObject.token(), refreshToken);
     }
 
-    // refresh token 기간 만료에 따른 재발급
+    // refresh token 기간 만료 및 재발급
     @Transactional
     public AccessRefreshToken refreshJwtSession(String refreshToken) {
         if (!validate(refreshToken)) {
@@ -264,9 +212,8 @@ public class JwtService {
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰을 찾을 수 없습니다."));
 
-        // 토큰에서 사용자 ID 파싱 및 사용자 조회
         User user = parse(refreshToken).user();
-        // 새로운 JWT 객체 생성
+
         JwtObject accessJwtObject = generateJwtObject(user, accessTokenValiditySeconds);
         JwtObject refreshJwtObject = generateJwtObject(user, refreshTokenValiditySeconds);
 
@@ -275,9 +222,6 @@ public class JwtService {
                 refreshJwtObject.token(),
                 refreshJwtObject.expirationTime()
         );
-
         return new AccessRefreshToken(accessJwtObject.token(), refreshJwtObject.token());
     }
-
-
 }
