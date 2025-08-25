@@ -7,9 +7,9 @@ import lombok.ToString;
 @ToString
 public class DirectMessageOutboxEvent {
 
-	private Outbox outbox;
+	private DirectMessageOutbox outbox;
 
-	public static DirectMessageOutboxEvent of(Outbox outbox) {
+	public static DirectMessageOutboxEvent of(DirectMessageOutbox outbox) {
 		DirectMessageOutboxEvent directMessageOutboxEvent = new DirectMessageOutboxEvent();
 		directMessageOutboxEvent.outbox = outbox;
 		return directMessageOutboxEvent;

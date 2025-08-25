@@ -5,6 +5,7 @@ import com.team3.otboo.domain.hot.service.HotFeedService;
 import com.team3.otboo.domain.user.user_details.CustomUserDetails;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class HotFeedController {
 
 	private final HotFeedService hotFeedService;
@@ -22,6 +24,7 @@ public class HotFeedController {
 		@PathVariable("dateStr") String dateStr,
 		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
+		log.info("[HotFeedController.readAll]");
 		return hotFeedService.readAllFeeds(dateStr, userDetails.getId());
 	}
 }

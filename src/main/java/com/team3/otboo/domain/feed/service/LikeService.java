@@ -37,6 +37,10 @@ public class LikeService {
 
 	@Transactional
 	public FeedDto like(UUID userId, UUID feedId) {
+		if (likeRepository.existsByUserIdAndFeedId(userId, feedId)) {
+			return feedDtoAssembler.assemble(feedId, userId);
+		}
+
 		User liker = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 		Feed feed = feedRepository.findById(feedId)
@@ -51,7 +55,7 @@ public class LikeService {
 		);
 
 		int result = feedLikeCountRepository.increase(feedId);
-		if (result == 0) { // 여기서 스레드 두개가 if 문 안으로 들어가서 동시성 문제 생길 수 있음 .
+		if (result == 0) {
 			feedLikeCountRepository.save(FeedLikeCount.init(feedId, 1L));
 		}
 

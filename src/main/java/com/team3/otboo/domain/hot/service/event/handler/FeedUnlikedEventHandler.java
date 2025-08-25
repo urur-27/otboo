@@ -23,6 +23,6 @@ public class FeedUnlikedEventHandler implements EventHandler<FeedUnlikedEventPay
 
 	@Override
 	public UUID findFeedId(Event<FeedUnlikedEventPayload> event) {
-		return event.getPayload().getId();
+		return event.getPayload().getFeedId();
 	}
 }

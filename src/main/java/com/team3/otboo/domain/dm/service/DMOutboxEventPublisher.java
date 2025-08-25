@@ -3,8 +3,8 @@ package com.team3.otboo.domain.dm.service;
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventPayload;
 import com.team3.otboo.common.event.EventType;
+import com.team3.otboo.common.outboxMessageRelay.DirectMessageOutbox;
 import com.team3.otboo.common.outboxMessageRelay.DirectMessageOutboxEvent;
-import com.team3.otboo.common.outboxMessageRelay.Outbox;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ public class DMOutboxEventPublisher {
 	// 카프카로 바로 전송하지 않고 .. MessageRelay(중계 시스템) 에게 publish 함 .
 	// MessageRelay 는 @TransactionalEventListener 를 통해 듣고 있다가 . 이벤트가 발생하면 적절한 처리를 한다 .
 	public void publish(EventType eventType, EventPayload payload) {
-		Outbox outbox = Outbox.create(
+		DirectMessageOutbox outbox = DirectMessageOutbox.create(
 			eventType,
 			Event.of(
 				UUID.randomUUID(),

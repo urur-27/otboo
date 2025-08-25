@@ -3,6 +3,7 @@ package com.team3.otboo.domain.feed.entity;
 import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -11,7 +12,13 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 // create index idx_feed_id_created_at on article(feed_id asc, created_at desc)
-@Table(name = "comments")
+@Table(name = "comments",
+	indexes = {
+		@Index(
+			name = "idx_feed_id_created_at",
+			columnList = "feed_id, created_at")
+	}
+)
 @Entity
 @Getter
 @ToString
