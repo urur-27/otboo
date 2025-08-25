@@ -66,5 +66,4 @@ public class RedisConfig {
 	public MessageListenerAdapter dmListenerAdapter(SubscribeService subscribeService) {
 		return new MessageListenerAdapter(subscribeService, "onMessage");
 	}
-
 }

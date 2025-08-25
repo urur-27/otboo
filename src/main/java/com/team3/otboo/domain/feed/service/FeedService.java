@@ -29,6 +29,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FeedService {
 
 	private final FeedRepository feedRepository;
@@ -82,6 +84,7 @@ public class FeedService {
 			feedCountRepository.save(FeedCount.init(1L));
 		}
 
+		log.info("[FeedService.create] feed created. feedId: " + feed.getId());
 		outboxEventPublisher.publish(
 			EventType.FEED_CREATED,
 			FeedCreatedEventPayload.builder()
