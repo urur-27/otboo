@@ -137,8 +137,7 @@ public class FeedReadService {
 
 		Set<UUID> likedFeedIds = likeRepository
 			.findLikedFeedIdsByUserAndFeedIn(userId, fetchedFeedIds);
-
-		log.info("[FeedReadService.readAll] feedQueryModel: {}" + feedQueryModels);
+		
 		return feedQueryModels.stream()
 			.map(feedQueryModel ->
 				FeedDto.from(

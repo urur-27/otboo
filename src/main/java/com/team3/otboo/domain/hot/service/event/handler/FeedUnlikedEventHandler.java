@@ -13,7 +13,6 @@ public class FeedUnlikedEventHandler implements EventHandler<FeedUnlikedEventPay
 
 	@Override
 	public void handle(Event<FeedUnlikedEventPayload> event) {
-
 	}
 
 	@Override
