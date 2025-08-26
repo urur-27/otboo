@@ -5,6 +5,7 @@ import com.team3.otboo.domain.dm.entity.DirectMessage;
 import com.team3.otboo.domain.user.dto.UserSummary;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +17,11 @@ public class DirectMessageMapper {
 
 	// n+1 문제 해결해야함 .
 	public DirectMessageDto toDto(DirectMessage directMessage) {
-		User sender = userRepository.findById(directMessage.getSenderId()).orElse(null);
-		User receiver = userRepository.findById(directMessage.getReceiverId()).orElse(null);
+		User sender = userRepository.findById(directMessage.getSenderId())
+			.orElseThrow((UserNotFoundException::new));
+		User receiver = userRepository.findById(directMessage.getReceiverId())
+			.orElseThrow((UserNotFoundException::new));
+		
 		return new DirectMessageDto(
 			directMessage.getId(),
 			directMessage.getCreatedAt(),
