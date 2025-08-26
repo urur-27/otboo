@@ -70,7 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.setCharacterEncoding("UTF-8");
-                // 실제 프로젝트에서는 공통 에러 응답 DTO(Data Transfer Object)를 사용하는 것이 좋습니다.
+                
                 Map<String, String> errorResponse = Map.of(
                         "error", "Unauthorized",
                         "message", "로그인 차단된 토큰입니다."
