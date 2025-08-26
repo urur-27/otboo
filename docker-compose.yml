@@ -31,8 +31,21 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    # Redis 서버 실행 시 영속성 관련 옵션을 함께 전달
+    # 60초동안 1번 이상의 쓰기 작업이 실행될 경우 RDB(스냅샷)기능 활성화
+    # 서버 재시작 시 RDB보다 AOF를 먼저 연결하여 데이터를 백업한다.
+    command: redis-server --save 60 1 --appendonly yes
+    # 컨테이너가 삭제되어도 데이터를 보존하기 위해 볼륨을 연결
+    # 영속성 파일 저장 경로(.rdb, .aof)
+    volumes:
+      - redis-data:/data
 
   kafka:
     image: apache/kafka:3.8.0
     ports:
       - "9092:9092"
+
+# Docker가 관리하는 명명된 볼륨(named volume)을 정의
+# 영속성 파일 저장을 위해
+volumes:
+  redis-data:

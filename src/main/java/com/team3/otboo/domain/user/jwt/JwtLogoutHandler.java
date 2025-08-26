@@ -30,7 +30,7 @@ public class JwtLogoutHandler implements LogoutHandler {
                 // Refresh token이 존재할 경우
                 .ifPresent(refreshToken -> {
                     // DB에 저장된 세션 정보 삭제 및 블랙리스트 추가
-                    jwtService.invalidateJwtSession(refreshToken);
+                    jwtService.logout(refreshToken);
                     // 사용자의 브라우저에서 refresh token 쿠키를 즉시 만료시킨다.
                     invalidateRefreshTokenCookie(response);
                 });

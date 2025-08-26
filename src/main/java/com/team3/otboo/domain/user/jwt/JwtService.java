@@ -15,6 +15,8 @@ import com.team3.otboo.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -41,6 +44,12 @@ public class JwtService {
     private final JwtSessionRepository jwtSessionRepository;
     private final ObjectMapper objectMapper;
     private final UserRepository userRepository;
+
+    // redis template
+    private final RedisTemplate<String, Object> redisTemplate;
+    // redis key
+    private static final String USER_TOKEN_KEY_PREFIX = "user:";
+    private static final String BLACKLIST_KEYU_PREFIX = "blacklist:";
 
     /*
         <nimbus-jose-jwt 라이브러리 구성 요소 설명>
@@ -92,23 +101,41 @@ public class JwtService {
     }
 
     @Transactional
-    // 사용자의 로그인 성공 시 새로운 JWT 세션을 등록
+    // 사용자의 로그인 성공 시 새로운 JWT 토큰 발급 및 redis에 저장
     public AccessRefreshToken registerJwtSession(User user) {
-
+        // 만들고
         JwtObject accessJwtObject = generateJwtObject(user, accessTokenValiditySeconds);
         JwtObject refreshJwtObject = generateJwtObject(user, refreshTokenValiditySeconds);
 
-        JwtSession jwtSession = new JwtSession(
-                user.getId(),
-                refreshJwtObject.token(),
-                refreshJwtObject.expirationTime()
-        );
+        // redis에 토큰 저장
+        saveTokensToRedis(user.getId(), accessJwtObject.token(), refreshJwtObject.token());
 
-        jwtSessionRepository.save(jwtSession);
-        log.info("session 저장 완료");
+        log.info("redis에 저장 완료");
         return new AccessRefreshToken(accessJwtObject.token(), refreshJwtObject.token());
     }
 
+    // 사용자의 토큰 2개를 redis hash 자료구조에 저장하는 메서드
+    private void saveTokensToRedis(UUID userId, String accessToken, String refreshToken) {
+        // redis의 hash 자료구조를 사용하기 위한 hashoperation 객체를 가져온다.
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        // key 생성
+        String key = USER_TOKEN_KEY_PREFIX + userId.toString();
+
+        // 저장할 데이터를 map형태로 만든다
+        Map<String, String> tokenMap = new HashMap<>();
+        tokenMap.put("accessToken", accessToken);
+        tokenMap.put("refreshToken", refreshToken);
+
+        // redis에 hash 데이터를 저장
+        hashOperations.putAll(key, tokenMap);
+
+        // key 자체에 만료 시간을 설정한다.
+        // TTL이 지나면 이 key에 해당하는 hash테이터 전체가 삭제된다.
+        // TTL은 refresh token의 만료시간으로 설정한다.
+        redisTemplate.expire(key, refreshTokenValiditySeconds, TimeUnit.SECONDS);
+    }
+
+    // 검증하는 메서드
     public boolean validate(String token) {
         boolean verified;
         try {
@@ -163,65 +190,113 @@ public class JwtService {
         }
     }
 
-    private void invalidate(JwtSession jwtSession) {
-        jwtSessionRepository.delete(jwtSession);
-        log.debug("session 삭제 완료");
+    // access token이 블랙리스트에 있는지 확인하는 메서드
+    public boolean isTokenblacklisted(String accessToken) {
+        String key = BLACKLIST_KEYU_PREFIX + accessToken;
+        // redis에 해당 키가 존재하면 true 반환
+        return redisTemplate.hasKey(key);
     }
 
+    // 로그아웃 처리 (redis에서 삭제 및 블랙리스트에 추가)
     @Transactional
-    public void invalidateJwtSession(String refreshToken) {
-        log.info("존재할 경우 삭제 시작");
-        jwtSessionRepository.findByRefreshToken(refreshToken)
-                .ifPresent(this::invalidate);
+    public void logout(String token){
+        // 사용자 Id 추출
+        JwtObject parsedToken = parse(token);
+        UUID userId = parsedToken.user().getId();
+
+        logout(userId);
     }
 
+    // Id로 로그아웃할 경우
     @Transactional
-    public void invalidateJwtSession(UUID userId) {
-        jwtSessionRepository.findByUserId(userId)
-                .ifPresent(this::invalidate);
-    }
-
-    // access token 기간 만료 및 me 조회 요청에 따른 재발급
-    public AccessRefreshToken meJwtRefreshToken(String refreshToken) {
-        if (!validate(refreshToken)) {
-            throw new BusinessException(
-                    ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 유효하지 않습니다.");
-        }
-        JwtSession session = jwtSessionRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰을 찾을 수 없습니다."));
-        if(session.isExpired()) {
-            throw new BusinessException(
-                    ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 이미 만료되었습니다.");
+    public void logout(UUID userId) {
+        // 실제로 존재하는지 확인
+        if(!userLoggedIn(userId)){
+            log.warn("로그아웃 상태 또는 존재하지 않는 사용자입니다.");
+            return;
         }
 
+        // redis에서 토큰 삭제 = refresh token 무효화
+        String userTokenKey = USER_TOKEN_KEY_PREFIX + userId.toString();
+
+        HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
+        String accessToken = hashOps.get(userTokenKey, "accessToken");
+
+        if(accessToken != null){
+            // 만료시간 계산
+            long remainingTime = parse(accessToken).expirationTime().toEpochMilli() - System.currentTimeMillis();
+
+            // access token을 블랙리스트에 추가하여 즉시 사용 불가능하게 만든다.
+            // 토큰의 남은 유효시간을 계산하여 TTL로 설정 -> 자동삭제되도록 하기 위함
+            if(remainingTime > 0){
+                String blacklistKey = BLACKLIST_KEYU_PREFIX + accessToken;
+                redisTemplate.opsForValue().set(blacklistKey, "blacklisted", remainingTime, TimeUnit.MILLISECONDS);
+            }
+        }
+        redisTemplate.delete(userTokenKey);
+        log.info("로그아웃 처리 및 블랙리스트 추가 완료, access token: {}", accessToken);
+    }
+
+    // access, refresh token 재발급 메서드 (refresh api 요청)
+    @Transactional
+    public AccessRefreshToken reIssueToken(String refreshToken) {
+        // refresh token의 서명과 만료시간 1차 검증
+        if(!validate(refreshToken)){
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 유효하지 않습니다.");
+        }
+
+        // redis에 저장되어있는 refresh token과 일치하는지 2차 검증
         User user = parse(refreshToken).user();
-        JwtObject accessJwtObject = generateJwtObject(user, accessTokenValiditySeconds);
+        String userTokenKey = USER_TOKEN_KEY_PREFIX + user.getId().toString();
+        // <key, access, refresh>
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        // "accessToken" : ~~,
+        // "refreshToken" : ~~
+        // <access, refresh>
+        Map<String, String> storedTokens = hashOperations.entries(userTokenKey);
 
-        return new AccessRefreshToken(accessJwtObject.token(), refreshToken);
+        // 만약 redis의 refresh token과 다르다면 강제 로그아웃 처리(redis에서 삭제)
+        String storedRefreshToken = storedTokens.get("refreshToken");
+        if(storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)){
+            redisTemplate.delete(userTokenKey);
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 일치하지 않습니다.");
+        }
+
+        // 기존의 Access token을 블랙리스트에 등록하여 사용하지 못하도록 한다.
+        String oldAccessToken = storedTokens.get("accessToken");
+        if(oldAccessToken != null){
+            String blacklistKey = BLACKLIST_KEYU_PREFIX + oldAccessToken;
+            long remainingTime = parse(oldAccessToken).expirationTime().toEpochMilli() - System.currentTimeMillis();
+            if(remainingTime > 0){
+                // redis 블랙리스트에 저장하면서 해당 데이터가 자동으로 사라진 시간 TTL 설정
+                redisTemplate.opsForValue().set(blacklistKey, "blacklisted", remainingTime, TimeUnit.MILLISECONDS);
+            }
+        }
+
+        // 새로운 access token과 refresh token을 생성
+        JwtObject newAccessJwt = generateJwtObject(user, accessTokenValiditySeconds);
+        JwtObject newRefreshJwt = generateJwtObject(user, refreshTokenValiditySeconds);
+
+        // 새로 생성된 토큰들을 redis에 다시 저장
+        saveTokensToRedis(user.getId(), newAccessJwt.token(), newRefreshJwt.token());
+
+        return new AccessRefreshToken(newAccessJwt.token(), newRefreshJwt.token());
     }
 
-    // refresh token 기간 만료 및 재발급
+    // key 존재 여부 체크
     @Transactional
-    public AccessRefreshToken refreshJwtSession(String refreshToken) {
-        if (!validate(refreshToken)) {
-            throw new BusinessException(
-                    ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰이 유효하지 않습니다.");
-        }
-        JwtSession session = jwtSessionRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.INVALID_INPUT_VALUE, "리프레시 토큰을 찾을 수 없습니다."));
+    public boolean userLoggedIn(UUID userId){
+        String userTokenKey = USER_TOKEN_KEY_PREFIX + userId.toString();
+        return redisTemplate.hasKey(userTokenKey);
+    }
 
-        User user = parse(refreshToken).user();
-
-        JwtObject accessJwtObject = generateJwtObject(user, accessTokenValiditySeconds);
-        JwtObject refreshJwtObject = generateJwtObject(user, refreshTokenValiditySeconds);
-
-        session.update(
-                user.getId(),
-                refreshJwtObject.token(),
-                refreshJwtObject.expirationTime()
-        );
-        return new AccessRefreshToken(accessJwtObject.token(), refreshJwtObject.token());
+    // access token 반환해주는 메서드
+    @Transactional
+    public String getAccessToken(String refreshToken){
+        String userKey = USER_TOKEN_KEY_PREFIX + parse(refreshToken).user().getId().toString();
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        Map<String, String> tokens = hashOperations.entries(userKey);
+        String accessToken = tokens.get("accessToken");
+        return accessToken;
     }
 }
