@@ -12,6 +12,8 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      database: 0                  # 배포는 항상 0
+      cache-prefix: "otboo:cache:" # 캐시 키 프리픽스
       ssl:
         enabled: true
   jpa:

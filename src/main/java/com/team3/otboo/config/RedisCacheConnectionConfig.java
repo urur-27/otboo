@@ -29,12 +29,15 @@ public class RedisCacheConnectionConfig {
     @Value("${spring.data.redis.ssl.enabled:false}")
     private boolean sslEnabled;
 
+    @Value("${spring.data.redis.database:0}") private int dbIndex; // 배포=0, 로컬=원하면 1
+    @Value("${spring.data.redis.cache-prefix:otboo:cache:}") String cachePrefix;
+
     // 캐시 전용 커넥션 (DB index 분리 + SSL 반영)
     @Bean
     @Qualifier("cache")
     public RedisConnectionFactory cacheConnectionFactory() {
         var conf = new RedisStandaloneConfiguration(host, port);
-        conf.setDatabase(1);
+        conf.setDatabase(dbIndex);
         if (password != null && !password.isBlank()) {
             conf.setPassword(RedisPassword.of(password));
         }
@@ -47,10 +50,11 @@ public class RedisCacheConnectionConfig {
     public RedisCacheManager cacheManager(
             @Qualifier("cache") RedisConnectionFactory cf
     ) {
+        // 타입정보 포함(no-arg) → LinkedHashMap 캐스트 이슈 방지
         var serializer = new GenericJackson2JsonRedisSerializer();
 
         var defaults = RedisCacheConfiguration.defaultCacheConfig()
-                .prefixCacheNameWith("otboo:")
+                .prefixCacheNameWith(cachePrefix)
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
                 .entryTtl(Duration.ofMinutes(10))
                 .disableCachingNullValues();
@@ -60,6 +64,7 @@ public class RedisCacheConnectionConfig {
                 // 캐시별 TTL
                 .withCacheConfiguration("clothingList",  defaults.entryTtl(Duration.ofSeconds(60)))
                 .withCacheConfiguration("attrSnapshot",  defaults.entryTtl(Duration.ofHours(6)))
+                .withCacheConfiguration("attrDefsPage", defaults.entryTtl(Duration.ofSeconds(60)))
                 .build();
     }
 }
