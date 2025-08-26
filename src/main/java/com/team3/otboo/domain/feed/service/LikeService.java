@@ -103,22 +103,6 @@ public class LikeService {
 		likeRepository.deleteAllByFeedId(feedId);
 	}
 
-	// 테스트 데이터 삽입용 메서드
-	@Transactional
-	public Like createBulk(UUID userId, UUID feedId) {
-		Like like = likeRepository.save(
-			Like.create(feedId, userId)
-		);
-
-		int result = feedLikeCountRepository.increase(feedId);
-		if (result == 0) {
-			// 트래픽이 몰리면 이 구문 안에 두개의 스레드가 들어와 데이터가 유실될 수도 있음 . todo: (미리 초기화 해놓기)
-			feedLikeCountRepository.save(FeedLikeCount.init(feedId, 1L));
-		}
-
-		return like;
-	}
-
 	public Long count(UUID feedId) {
 		return feedLikeCountRepository.findById(feedId)
 			.map(FeedLikeCount::getLikeCount)
