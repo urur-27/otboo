@@ -71,6 +71,7 @@ public class DirectMessageService {
 			EventType.DIRECT_MESSAGE_SENT,
 			payload // directMessageSendPayload
 		);
+		
 		eventPublisher.publishEvent(new DmReceivedEvent(receiver, sender.getUsername()));
 
 		return new DirectMessageSentPayload(dmKey, directMessageMapper.toDto(directMessage));

@@ -15,7 +15,6 @@ public class FeedCreatedEventHandler implements EventHandler<FeedCreatedEventPay
 
 	@Override
 	public void handle(Event<FeedCreatedEventPayload> event) {
-		log.info("[FeedCreatedEventHandler.handle] hot feed 에 대한 데이터 생성");
 		// MSA 에서 hot feed 에 대한 정보를 .따로 repository 에 저장할때 사용 .
 		// FeedCommentCount, FeedLikeCount, feed 의 생성 시간 등 ..
 	}
