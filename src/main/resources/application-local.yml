@@ -15,3 +15,4 @@ logging:
     root: info
     org.hibernate.SQL: info
     org.hibernate.orm.jdbc.bind: info
+    org.apache.kafka: WARN

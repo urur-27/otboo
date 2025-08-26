@@ -16,6 +16,7 @@ public class FeedLikedEventHandler implements EventHandler<FeedLikedEventPayload
 	@Override
 	public void handle(Event<FeedLikedEventPayload> event) {
 		FeedLikedEventPayload payload = event.getPayload();
+		// 여기서 동시성 문제가 발생
 		feedQueryModelRepository.read(payload.getFeedId())
 			.ifPresent(feedQueryModel -> {
 				feedQueryModel.updateBy(payload);

@@ -39,6 +39,9 @@ public class FeedController {
 	) {
 		UUID userId = userDetails.getId();
 		FeedDto feedDto = feedService.create(userId, request);
+		////
+		System.out.println("feedDto.getId(): " + feedDto.id());
+		////
 		return ResponseEntity.ok(feedDto);
 	}
 

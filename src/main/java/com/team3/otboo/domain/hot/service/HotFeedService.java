@@ -58,8 +58,8 @@ public class HotFeedService {
 	}
 
 	// FeedDto 를 반환하는 메서드 .. 나중에 인기 피드를 따로 만들어서 인기 피드만 보여줄때 사용 userId -> 현재 로그인한 유저
-	public List<FeedDto> readAllFeeds(String dateStr, UUID userId) {
-		// n이 최대 10개인데 N+1 문제를 해결해야할까
+	public List<FeedDto> readAll(String dateStr, UUID userId) {
+		// n이 최대 10개인데 N+1 문제를 해결해야할까 ?
 		return hotFeedListRepository.readAll(dateStr).stream()
 			.map(feedId -> feedDtoAssembler.assemble(UUID.fromString(feedId), userId))
 			.toList();

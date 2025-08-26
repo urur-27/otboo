@@ -17,7 +17,7 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, UU
 			+ "from direct_messages d "
 			+ "where ((d.sender_id = :userId and d.receiver_id = :currentUserId) "
 			+ "or (d.sender_id = :currentUserId and d.receiver_id = :userId)) "
-			+ "order by d.created_at asc, d.id asc "
+			+ "order by d.created_at desc, d.id desc "
 			+ "limit :limit"
 		,
 		nativeQuery = true
@@ -34,9 +34,9 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, UU
 				+ "from direct_messages d "
 				+ "where ((d.sender_id = :userId and d.receiver_id = :currentUserId) "
 				+ "or (d.sender_id = :currentUserId and d.receiver_id = :userId)) "
-				+ "and (d.created_at > :lastCreatedAt "
-				+ "or (d.created_at = :lastCreatedAt and d.id > :idAfter)) "
-				+ "order by d.created_at asc, d.id asc "
+				+ "and (d.created_at < :lastCreatedAt "
+				+ "or (d.created_at = :lastCreatedAt and d.id < :idAfter)) "
+				+ "order by d.created_at desc, d.id desc "
 				+ "limit :limit",
 		nativeQuery = true
 	)

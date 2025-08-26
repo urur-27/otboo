@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.query.SortDirection;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DirectMessageService {
 
 	private final DirectMessageRepository directMessageRepository;
@@ -35,7 +37,7 @@ public class DirectMessageService {
 
 	private final DirectMessageMapper directMessageMapper;
 
-	private final DMOutboxEventPublisher outboxEventPublisher;
+	private final DMOutboxEventPublisher dmOutboxEventPublisher;
 
 
 	@Transactional
@@ -64,10 +66,12 @@ public class DirectMessageService {
 			directMessageMapper.toDto(directMessage)
 		);
 
-		outboxEventPublisher.publish(
+		log.info("[DirectMessageService.save] payload: " + payload.getDirectMessageDto());
+		dmOutboxEventPublisher.publish(
 			EventType.DIRECT_MESSAGE_SENT,
-			payload
+			payload // directMessageSendPayload
 		);
+		
 		eventPublisher.publishEvent(new DmReceivedEvent(receiver, sender.getUsername()));
 
 		return new DirectMessageSentPayload(dmKey, directMessageMapper.toDto(directMessage));
@@ -118,12 +122,16 @@ public class DirectMessageService {
 			hasNext,
 			totalCount,
 			"created_at, id",
-			SortDirection.ASCENDING
+			SortDirection.DESCENDING
 		);
 	}
 
 	private String createDmKey(UUID userId1, UUID userId2) {
-		return userId1.compareTo(userId2) < 0 ?
-			userId1 + "_" + userId2 : userId2 + "_" + userId1;
+		// 문자열로 바꿔서 비교해야함 .
+		if (userId1.toString().compareTo(userId2.toString()) < 0) {
+			return userId1 + "_" + userId2;
+		} else {
+			return userId2 + "_" + userId1;
+		}
 	}
 }

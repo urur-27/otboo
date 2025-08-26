@@ -21,6 +21,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 	name = "follows",
 	uniqueConstraints = {
 		@UniqueConstraint(
+			name = "idx_followee_id_follower_id",
 			columnNames = {"followeeId", "followerId"}
 		)
 	}
