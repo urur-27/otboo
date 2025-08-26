@@ -4,6 +4,7 @@ import com.team3.otboo.domain.base.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -16,11 +17,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AttributeOption extends BaseEntity {
 
-    @Column(name = "option_value")
+    @Column(name = "option_value", nullable = false)
     private String value; // 예: 블랙, S, 캐주얼
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "attribute_id", nullable = false)
     private Attribute attribute;
+
+    @Column(nullable = false)
+    private boolean active = true;
 
     // 연관관계 설정
     public void assignAttribute(Attribute attribute) {
@@ -31,10 +36,13 @@ public class AttributeOption extends BaseEntity {
         AttributeOption option = new AttributeOption();
         option.value = value;
         option.assignAttribute(attribute);
+        option.active = true;
         return option;
     }
 
     public void updateValue(String newValue) {
         this.value = newValue;
     }
+    public void deactivate() { this.active = false; }
+    public void activate() { this.active = true; }
 }
