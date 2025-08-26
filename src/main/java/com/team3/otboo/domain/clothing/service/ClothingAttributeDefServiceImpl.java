@@ -7,6 +7,7 @@ import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.mapper.ClothingAttributeDefMapper;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.domain.clothing.repository.ClothingAttributeValueRepository;
+import com.team3.otboo.event.AttributeSchemaChangedEvent;
 import com.team3.otboo.event.NewAttributeAddedEvent;
 import com.team3.otboo.global.exception.attribute.AttributeNameDuplicatedException;
 import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
@@ -15,6 +16,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +26,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
 
     private final AttributeRepository attributeRepository;
     private final ClothingAttributeDefMapper mapper;
-    private final ApplicationEventPublisher eventPublisher;
+    private final ApplicationEventPublisher publisher;
     private final ClothingAttributeValueRepository cavRepository;
 
     @Override
@@ -39,11 +41,15 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
         attribute.getOptions().forEach(option -> option.assignAttribute(attribute));
         Attribute saved = attributeRepository.save(attribute);
 
-        eventPublisher.publishEvent(new NewAttributeAddedEvent(saved.getName()));
-
+        publisher.publishEvent(new NewAttributeAddedEvent(saved.getName()));
+        publisher.publishEvent(new AttributeSchemaChangedEvent());
         return mapper.toDto(saved);
     }
 
+    @Cacheable(
+            cacheNames = "attrDefsPage",
+            key = "T(java.util.Objects).hash(#cursor,#idAfter,#limit,#sortBy,#direction,#keyword)"
+    )
     @Override
     public CursorPageResponse<ClothesAttributeDefDto> getAttributes(
             String cursor,
@@ -78,6 +84,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
         Attribute attribute = attributeRepository.findById(definitionId)
                 .orElseThrow(AttributeNotFoundException::new);
 
+        publisher.publishEvent(new AttributeSchemaChangedEvent());
         attributeRepository.delete(attribute);
     }
 
@@ -99,7 +106,7 @@ public class ClothingAttributeDefServiceImpl implements ClothingAttributeDefServ
 
         // diff 기반 동기화
         attribute.syncOptions(values, cavRepository::countByOption_Id);
-
+        publisher.publishEvent(new AttributeSchemaChangedEvent());
         return mapper.toDto(attribute);
     }
 }

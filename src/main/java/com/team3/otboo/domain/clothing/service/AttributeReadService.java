@@ -4,6 +4,7 @@ import com.team3.otboo.domain.clothing.entity.Attribute;
 import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ public class AttributeReadService {
 
     private final AttributeRepository attributeRepository;
 
+    @Cacheable(cacheNames = "attrSnapshot", key = "'v1'")
     @Transactional(readOnly = true)
     public AttributeSnapshot loadAllForExtraction() {
         List<Attribute> all = attributeRepository.findAllWithOptions();
