@@ -72,7 +72,7 @@ public class ClothingExtractionServiceImpl implements ClothingExtractionService 
                                     route.model(),
                                     idem
                             )
-                            .timeout(Duration.ofSeconds(35))
+                            .timeout(Duration.ofSeconds(30))
                             .retryWhen(Retry.backoff(1, Duration.ofMillis(250))
                                     .filter(this::isRetryable))
                             .map((VisionAnalysisResult vision) -> {
