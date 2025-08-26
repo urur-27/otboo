@@ -83,13 +83,18 @@ public class FollowService {
 	@Transactional
 	public void delete(UUID followId) {
 		Follow follow = followRepository.findById(followId).orElseThrow(
-			() -> new EntityNotFoundException("해당 follow가 존재하지 않습니다.")
+			() -> new EntityNotFoundException("해당 follow 가 존재하지 않습니다.")
 		);
-
-		followRepository.deleteById(followId);
 
 		userFollowerCountRepository.decrease(follow.getFolloweeId());
 		userFollowingCountRepository.decrease(follow.getFollowerId());
+
+		/////////
+		System.out.println("follow.getFolloweeId(): " + follow.getFolloweeId());
+		System.out.println("follow.getFollowerId(): " + follow.getFollowerId());
+		/////////
+
+		followRepository.deleteById(followId);
 	}
 
 	@Transactional(readOnly = true)
@@ -188,6 +193,7 @@ public class FollowService {
 	@Transactional(readOnly = true)
 	public FollowSummaryDto getFollowSummary(UUID userId, UUID currentUserId) {
 
+		// user가 0명일 수 있으므로 follow를 다 해놔야함 .
 		UserFollowerCount followerCount = userFollowerCountRepository.findById(userId).orElseThrow(
 			() -> new EntityNotFoundException("user not found. userId: " + userId)
 		);

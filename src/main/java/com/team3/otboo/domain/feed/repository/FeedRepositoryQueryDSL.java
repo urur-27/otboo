@@ -29,11 +29,11 @@ public class FeedRepositoryQueryDSL {
 	private final QWeather weather = QWeather.weather;
 	private final QFeedLikeCount feedLikeCount = QFeedLikeCount.feedLikeCount;
 
-	public List<Feed> getFeeds(FeedListRequest req) {
-
+	public List<Feed> readAll(FeedListRequest req) {
 		return queryFactory
-			.selectFrom(feed)
-			.join(ootd).on(feed.id.eq(ootd.feedId))
+			.selectDistinct(feed)
+			.from(feed)
+			.leftJoin(ootd).on(feed.id.eq(ootd.feedId))
 			.join(weather).on(feed.weatherId.eq(weather.id))
 			.leftJoin(feedLikeCount).on(feed.id.eq(feedLikeCount.feedId))
 			.where(
@@ -49,14 +49,13 @@ public class FeedRepositoryQueryDSL {
 			.fetch();
 	}
 
+	// count 쿼리 사용 x
 	public int countFeeds(FeedListRequest req) {
-
 		Long cnt = queryFactory
 			.select(feed.id.countDistinct())
 			.from(feed)
-			.join(ootd).on(feed.id.eq(ootd.feedId))
+			.leftJoin(ootd).on(feed.id.eq(ootd.feedId))
 			.join(weather).on(feed.weatherId.eq(weather.id))
-			// precipitation 조인 제거
 			.leftJoin(feedLikeCount).on(feed.id.eq(feedLikeCount.feedId))
 			.where(
 				keywordLike(req.keywordLike()),

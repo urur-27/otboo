@@ -1,4 +1,4 @@
-package com.team3.otboo.domain.hot.service.eventhandler;
+package com.team3.otboo.domain.hot.service.event.handler;
 
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventType;
@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
-@Component
+@Component("hotFeedLikedEventHandler")
 @Repository
 public class FeedLikeEventHandler implements EventHandler<FeedLikedEventPayload> {
 

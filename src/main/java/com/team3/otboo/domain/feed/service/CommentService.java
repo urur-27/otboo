@@ -1,5 +1,8 @@
 package com.team3.otboo.domain.feed.service;
 
+import com.team3.otboo.common.event.EventType;
+import com.team3.otboo.common.event.payload.CommentCreatedEventPayload;
+import com.team3.otboo.common.outboxMessageRelay.OutboxEventPublisher;
 import com.team3.otboo.domain.feed.dto.CommentDto;
 import com.team3.otboo.domain.feed.dto.CommentDtoCursorResponse;
 import com.team3.otboo.domain.feed.entity.Comment;
@@ -33,7 +36,9 @@ public class CommentService {
 
 	private final CommentRepository commentRepository;
 	private final FeedCommentCountRepository feedCommentCountRepository;
+
 	private final ApplicationEventPublisher eventPublisher;
+	private final OutboxEventPublisher outboxEventPublisher;
 
 	private final CommentMapper commentMapper;
 	private final UserRepository userRepository;
@@ -45,10 +50,10 @@ public class CommentService {
 			throw new IllegalArgumentException("feed not found. feed id: " + request.feedId());
 		}
 		Feed feed = feedRepository.findById(request.feedId())
-				.orElseThrow(IllegalArgumentException::new);
+			.orElseThrow(IllegalArgumentException::new);
 
 		User feedOwner = userRepository.findById(feed.getAuthorId())
-				.orElseThrow(EntityNotFoundException::new);
+			.orElseThrow(EntityNotFoundException::new);
 
 		User author = userRepository.findById(request.authorId()).orElseThrow(
 			() -> new EntityNotFoundException("user not found. user Id: " + request.authorId())
@@ -68,9 +73,22 @@ public class CommentService {
 		}
 
 		eventPublisher.publishEvent(new NewCommentEvent(
-				feedOwner,
-				author.getUsername(),
-				feed.getId()));
+			feedOwner,
+			author.getUsername(),
+			feed.getId()));
+		outboxEventPublisher.publish(
+			EventType.COMMENT_CREATED,
+			CommentCreatedEventPayload.builder()
+				.id(comment.getId()) // comment id
+				.createdAt(comment.getCreatedAt())
+				.updatedAt(comment.getUpdatedAt())
+				.feedId(comment.getFeedId())
+				.authorId(comment.getAuthorId())
+				.content(comment.getContent())
+				.commentCount(count(comment.getFeedId()).intValue())
+				.build()
+		);
+
 		return commentMapper.toDto(comment, author);
 	}
 
@@ -136,6 +154,11 @@ public class CommentService {
 
 	public void deleteAllByFeedId(UUID feedId) {
 		commentRepository.deleteAllByFeedId(feedId);
+	}
+
+	public Long count(UUID feedId) {
+		return feedCommentCountRepository.findById(feedId)
+			.map(FeedCommentCount::getCommentCount).orElse(0L);
 	}
 
 	// 테스트 데이터 생성용 ..

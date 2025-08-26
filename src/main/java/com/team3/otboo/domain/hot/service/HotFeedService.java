@@ -1,13 +1,13 @@
 package com.team3.otboo.domain.hot.service;
 
-import com.team3.otboo.domain.feed.dto.FeedDto;
-import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
-import com.team3.otboo.domain.hot.client.FeedClient;
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventPayload;
 import com.team3.otboo.common.event.EventType;
+import com.team3.otboo.domain.feed.dto.FeedDto;
+import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
+import com.team3.otboo.domain.feedread.client.FeedClient;
 import com.team3.otboo.domain.hot.repository.HotFeedListRepository;
-import com.team3.otboo.domain.hot.service.eventhandler.EventHandler;
+import com.team3.otboo.domain.hot.service.event.handler.EventHandler;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 public class HotFeedService {
 
 	private final FeedClient feedClient; // 원본 feed 를 조회해옴 . (hotFeedListRepository 는 id만 저장)
-	private final List<EventHandler<EventPayload>> eventHandlers;
+	private final List<EventHandler> eventHandlers;
 	private final HotFeedScoreUpdater hotFeedScoreUpdater;
 	private final HotFeedListRepository hotFeedListRepository;
 	private final FeedDtoAssembler feedDtoAssembler;

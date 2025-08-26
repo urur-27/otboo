@@ -2,9 +2,9 @@ package com.team3.otboo.domain.feed.service;
 
 import com.team3.otboo.common.event.EventType;
 import com.team3.otboo.common.event.payload.FeedViewedEventPayload;
+import com.team3.otboo.common.outboxMessageRelay.OutboxEventPublisher;
 import com.team3.otboo.domain.feed.entity.FeedViewCount;
 import com.team3.otboo.domain.feed.repository.FeedViewCountBackUpRepository;
-import com.team3.otboo.domain.hot.service.HotFeedOutboxEventPublisher;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,11 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ViewCountBackUpProcessor {
 
-	private final HotFeedOutboxEventPublisher hotFeedOutboxEventPublisher;
+	private final OutboxEventPublisher outboxEventPublisher;
 	private final FeedViewCountBackUpRepository feedViewCountBackUpRepository;
-
-	private final HotFeedOutboxEventPublisher outboxEventPublisher;
-
+	
 	@Transactional
 	public void backUp(UUID feedId, Long viewCount) {
 		int result = feedViewCountBackUpRepository.update(feedId, viewCount);
