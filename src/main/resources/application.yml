@@ -75,6 +75,10 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: false
 
+  elasticsearch:
+    uris:
+      - http://15.164.170.61:9200
+
 server:
   port: 8080
 

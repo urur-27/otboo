@@ -1,35 +1,56 @@
 package com.team3.otboo.domain.feedread.service;
 
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.QueryStringQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventPayload;
 import com.team3.otboo.domain.feed.dto.FeedDto;
+import com.team3.otboo.domain.feed.entity.Feed;
 import com.team3.otboo.domain.feed.entity.FeedCommentCount;
 import com.team3.otboo.domain.feed.entity.FeedCount;
 import com.team3.otboo.domain.feed.entity.FeedLikeCount;
+import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
 import com.team3.otboo.domain.feed.repository.FeedCommentCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedLikeCountRepository;
+import com.team3.otboo.domain.feed.repository.FeedRepository;
 import com.team3.otboo.domain.feed.repository.LikeRepository;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.response.FeedDtoCursorResponse;
 import com.team3.otboo.domain.feedread.client.FeedClient;
+import com.team3.otboo.domain.feedread.document.FeedDocument;
 import com.team3.otboo.domain.feedread.repository.FeedIdListRepository;
 import com.team3.otboo.domain.feedread.repository.FeedQueryModel;
 import com.team3.otboo.domain.feedread.repository.FeedQueryModelRepository;
 import com.team3.otboo.domain.feedread.service.event.handler.EventHandler;
 import com.team3.otboo.domain.feedread.service.response.FeedReadResponse;
+import com.team3.otboo.domain.user.enums.SortDirection;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
+
 
 @Service
 @RequiredArgsConstructor
@@ -38,14 +59,19 @@ public class FeedReadService {
 
 	private final FeedClient feedClient;
 
+	private final FeedRepository feedRepository;
 	private final FeedQueryModelRepository feedQueryModelRepository;
 	private final FeedIdListRepository feedIdListRepository;
 	private final FeedCountRepository feedCountRepository;
+
+	private final FeedDtoAssembler feedDtoAssembler;
 
 	private final LikeRepository likeRepository; // likeByMe 를 위한 likeRepository
 	private final List<EventHandler> eventHandlers;
 	private final FeedCommentCountRepository feedCommentCountRepository;
 	private final FeedLikeCountRepository feedLikeCountRepository;
+
+	private final ElasticsearchOperations elasticsearchOperations;
 
 	public void handleEvent(Event<EventPayload> event) {
 		for (EventHandler eventHandler : eventHandlers) {
@@ -76,7 +102,6 @@ public class FeedReadService {
 			.ifPresent(feedQueryModel -> feedQueryModelRepository.create(
 				feedQueryModel, Duration.ofDays(1) // 일단 하루만 저장 .
 			));
-		log.info("[FeedReadService.fetch] fetch data. feedId={}", feedId);
 		return feedQueryModelOptional;
 	}
 
@@ -137,7 +162,7 @@ public class FeedReadService {
 
 		Set<UUID> likedFeedIds = likeRepository
 			.findLikedFeedIdsByUserAndFeedIn(userId, fetchedFeedIds);
-		
+
 		return feedQueryModels.stream()
 			.map(feedQueryModel ->
 				FeedDto.from(
@@ -187,5 +212,123 @@ public class FeedReadService {
 			.flatMap(cursorResponse -> cursorResponse.data().stream())
 			.map(FeedDto::id)
 			.toList();
+	}
+
+	public FeedDtoCursorResponse readAllInfiniteScrollByEs(UUID userId, FeedListRequest request) {
+		String indexName = "feeds";
+		boolean desc = request.sortDirection() == SortDirection.DESCENDING;
+		int pageSize = request.limit() + 1;
+
+		List<Query> must = new ArrayList<>();
+		List<Query> filters = new ArrayList<>();
+
+		if (request.keywordLike() != null && !request.keywordLike().isBlank()) {
+			must.add(new QueryStringQuery.Builder()
+				.fields("content", "authorName")
+				.query(request.keywordLike())
+				.fuzziness("AUTO")
+				.build()
+				._toQuery());
+		} else {
+			must.add(MatchAllQuery.of(m -> m)._toQuery());
+		}
+		if (request.authorIdEqual() != null) {
+			filters.add(new TermQuery.Builder()
+				.field("authorId")
+				.value(request.authorIdEqual().toString())
+				.build()
+				._toQuery());
+		}
+		if (request.skyStatusEqual() != null) {
+			filters.add(new TermQuery.Builder()
+				.field("skyStatus")
+				.value(request.skyStatusEqual().name())
+				.build()
+				._toQuery());
+		}
+		if (request.precipitationTypeEqual() != null) {
+			filters.add(new TermQuery.Builder()
+				.field("precipitationType")
+				.value(request.precipitationTypeEqual().name())
+				.build()
+				._toQuery());
+		}
+
+		BoolQuery boolQuery = new BoolQuery.Builder().must(must).filter(filters).build();
+
+		String sortByField = request.sortBy() != null ? request.sortBy() : "createdAt";
+		List<SortOptions> sorts = List.of(
+			SortOptions.of(s -> s.field(
+				f -> f.field(sortByField).order(desc ? SortOrder.Desc : SortOrder.Asc)
+			))
+		);
+
+		List<Object> searchAfter = null;
+		if (request.cursor() != null && !request.cursor().isBlank()) {
+			searchAfter = List.of(request.cursor());
+		}
+
+		NativeQueryBuilder queryBuilder = new NativeQueryBuilder()
+			.withQuery(boolQuery._toQuery())
+			.withSort(sorts)
+			.withPageable(org.springframework.data.domain.PageRequest.of(0, pageSize))
+			.withTrackTotalHits(true);
+
+		if (searchAfter != null) {
+			queryBuilder.withSearchAfter(searchAfter);
+		}
+
+		NativeQuery query = queryBuilder.build();
+
+		SearchHits<FeedDocument> searchResult = elasticsearchOperations.search(
+			query, FeedDocument.class, IndexCoordinates.of(indexName));
+
+		List<org.springframework.data.elasticsearch.core.SearchHit<FeedDocument>> searchHits = searchResult.getSearchHits();
+
+		boolean hasNext = searchHits.size() > request.limit();
+		List<org.springframework.data.elasticsearch.core.SearchHit<FeedDocument>> pageHits =
+			hasNext ? searchHits.subList(0, request.limit()) : searchHits;
+
+		List<UUID> pageIds = pageHits.stream()
+			.map(hit -> hit.getContent().getId())
+			.toList();
+
+		List<FeedDto> data;
+		if (pageIds.isEmpty()) {
+			data = Collections.emptyList();
+		} else {
+			Map<UUID, Feed> feedsById = feedRepository.findAllByIdIn(pageIds).stream()
+				.collect(Collectors.toMap(Feed::getId, java.util.function.Function.identity()));
+
+			data = pageIds.stream()
+				.map(feedsById::get)
+				.filter(Objects::nonNull)
+				.map(feed -> feedDtoAssembler.assemble(feed.getId(),
+					userId))
+				.toList();
+		}
+
+		String nextCursor = null;
+		UUID nextIdAfter = null;
+
+		if (hasNext) {
+			var lastHit = pageHits.getLast();
+			List<Object> sortValues = lastHit.getSortValues();
+			if (!sortValues.isEmpty()) {
+				nextCursor = sortValues.get(0).toString();
+			}
+		}
+
+		long totalCount = searchResult.getTotalHits();
+
+		return new FeedDtoCursorResponse(
+			data,
+			nextCursor,
+			nextIdAfter,
+			hasNext,
+			(int) totalCount,
+			request.sortBy(),
+			request.sortDirection()
+		);
 	}
 }

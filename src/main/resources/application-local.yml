@@ -10,3 +10,5 @@ logging:
     org.hibernate.SQL: info
     org.hibernate.orm.jdbc.bind: info
     org.apache.kafka: WARN
+    org.springframework.data.elasticsearch.client: TRACE
+    org.elasticsearch.client: TRACE

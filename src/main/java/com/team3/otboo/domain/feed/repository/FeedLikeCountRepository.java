@@ -1,6 +1,7 @@
 package com.team3.otboo.domain.feed.repository;
 
 import com.team3.otboo.domain.feed.entity.FeedLikeCount;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -34,4 +35,10 @@ public interface FeedLikeCountRepository extends JpaRepository<FeedLikeCount, UU
 	)
 	@Modifying
 	Long increaseAndGet(@Param("feedId") UUID feedId);
+
+	@Query(
+		value = "SELECT * FROM feed_like_count WHERE feed_id IN (:ids)",
+		nativeQuery = true
+	)
+	List<FeedLikeCount> findAllByIdIn(@Param("ids") List<UUID> ids);
 }

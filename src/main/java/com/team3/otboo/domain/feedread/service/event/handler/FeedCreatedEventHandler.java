@@ -5,9 +5,11 @@ import com.team3.otboo.common.event.EventType;
 import com.team3.otboo.common.event.payload.FeedCreatedEventPayload;
 import com.team3.otboo.domain.feed.dto.FeedDto;
 import com.team3.otboo.domain.feed.mapper.FeedDtoAssembler;
+import com.team3.otboo.domain.feedread.document.FeedDocument;
 import com.team3.otboo.domain.feedread.repository.FeedIdListRepository;
 import com.team3.otboo.domain.feedread.repository.FeedQueryModel;
 import com.team3.otboo.domain.feedread.repository.FeedQueryModelRepository;
+import com.team3.otboo.domain.feedread.repository.FeedSearchRepository;
 import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class FeedCreatedEventHandler implements EventHandler<FeedCreatedEventPay
 	private final FeedIdListRepository feedIdListRepository;
 
 	private final FeedDtoAssembler feedDtoAssembler;
+	private final FeedSearchRepository feedSearchRepository;
 
 	@Override
 	public void handle(Event<FeedCreatedEventPayload> event) {
@@ -33,6 +36,17 @@ public class FeedCreatedEventHandler implements EventHandler<FeedCreatedEventPay
 			Duration.ofDays(1)
 		);
 		feedIdListRepository.add(feedId, payload.getCreatedAt(), 1000L); // id list 는 1000개 까지 저장 .
+
+		FeedDocument feedDocument = new FeedDocument();
+		feedDocument.setId(payload.getId());
+		feedDocument.setCreatedAt(payload.getCreatedAt());
+		feedDocument.setContent(payload.getContent());
+		feedDocument.setAuthorId(payload.getAuthorId());
+		feedDocument.setAuthorName(feedDto.author().name());
+		feedDocument.setSkyStatus(payload.getSkyStatus());
+		feedDocument.setPrecipitationType(payload.getPrecipitationType());
+		feedDocument.setLikeCount(0); // 생성시 like count 는 0
+		feedSearchRepository.save(feedDocument);
 	}
 
 	@Override
