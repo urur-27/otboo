@@ -12,7 +12,7 @@ import org.springframework.data.annotation.Id;
 public class MongoFeedDocument {
 
 	@Id // MongoDB의 고유 ID 필드
-	private String id; // String 타입으로 사용하는 것이 일반적
+	private String id;
 
 	private Instant createdAt;
 	private String content;
