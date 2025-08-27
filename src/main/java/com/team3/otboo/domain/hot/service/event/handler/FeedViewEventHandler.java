@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 
-@Component("hotFeedUnlikedEventHandler")
+@Component("hotFeedViewedEventHandler")
 @RequiredArgsConstructor
 public class FeedViewEventHandler implements EventHandler<FeedViewedEventPayload> {
 
