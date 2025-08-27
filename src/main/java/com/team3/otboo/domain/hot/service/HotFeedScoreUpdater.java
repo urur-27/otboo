@@ -38,7 +38,7 @@ public class HotFeedScoreUpdater {
 
 		eventHandler.handle(event);
 
-		// 댓글 생성, 좋아요 생성 삭제 때마다 score 를 갱신해줘야함 .. -> 이런거 부하가 심하지 않나 .
+		// 댓글 생성, 좋아요 생성 삭제, 조회수 증가 때마다 score 를 갱신해줘야함 .. -> 이런거 부하가 심하지 않나 .
 		long score = hotFeedScoreCalculator.calculate(feedId);
 
 		log.info("[HotFeedScoreUpdater.update] feedId: " + feedId + ", score: " + score);

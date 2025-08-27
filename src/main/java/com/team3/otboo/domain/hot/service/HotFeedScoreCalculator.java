@@ -7,10 +7,12 @@ import com.team3.otboo.domain.feed.repository.FeedLikeCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedViewCountRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class HotFeedScoreCalculator {
 
 	private final FeedLikeCountRepository feedLikeCountRepository;
@@ -32,6 +34,11 @@ public class HotFeedScoreCalculator {
 
 		Long viewCount = feedViewCountRepository.read(feedId);
 
+		log.info("[HotFeedScoreCalculator] score: {}",
+			likeCount * FEED_LIKE_COUNT_WEIGHT
+				+ commentCount * FEED_COMMENT_COUNT_WEIGHT
+				+ viewCount * FEED_VIEW_COUNT_WEIGHT);
+		
 		return likeCount * FEED_LIKE_COUNT_WEIGHT
 			+ commentCount * FEED_COMMENT_COUNT_WEIGHT
 			+ viewCount * FEED_VIEW_COUNT_WEIGHT;
