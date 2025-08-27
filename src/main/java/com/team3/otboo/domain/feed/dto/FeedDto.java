@@ -17,13 +17,13 @@ public record FeedDto(
 	String content,
 	Long likeCount,
 	Integer commentCount,
-	Boolean likedByMe
-	// Long viewCount
+	Boolean likedByMe,
+	Long viewCount
 	// 바뀌는 데이터 -> content, likeCount, commentCount, likedByMe, viewCount
 ) {
 
 	public static FeedDto from(FeedQueryModel feedQueryModel, Long likeCount, Long commentCount,
-		Boolean likedByMe) {
+		Boolean likedByMe, Long viewCount) {
 		return new FeedDto(
 			feedQueryModel.getId(),
 			feedQueryModel.getCreatedAt(),
@@ -34,7 +34,8 @@ public record FeedDto(
 			feedQueryModel.getContent(),
 			likeCount,
 			commentCount.intValue(),
-			likedByMe
+			likedByMe,
+			viewCount
 		);
 	}
 }

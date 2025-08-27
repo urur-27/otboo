@@ -20,6 +20,7 @@ import com.team3.otboo.domain.feed.repository.FeedCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedLikeCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedRepository;
 import com.team3.otboo.domain.feed.repository.LikeRepository;
+import com.team3.otboo.domain.feed.service.ViewService;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.response.FeedDtoCursorResponse;
 import com.team3.otboo.domain.feedread.client.FeedClient;
@@ -72,6 +73,7 @@ public class FeedReadService {
 	private final FeedLikeCountRepository feedLikeCountRepository;
 
 	private final ElasticsearchOperations elasticsearchOperations;
+	private final ViewService viewService;
 
 	public void handleEvent(Event<EventPayload> event) {
 		for (EventHandler eventHandler : eventHandlers) {
@@ -87,9 +89,12 @@ public class FeedReadService {
 			.or(() -> fetch(feedId, userId))
 			.orElseThrow(() -> new EntityNotFoundException("feed not found feedId: " + feedId));
 
+		Long viewCount = viewService.count(feedId);
+
 		return FeedReadResponse.from(
 			feedQueryModel,
-			likeRepository.existsByUserIdAndFeedId(userId, feedId)
+			likeRepository.existsByUserIdAndFeedId(userId, feedId),
+			viewCount
 		);
 	}
 
@@ -171,7 +176,9 @@ public class FeedReadService {
 						.map(FeedLikeCount::getLikeCount).orElse(0L),
 					feedCommentCountRepository.findById(feedQueryModel.getId())
 						.map(FeedCommentCount::getCommentCount).orElse(0L),
-					likedFeedIds.contains(feedQueryModel.getId())) // likedByMe
+					likedFeedIds.contains(feedQueryModel.getId()),
+					viewService.count(feedQueryModel.getId())
+				) // likedByMe
 			)
 			.toList();
 	}
