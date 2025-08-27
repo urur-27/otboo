@@ -37,7 +37,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     ) throws IOException, ServletException {
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
-        jwtService.invalidateJwtSession(user.getUser().getId());
+        jwtService.logout(user.getUser().getId());
         log.info("이전에 세션이 존재하고 있다면 만료 완료");
 
         AccessRefreshToken token = jwtService.registerJwtSession(user.getUser());
