@@ -3,8 +3,12 @@ package com.team3.otboo.domain.feedread.service;
 import com.team3.otboo.common.event.Event;
 import com.team3.otboo.common.event.EventPayload;
 import com.team3.otboo.domain.feed.dto.FeedDto;
+import com.team3.otboo.domain.feed.entity.FeedCommentCount;
 import com.team3.otboo.domain.feed.entity.FeedCount;
+import com.team3.otboo.domain.feed.entity.FeedLikeCount;
+import com.team3.otboo.domain.feed.repository.FeedCommentCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedCountRepository;
+import com.team3.otboo.domain.feed.repository.FeedLikeCountRepository;
 import com.team3.otboo.domain.feed.repository.LikeRepository;
 import com.team3.otboo.domain.feed.service.request.FeedListRequest;
 import com.team3.otboo.domain.feed.service.response.FeedDtoCursorResponse;
@@ -40,6 +44,8 @@ public class FeedReadService {
 
 	private final LikeRepository likeRepository; // likeByMe 를 위한 likeRepository
 	private final List<EventHandler> eventHandlers;
+	private final FeedCommentCountRepository feedCommentCountRepository;
+	private final FeedLikeCountRepository feedLikeCountRepository;
 
 	public void handleEvent(Event<EventPayload> event) {
 		for (EventHandler eventHandler : eventHandlers) {
@@ -131,12 +137,16 @@ public class FeedReadService {
 
 		Set<UUID> likedFeedIds = likeRepository
 			.findLikedFeedIdsByUserAndFeedIn(userId, fetchedFeedIds);
-
+		
 		return feedQueryModels.stream()
 			.map(feedQueryModel ->
 				FeedDto.from(
 					feedQueryModel,
-					likedFeedIds.contains(feedQueryModel.getId())) // 내가 좋아요를 눌렀는가 확인
+					feedLikeCountRepository.findById(feedQueryModel.getId())
+						.map(FeedLikeCount::getLikeCount).orElse(0L),
+					feedCommentCountRepository.findById(feedQueryModel.getId())
+						.map(FeedCommentCount::getCommentCount).orElse(0L),
+					likedFeedIds.contains(feedQueryModel.getId())) // likedByMe
 			)
 			.toList();
 	}

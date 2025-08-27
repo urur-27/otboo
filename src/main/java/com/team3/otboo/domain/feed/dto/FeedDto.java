@@ -22,7 +22,11 @@ public record FeedDto(
 	// 바뀌는 데이터 -> content, likeCount, commentCount, likedByMe, viewCount
 ) {
 
-	public static FeedDto from(FeedQueryModel feedQueryModel, Boolean likedByMe) {
+	public static FeedDto from(
+		FeedQueryModel feedQueryModel,
+		Long likeCount,
+		Long commentCount,
+		Boolean likedByMe) {
 		return new FeedDto(
 			feedQueryModel.getId(),
 			feedQueryModel.getCreatedAt(),
@@ -31,8 +35,8 @@ public record FeedDto(
 			feedQueryModel.getWeather(),
 			feedQueryModel.getOotds(),
 			feedQueryModel.getContent(),
-			feedQueryModel.getLikeCount(),
-			feedQueryModel.getCommentCount(),
+			likeCount,
+			commentCount.intValue(),
 			likedByMe
 		);
 	}

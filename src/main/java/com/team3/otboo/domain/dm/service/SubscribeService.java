@@ -24,11 +24,12 @@ public class SubscribeService implements MessageListener {
 			DirectMessageSentPayload payload = objectMapper
 				.readValue(publishMessage, DirectMessageSentPayload.class);
 
+			log.info("[SubscribeService.onMessage] payload: {}", payload);
 			messageTemplate.convertAndSend(
-				"/sub/direct-messages_" + payload.getDmKey(), // 수신 엔드포인트
-				payload);
+				"/sub/direct-messages_" + payload.getDmKey(),
+				payload.getDirectMessageDto());
 		} catch (Exception e) {
-			log.error("[SubscribeService.onMessage]json 역직렬화 중 오류 발생");
+			log.error("[SubscribeService.onMessage] json 역직렬화 중 오류 발생");
 		}
 	}
 }

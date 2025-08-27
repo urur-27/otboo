@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.StringRedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class HotFeedListRepository {
 
 	private final StringRedisTemplate redisTemplate;
@@ -42,6 +44,7 @@ public class HotFeedListRepository {
 
 	// 인기글을 표시하는 방법으로 구현 하려면 .. readAll 인기글을 불러서 2시간 정도마다 스케줄러로 isHot 을 갱신해준다 .
 	public List<String> readAll(String dateStr) {
+		log.info("[HotFeedListRepository.readAll] dateStr: {}", dateStr);
 		return redisTemplate.opsForZSet()
 			.reverseRangeWithScores(generateKey(dateStr), 0, -1)
 			.stream()

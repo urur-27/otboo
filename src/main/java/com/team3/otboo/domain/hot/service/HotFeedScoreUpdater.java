@@ -12,10 +12,12 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class HotFeedScoreUpdater {
 
 	private final FeedService feedService;
@@ -23,7 +25,7 @@ public class HotFeedScoreUpdater {
 	private final HotFeedScoreCalculator hotFeedScoreCalculator;
 	private final HotFeedListRepository hotFeedListRepository;
 
-	private static final long HOT_FEED_COUNT = 5; // hot feed 5개
+	private static final long HOT_FEED_COUNT = 10; // 그날의 hot feed 5개
 	private static final Duration HOT_FEED_TTL = Duration.ofDays(10); // 10일 저장 ..
 
 	public void update(Event<EventPayload> event, EventHandler<EventPayload> eventHandler) {
@@ -38,6 +40,8 @@ public class HotFeedScoreUpdater {
 
 		// 댓글 생성, 좋아요 생성 삭제 때마다 score 를 갱신해줘야함 .. -> 이런거 부하가 심하지 않나 .
 		long score = hotFeedScoreCalculator.calculate(feedId);
+
+		log.info("[HotFeedScoreUpdater.update] feedId: " + feedId + ", score: " + score);
 		hotFeedListRepository.add(
 			feedId,
 			feed.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime(),

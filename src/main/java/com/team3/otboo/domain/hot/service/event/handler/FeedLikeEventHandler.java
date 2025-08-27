@@ -22,6 +22,6 @@ public class FeedLikeEventHandler implements EventHandler<FeedLikedEventPayload>
 
 	@Override
 	public UUID findFeedId(Event<FeedLikedEventPayload> event) {
-		return event.getPayload().getId();
+		return event.getPayload().getFeedId();
 	}
 }

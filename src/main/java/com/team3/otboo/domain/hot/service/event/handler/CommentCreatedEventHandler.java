@@ -22,6 +22,6 @@ public class CommentCreatedEventHandler implements EventHandler<CommentCreatedEv
 
 	@Override
 	public UUID findFeedId(Event<CommentCreatedEventPayload> event) {
-		return event.getPayload().getId();
+		return event.getPayload().getFeedId();
 	}
 }
