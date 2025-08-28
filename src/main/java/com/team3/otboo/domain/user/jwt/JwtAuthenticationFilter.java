@@ -3,6 +3,8 @@ package com.team3.otboo.domain.user.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.user_details.CustomUserDetails;
+import com.team3.otboo.global.exception.BusinessException;
+import com.team3.otboo.global.exception.ErrorCode;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -61,6 +63,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (optionalAccessToken.isPresent() && !isPermitAll(request)) {
             String accessToken = optionalAccessToken.get();
 
+            // 블랙리스트에 있는지 확인
+            if(jwtService.isTokenblacklisted(accessToken)) {
+                log.warn("로그인 차단된 토큰 접근");
+                // 401
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.setCharacterEncoding("UTF-8");
+                
+                Map<String, String> errorResponse = Map.of(
+                        "error", "Unauthorized",
+                        "message", "로그인 차단된 토큰입니다."
+                );
+                response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+                return;
+            }
+
             // 토큰 검증 성공 시, 인증된 사용자의 요청으로 처리
             if (jwtService.validate(accessToken)) {
                 User user = jwtService.parse(accessToken).user();
@@ -69,15 +87,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         userDetails, null, userDetails.getAuthorities()
                 );
                 SecurityContextHolder.getContext().setAuthentication(auth);
-
                 chain.doFilter(request, response);
-
-            } else {
+            }
+            else {
                 // jwtService.invalidateJwtSession(accessToken);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.setCharacterEncoding("UTF-8");
-                // error처리 추가 필요
                 response.getWriter().write(objectMapper.writeValueAsString(HttpServletResponse.SC_UNAUTHORIZED));
             }
         } else {

@@ -45,7 +45,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        jwtService.invalidateJwtSession(userDetails.getUser().getId());
+        jwtService.logout(userDetails.getUser().getId());
         log.info("이전에 세션이 존재하고 있다면 만료 완료");
         AccessRefreshToken tokens = jwtService.registerJwtSession(userDetails.getUser());
         log.info("token 두개 생성 완료");

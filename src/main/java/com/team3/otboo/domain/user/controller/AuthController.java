@@ -43,7 +43,7 @@ public class AuthController {
             HttpServletResponse response
     ) {
         log.info("토큰 재발급 요청");
-        AccessRefreshToken accessRefreshToken = jwtService.refreshJwtSession(refreshToken);
+        AccessRefreshToken accessRefreshToken = jwtService.reIssueToken(refreshToken);
 
         Cookie refreshTokenCookie = new Cookie(JwtService.REFRESH_TOKEN_COOKIE_NAME,
                 accessRefreshToken.refreshToken());
@@ -53,16 +53,15 @@ public class AuthController {
         return ResponseEntity.ok(accessRefreshToken.accessToken());
     }
 
-    // access token 새로 생성
-    // session에 따로 저장해놓지 않았기 때문
+    // redis에서 access token 반환
     @GetMapping("/me")
     public ResponseEntity<String> me(
             @CookieValue(name = "refresh_token") String refreshToken
     ) {
         log.info("Access token 조회 시작");
-        AccessRefreshToken accessRefreshToken = jwtService.meJwtRefreshToken(refreshToken);
+        String accessToken = jwtService.getAccessToken(refreshToken);
         log.info("Access token 조회 완료");
-        return ResponseEntity.status(HttpStatus.OK).body(accessRefreshToken.accessToken());
+        return ResponseEntity.status(HttpStatus.OK).body(accessToken);
     }
 
     // 자동으로 token, parameterName, headerName이 포함되어있음

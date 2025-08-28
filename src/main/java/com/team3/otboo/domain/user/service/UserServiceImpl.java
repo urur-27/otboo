@@ -36,6 +36,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -135,7 +141,7 @@ public class UserServiceImpl implements UserService {
 
 		// 계정을 잠금 상태로 변경할 경우, 토큰 무효화 진행
 		if (request.locked()) {
-			jwtService.invalidateJwtSession(user.getId());
+			jwtService.logout(user.getId());
 		}
 		return user.getId();
 	}
@@ -153,7 +159,7 @@ public class UserServiceImpl implements UserService {
 		user.updateRole(request.role());
 
 		// 권한 변경 후 해당 사용자가 로그인한 세션 만료 처리
-		jwtService.invalidateJwtSession(user.getId());
+		jwtService.logout(user.getId());
 		return UserResponse.of(user);
 	}
 

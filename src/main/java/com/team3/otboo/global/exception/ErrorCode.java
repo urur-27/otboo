@@ -18,11 +18,12 @@ public enum ErrorCode {
   // User Errors (Uxxx)
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "해당 사용자를 찾을 수 없습니다."),
   PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "U002", "해당 프로필을 찾을 수 없습니다."),
-  ALREADY_EXISTS(HttpStatus.ALREADY_REPORTED, "U003", "이미 존재합니다."),
+  ALREADY_EXISTS(HttpStatus.CONFLICT, "U003", "이미 존재합니다."),
 
   // sign-in
   SIGN_IN_ERROR(HttpStatus.BAD_REQUEST, "S001", "로그인에 실패했습니다."),
   SIGN_IN_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "S002", "로그인 시간이 초과되었습니다"),
+  LOGOUT_ERROR(HttpStatus.BAD_REQUEST, "S003", "로그아웃 실패"),
 
   // Roles Errors (Rxxx)
   ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "해당 권한은 존재하지 않습니다."),
