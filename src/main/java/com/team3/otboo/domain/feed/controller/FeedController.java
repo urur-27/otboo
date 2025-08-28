@@ -97,7 +97,7 @@ public class FeedController {
 
 		if (isCacheable(request)) {
 			// 필터링 조건 x -> redis 에서 검색 .
-			log.info("[FeedController.readAllInfiniteScroll]");
+			log.info("[FeedController.readAllInfiniteScroll] return redis data.");
 			FeedDtoCursorResponse response = feedReadService.readAllInfiniteScroll(user.getId(),
 				request);
 			return ResponseEntity.ok(response);
