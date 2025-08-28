@@ -63,13 +63,13 @@ public class FeedReadController {
 			precipitationTypeEqual,
 			authorIdEqual
 		);
-		log.info("[FeedController.readAllInfiniteScroll]");
+		log.info("[FeedController.readAllInfiniteScroll] return redis data.");
 		FeedDtoCursorResponse response = feedReadService.readAllInfiniteScroll(user.getId(),
 			request);
 		return ResponseEntity.ok(response);
 	}
 
-	@GetMapping("/api/feeds/r")
+	@GetMapping("/api/feeds/elasticsearch")
 	public ResponseEntity<FeedDtoCursorResponse> readAllInfiniteScrollByES(
 		@AuthenticationPrincipal CustomUserDetails userDetails,
 		@RequestParam(value = "cursor", required = false) String cursor,
@@ -94,8 +94,8 @@ public class FeedReadController {
 			precipitationTypeEqual,
 			authorIdEqual
 		);
-		log.info("[FeedController.readAllInfiniteScroll]");
-		FeedDtoCursorResponse response = feedReadService.readAllInfiniteScroll(user.getId(),
+		log.info("[FeedController.readAllInfiniteScroll] return elasticsearch data.");
+		FeedDtoCursorResponse response = feedReadService.readAllInfiniteScrollByEs(user.getId(),
 			request);
 		return ResponseEntity.ok(response);
 	}

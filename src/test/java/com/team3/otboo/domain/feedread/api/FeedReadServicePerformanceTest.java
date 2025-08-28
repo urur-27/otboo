@@ -18,10 +18,10 @@ public class FeedReadServicePerformanceTest {
 	private FeedReadService feedReadService;
 
 	// 테스트용 사용자 ID (실제 DB에 존재하는 사용자의 UUID로 변경해야 합니다)
-	private final UUID TEST_USER_ID = UUID.fromString("");
+	private final UUID TEST_USER_ID = UUID.fromString("48f9df45-15df-4b11-8749-17c82a182f7c");
 
 	private static final int PAGE_SIZE = 20;
-	private static final int TOTAL_PAGES_TO_FETCH = 10;
+	private static final int TOTAL_PAGES_TO_FETCH = 1; // 한페이지 가져오는데 얼마나 걸리는가 측정
 
 	@Test
 	@DisplayName("Redis 최신순 무한 스크롤 성능 측정")
