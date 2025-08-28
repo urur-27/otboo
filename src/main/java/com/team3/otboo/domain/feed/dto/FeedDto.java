@@ -22,10 +22,7 @@ public record FeedDto(
 	// 바뀌는 데이터 -> content, likeCount, commentCount, likedByMe, viewCount
 ) {
 
-	public static FeedDto from(
-		FeedQueryModel feedQueryModel,
-		Long likeCount,
-		Long commentCount,
+	public static FeedDto from(FeedQueryModel feedQueryModel, Long likeCount, Long commentCount,
 		Boolean likedByMe) {
 		return new FeedDto(
 			feedQueryModel.getId(),

@@ -23,6 +23,8 @@ import com.team3.otboo.domain.feed.service.request.FeedUpdateRequest;
 import com.team3.otboo.domain.feed.service.response.FeedDtoCursorResponse;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.domain.weather.entity.Weather;
+import com.team3.otboo.domain.weather.repository.WeatherRepository;
 import com.team3.otboo.event.FollowedUserPostedFeedEvent;
 import com.team3.otboo.global.exception.user.UserNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
@@ -56,6 +58,7 @@ public class FeedService {
 	private final FeedViewCountBackUpRepository feedViewCountBackUpRepository;
 
 	private final OutboxEventPublisher outboxEventPublisher;
+	private final WeatherRepository weatherRepository;
 
 	// 알림 기능과 겹치니까 publish 는 한번만 하고, Listener 를 두개 써야함 .
 	// 겹치는거 -> 좋아요 생성 삭제, 댓글 생성 시 알림 가야하고 + 인기 피드 쪽에서 점수 계산까지 해야함 .
@@ -85,6 +88,9 @@ public class FeedService {
 		}
 
 		log.info("[FeedService.create] feed created. feedId: " + feed.getId());
+		Weather weather = weatherRepository.findById(feed.getWeatherId())
+			.orElseThrow(EntityNotFoundException::new);
+
 		outboxEventPublisher.publish(
 			EventType.FEED_CREATED,
 			FeedCreatedEventPayload.builder()
@@ -94,6 +100,8 @@ public class FeedService {
 				.authorId(feed.getAuthorId())
 				.weatherId(feed.getWeatherId())
 				.content(feed.getContent())
+				.skyStatus(weather.getSkyStatus())
+				.precipitationType(weather.getPrecipitation().getType())
 				.build()
 		);
 
