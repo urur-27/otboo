@@ -77,7 +77,7 @@ spring:
 
   elasticsearch:
     uris:
-      - http://15.164.170.61:9200
+      ${ELASTICSEARCH_URIS:localhost:9200}
 
 server:
   port: 8080
