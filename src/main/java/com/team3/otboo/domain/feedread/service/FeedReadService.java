@@ -191,12 +191,7 @@ public class FeedReadService {
 		}
 
 		List<UUID> feedIds = feedIdListRepository.readAllInfiniteScroll(cursor, limit);
-
-		/////////////
-		System.out.println("limit: " + limit);
-		System.out.println("feedIds.size(): " + feedIds.size());
-		/////////////
-
+		
 		if (limit == feedIds.size()) {
 			log.info("[FeedReadService.readAllInfiniteScrollFeedIds] return redis data");
 			return feedIds;
