@@ -24,9 +24,12 @@ public class FeedReadResponse {
 	private Integer commentCount;
 	private Boolean likedByMe;
 
+	private Long viewCount;
+
 //	private Long viewCount;
 
-	public static FeedReadResponse from(FeedQueryModel feedQueryModel, Boolean likedByMe) {
+	public static FeedReadResponse from(FeedQueryModel feedQueryModel, Boolean likedByMe,
+		Long viewCount) {
 		FeedReadResponse response = new FeedReadResponse();
 		response.id = feedQueryModel.getId();
 		response.createdAt = feedQueryModel.getCreatedAt();
@@ -38,7 +41,7 @@ public class FeedReadResponse {
 		response.likeCount = feedQueryModel.getLikeCount();
 		response.commentCount = feedQueryModel.getCommentCount();
 		response.likedByMe = likedByMe;
-//		response.viewCount = viewCount;
+		response.viewCount = viewCount;
 		return response;
 	}
 

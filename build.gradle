@@ -97,6 +97,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     implementation 'org.jetbrains:annotations:24.0.1'
+
+    // Elastic Search
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+    // MongoDB
+//    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 }
 
 tasks.named('test') {

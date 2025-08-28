@@ -18,12 +18,14 @@ import com.team3.otboo.event.FeedLikedEvent;
 import com.team3.otboo.global.exception.user.UserNotFoundException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LikeService {
 
 	private final LikeRepository likeRepository;
@@ -69,6 +71,7 @@ public class LikeService {
 				.updatedAt(savedLike.getUpdatedAt())
 				.feedId(savedLike.getFeedId())
 				.userId(savedLike.getUserId())
+				.likeCount(count(feedId))
 				.build()
 		);
 
@@ -92,10 +95,12 @@ public class LikeService {
 						.updatedAt(feedLike.getUpdatedAt())
 						.feedId(feedLike.getFeedId())
 						.userId(feedLike.getUserId())
-						.likeCount(count(feedLike.getFeedId()))
+						.likeCount(count(feedId))
 						.build()
 				);
 			});
+
+		log.info("[LikeService.unlike] count(feedLike.getFeedId(): " + count(feedId));
 	}
 
 	@Transactional

@@ -1,6 +1,8 @@
 package com.team3.otboo.common.event.payload;
 
 import com.team3.otboo.common.event.EventPayload;
+import com.team3.otboo.domain.weather.enums.PrecipitationType;
+import com.team3.otboo.domain.weather.enums.SkyStatus;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -20,4 +22,7 @@ public class FeedCreatedEventPayload implements EventPayload {
 	private UUID authorId;
 	private UUID weatherId;
 	private String content;
+
+	private SkyStatus skyStatus;
+	private PrecipitationType precipitationType;
 }

@@ -23,7 +23,6 @@ public enum EventType {
 	FEED_LIKED(FeedLikedEventPayload.class, Topic.OTBOO_FEED_LIKE),
 	FEED_UNLIKED(FeedUnlikedEventPayload.class, Topic.OTBOO_FEED_LIKE),
 	DIRECT_MESSAGE_SENT(DirectMessageSentPayload.class, Topic.OTBOO_DIRECT_MESSAGE),
-	// 나중에 view service 만들기 .
 	FEED_VIEWED(FeedViewedEventPayload.class, Topic.OTBOO_FEED_VIEW);
 
 	private final Class<? extends EventPayload> payloadClass;

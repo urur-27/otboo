@@ -14,6 +14,7 @@ import com.team3.otboo.domain.weather.enums.PrecipitationType;
 import com.team3.otboo.domain.weather.enums.SkyStatus;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class FeedController {
 
 	private final FeedService feedService;
@@ -73,7 +75,7 @@ public class FeedController {
 		@RequestParam(value = "limit") Integer limit,
 		@RequestParam(value = "sortBy", defaultValue = "createdAt") String sortBy,
 		@RequestParam(value = "sortDirection", defaultValue = "DESCENDING") SortDirection sortDirection,
-		@RequestParam(value = "keyWordLike", required = false) String keywordLike,
+		@RequestParam(value = "keywordLike", required = false) String keywordLike,
 		@RequestParam(value = "skyStatusEqual", required = false) SkyStatus skyStatusEqual,
 		@RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,
 		@RequestParam(value = "authorIdEqual", required = false) UUID authorIdEqual
@@ -82,7 +84,8 @@ public class FeedController {
 		FeedListRequest request = new FeedListRequest(
 			cursor,
 			idAfter,
-			limit,
+			// limit,
+			8, // 무한 스크롤 테스트를 위해 limit 8로 변경 (프론트에서 20으로 보냄)
 			sortBy,
 			sortDirection,
 			keywordLike,
@@ -90,26 +93,30 @@ public class FeedController {
 			precipitationTypeEqual,
 			authorIdEqual
 		);
+		log.info("[FeedController.readAllInfiniteScroll] request: {}", request);
 
 		if (isCacheable(request)) {
-			// 캐시 가능 -> FeedReadService 호출
+			// 필터링 조건 x -> redis 에서 검색 .
+			log.info("[FeedController.readAllInfiniteScroll]");
 			FeedDtoCursorResponse response = feedReadService.readAllInfiniteScroll(user.getId(),
 				request);
 			return ResponseEntity.ok(response);
 		} else {
-			// 캐시 불가 -> FeedService 호출
-			FeedDtoCursorResponse response = feedService.readAllInfiniteScroll(user.getId(),
+			// 필터링 조건 o -> Elastic search 에서 검색
+			log.info("[FeedController.readAllInfiniteScroll] return elastic search data.");
+			FeedDtoCursorResponse response = feedReadService.readAllInfiniteScrollByEs(user.getId(),
 				request);
 			return ResponseEntity.ok(response);
 		}
 	}
 
-	// 필터링 조건이 따로 없을 때만 redis 에서 가져오기 (최신순 정렬 조건만 있을때 캐시 사용)
+	// 필터링 조건(검색 조건) 없으면 Redis 에서 데이터 가져오기
 	private boolean isCacheable(FeedListRequest request) {
-		return "createdAt".equals(request.sortBy()) &&
-			(request.keywordLike() == null || request.keywordLike().isBlank()) &&
-			request.skyStatusEqual() == null &&
-			request.precipitationTypeEqual() == null &&
-			request.authorIdEqual() == null;
+		boolean hasFilter = (request.keywordLike() != null && !request.keywordLike().isBlank()) ||
+			request.skyStatusEqual() != null ||
+			request.precipitationTypeEqual() != null ||
+			request.authorIdEqual() != null;
+
+		return !hasFilter && "createdAt".equals(request.sortBy());
 	}
 }

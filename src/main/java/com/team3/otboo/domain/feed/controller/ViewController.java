@@ -21,7 +21,6 @@ public class ViewController {
 	public ResponseEntity<Long> increase(
 		@PathVariable("feedId") UUID feedId
 	) {
-		log.info("[ViewController.increase()]");
 		Long count = viewService.increase(feedId);
 		return ResponseEntity.ok(count);
 	}
