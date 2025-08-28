@@ -64,7 +64,7 @@ public class RedisCacheConnectionConfig {
                 // 캐시별 TTL
                 .withCacheConfiguration("clothingList",  defaults.entryTtl(Duration.ofSeconds(60)))
                 .withCacheConfiguration("attrSnapshot",  defaults.entryTtl(Duration.ofHours(6)))
-                .withCacheConfiguration("attrDefsPage", defaults.entryTtl(Duration.ofSeconds(60)))
+                .withCacheConfiguration("attrDefsPage", defaults.entryTtl(Duration.ofSeconds(300)))
                 .build();
     }
 }
