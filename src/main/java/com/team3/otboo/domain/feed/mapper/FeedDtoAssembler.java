@@ -11,6 +11,7 @@ import com.team3.otboo.domain.feed.repository.FeedLikeCountRepository;
 import com.team3.otboo.domain.feed.repository.FeedRepository;
 import com.team3.otboo.domain.feed.repository.LikeRepository;
 import com.team3.otboo.domain.feed.service.OotdService;
+import com.team3.otboo.domain.feed.service.ViewService;
 import com.team3.otboo.domain.user.entity.Profile;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.repository.UserRepository;
@@ -41,6 +42,7 @@ public class FeedDtoAssembler {
 	private final WeatherRepository weatherRepository;
 	private final LikeRepository likeRepository;
 	private final OotdService ootdService;
+	private final ViewService viewService;
 
 	public FeedDto assemble(UUID feedId, UUID userId) {
 		Feed feed = feedRepository.findById(feedId).orElseThrow(
@@ -82,6 +84,8 @@ public class FeedDtoAssembler {
 		// 내가 좋아요를 눌렀는가 하나 때문에 userId 를 넣어줘야함 .
 		boolean likedByMe = likeRepository.existsByUserIdAndFeedId(userId, feedId);
 
+		Long viewCount = viewService.count(feedId);
+
 		return new FeedDto(
 			feed.getId(),
 			feed.getCreatedAt(),
@@ -92,7 +96,8 @@ public class FeedDtoAssembler {
 			feed.getContent(),
 			likeCount,
 			commentCount,
-			likedByMe
+			likedByMe,
+			viewCount
 		);
 	}
 
@@ -133,6 +138,8 @@ public class FeedDtoAssembler {
 			.map(FeedLikeCount::getLikeCount)
 			.orElse(0L);
 
+		Long viewCount = viewService.count(feedId);
+
 		return new FeedDto(
 			feed.getId(),
 			feed.getCreatedAt(),
@@ -143,7 +150,8 @@ public class FeedDtoAssembler {
 			feed.getContent(),
 			likeCount,
 			commentCount,
-			null
+			null,
+			viewCount
 		);
 	}
 

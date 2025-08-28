@@ -34,7 +34,6 @@ public class FeedLikedEventHandler implements EventHandler<FeedLikedEventPayload
 				Long likeCount = payload.getLikeCount();
 
 				Map<String, Object> patch = Map.of("likeCount", likeCount);
-				log.info("[FeedLikedEventHandler.handle] likeCount: {}", likeCount);
 				UpdateQuery updateQuery = UpdateQuery.builder(feedQueryModel.getId().toString())
 					.withDocument(Document.from(patch))
 					.build();

@@ -40,7 +40,6 @@ public class RedisConfig {
 		return new LettuceConnectionFactory(configuration);
 	}
 
-	// publish 객체 .
 	@Bean
 	@Qualifier("chatPubSub")
 	public RedisTemplate<String, Object> redisTemplate(
@@ -85,7 +84,7 @@ public class RedisConfig {
 	@Bean
 	@Primary
 	public RedisTemplate<String, Object> tokenRedisTemplate(
-			RedisConnectionFactory redisConnectionFactory){
+		RedisConnectionFactory redisConnectionFactory) {
 		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(redisConnectionFactory);
 

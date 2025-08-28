@@ -11,7 +11,6 @@ public class ViewService {
 
 	private final FeedViewCountRepository feedViewCountRepository;
 	private final ViewCountBackUpProcessor viewCountBackUpProcessor;
-	
 	private static final int BACK_UP_BACH_SIZE = 100;
 
 	public Long increase(UUID feedId) {

@@ -12,6 +12,7 @@ import com.team3.otboo.domain.user.jwt.login.JwtLoginSuccessHandler;
 import com.team3.otboo.domain.user.oauth.OAuth2LoginSuccessHandler;
 import com.team3.otboo.domain.user.user_details.CustomOAuthUserService;
 import java.util.Arrays;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -151,18 +152,12 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		// 프론트엔드 주소를 정확하게 명시해야 합니다.
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-		// 필요한 HTTP 메서드를 허용합니다.
+		configuration.setAllowedOrigins(List.of("http://localhost:5173"));
 		configuration.setAllowedMethods(
 			Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-		// 모든 헤더를 허용합니다.
-		configuration.setAllowedHeaders(Arrays.asList("*"));
-		// ★★★ 이 설정이 쿠키 전송을 허용하는 핵심입니다.
+		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);
-
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		// 모든 경로("/**")에 위 설정을 적용합니다.
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
 	}
