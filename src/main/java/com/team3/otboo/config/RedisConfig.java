@@ -28,10 +28,13 @@ public class RedisConfig {
 	@Value("${spring.data.redis.port}")
 	private int port;
 
+	@Value("${spring.data.redis.database:0}") private int dbIndex; // 배포=0
+
 	@Bean
 	@Qualifier("chatPubSub")
 	public RedisConnectionFactory chatPubSubFactory() {
 		RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
+		configuration.setDatabase(dbIndex);
 		configuration.setHostName(host);
 		configuration.setPort(port);
 		return new LettuceConnectionFactory(configuration);

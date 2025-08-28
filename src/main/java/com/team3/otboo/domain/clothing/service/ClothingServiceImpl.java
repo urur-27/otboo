@@ -15,6 +15,7 @@ import com.team3.otboo.domain.clothing.repository.AttributeOptionRepository;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.domain.clothing.repository.ClothingRepository;
 import com.team3.otboo.domain.user.entity.User;
+import com.team3.otboo.event.ClothingChangedEvent;
 import com.team3.otboo.global.exception.BusinessException;
 import com.team3.otboo.global.exception.ErrorCode;
 import com.team3.otboo.global.exception.attribute.AttributeNotFoundException;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,7 @@ public class ClothingServiceImpl implements ClothingService {
   private final BinaryContentRepository binaryContentRepository;
   private final ApplicationEventPublisher applicationEventPublisher;
   private final BinaryContentUploader binaryContentUploader;
+  private final ApplicationEventPublisher publisher;
 
   @Override
   @Transactional(readOnly = true)
@@ -80,9 +83,14 @@ public class ClothingServiceImpl implements ClothingService {
     }
 
     clothingRepository.save(clothing);
+    publisher.publishEvent(new ClothingChangedEvent(clothing.getId()));
     return clothingMapper.toDto(clothing);
   }
 
+  @Cacheable(
+          cacheNames = "clothingList",
+          key = "T(java.util.Objects).hash(#ownerId, #cursor, #idAfter, #limit, #typeEqual, #direction)"
+  )
   @Override
   @Transactional(readOnly = true)
   public ClothingDtoCursorResponse getClothesByCursor(
@@ -123,6 +131,7 @@ public class ClothingServiceImpl implements ClothingService {
   public void deleteClothing(UUID clothesId) {
     Clothing clothing = clothingRepository.findById(clothesId)
             .orElseThrow(ClothingNotFoundException::new);
+    publisher.publishEvent(new ClothingChangedEvent(clothesId));
     clothingRepository.delete(clothing);
   }
 
@@ -163,7 +172,7 @@ public class ClothingServiceImpl implements ClothingService {
         ClothingAttributeValue.of(clothing, attribute, option);
       }
     }
-
+    publisher.publishEvent(new ClothingChangedEvent(id));
     return clothingMapper.toDto(clothing);
   }
 
