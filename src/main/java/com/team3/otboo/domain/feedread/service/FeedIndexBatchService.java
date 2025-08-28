@@ -149,12 +149,12 @@ public class FeedIndexBatchService {
 	private IndexQuery buildIndexQuery(Feed feed, Map<UUID, Weather> weatherMap,
 		Map<UUID, FeedLikeCount> likeCountMap, Map<UUID, User> userMap) {
 		FeedDocument document = new FeedDocument();
-		document.setId(feed.getId());
+		document.setId(feed.getId().toString());
+		document.setFeedId(feed.getId());
 		document.setCreatedAt(feed.getCreatedAt());
 		document.setContent(feed.getContent());
 		document.setAuthorId(feed.getAuthorId());
 
-		// userMap에서 사용자 이름을 찾아 Document에 설정
 		User author = userMap.get(feed.getAuthorId());
 		if (author != null) {
 			document.setAuthorName(author.getUsername()); // User 엔티티의 이름 필드(getUsername)를 사용

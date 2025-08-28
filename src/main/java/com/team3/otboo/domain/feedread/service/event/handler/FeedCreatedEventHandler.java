@@ -38,7 +38,8 @@ public class FeedCreatedEventHandler implements EventHandler<FeedCreatedEventPay
 		feedIdListRepository.add(feedId, payload.getCreatedAt(), 1000L); // id list 는 1000개 까지 저장 .
 
 		FeedDocument feedDocument = new FeedDocument();
-		feedDocument.setId(payload.getId());
+		feedDocument.setId(payload.getId().toString());
+		feedDocument.setFeedId(payload.getId());
 		feedDocument.setCreatedAt(payload.getCreatedAt());
 		feedDocument.setContent(payload.getContent());
 		feedDocument.setAuthorId(payload.getAuthorId());

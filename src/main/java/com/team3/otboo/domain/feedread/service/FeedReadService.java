@@ -266,13 +266,21 @@ public class FeedReadService {
 		String sortByField = request.sortBy() != null ? request.sortBy() : "createdAt";
 		List<SortOptions> sorts = List.of(
 			SortOptions.of(s -> s.field(
-				f -> f.field(sortByField).order(desc ? SortOrder.Desc : SortOrder.Asc)
-			))
+				f -> f.field(sortByField).order(desc ? SortOrder.Desc : SortOrder.Asc))),
+			SortOptions.of(s -> s.field(f -> f.field("feedId").order(SortOrder.Asc)))
 		);
 
 		List<Object> searchAfter = null;
-		if (request.cursor() != null && !request.cursor().isBlank()) {
-			searchAfter = List.of(request.cursor());
+		if (request.cursor() != null && !request.cursor().isBlank() && request.idAfter() != null) {
+			Object primaryCursorValue = request.cursor();
+			if ("likeCount".equals(sortByField)) {
+				try {
+					primaryCursorValue = Integer.parseInt(request.cursor());
+				} catch (NumberFormatException e) {
+					log.warn("Invalid cursor value for likeCount: {}", request.cursor());
+				}
+			}
+			searchAfter = List.of(primaryCursorValue, request.idAfter().toString());
 		}
 
 		NativeQueryBuilder queryBuilder = new NativeQueryBuilder()
@@ -297,7 +305,7 @@ public class FeedReadService {
 			hasNext ? searchHits.subList(0, request.limit()) : searchHits;
 
 		List<UUID> pageIds = pageHits.stream()
-			.map(hit -> hit.getContent().getId())
+			.map(hit -> hit.getContent().getFeedId())
 			.toList();
 
 		List<FeedDto> data;
@@ -321,8 +329,9 @@ public class FeedReadService {
 		if (hasNext) {
 			var lastHit = pageHits.getLast();
 			List<Object> sortValues = lastHit.getSortValues();
-			if (!sortValues.isEmpty()) {
+			if (sortValues.size() >= 2) {
 				nextCursor = sortValues.get(0).toString();
+				nextIdAfter = UUID.fromString(sortValues.get(1).toString());
 			}
 		}
 

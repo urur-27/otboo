@@ -19,7 +19,10 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 public class FeedDocument {
 
 	@Id
-	private UUID id; // feed_id
+	private String id; // elasticsearch 내부용 ID 필드
+
+	@Field(type = FieldType.Keyword)
+	private UUID feedId;
 
 	@Field(type = FieldType.Date)
 	private Instant createdAt;
@@ -49,6 +52,6 @@ public class FeedDocument {
 	@Field(type = FieldType.Keyword)
 	private PrecipitationType precipitationType; // 강수
 
-	@Field(type = FieldType.Integer)
+	@Field(type = FieldType.Long)
 	private Integer likeCount;
 }
