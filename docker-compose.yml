@@ -45,6 +45,17 @@ services:
     ports:
       - "9092:9092"
 
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: Dockerfile.elastic
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 # Docker가 관리하는 명명된 볼륨(named volume)을 정의
 # 영속성 파일 저장을 위해
 volumes:

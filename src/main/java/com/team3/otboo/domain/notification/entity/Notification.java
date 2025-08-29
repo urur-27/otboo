@@ -33,14 +33,20 @@ public class Notification extends BaseEntity {
   @Column(nullable = false)
   private NotificationLevel level;
 
+  @Column(nullable = false)
   private boolean isRead = false;
 
+  public void read() {
+    this.isRead = true;
+  }
+
   @Builder
-  public Notification(User receiver, String title, String content, NotificationLevel level) {
+  public Notification(User receiver, String title, String content, NotificationLevel level,
+      boolean isRead) {
     this.receiver = receiver;
     this.title = title;
     this.content = content;
     this.level = level;
+    this.isRead = isRead;
   }
-
 }

@@ -67,8 +67,10 @@ public enum ErrorCode {
   SESSION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "J001", "세션 오류 발생했습니다."),
 
   // Weather Errors (Wxxx)
-  WEATHER_NOT_FOUND(HttpStatus.NOT_FOUND, "W001", "해당 날씨를 찾을 수 없습니다.");
+  WEATHER_NOT_FOUND(HttpStatus.NOT_FOUND, "W001", "해당 날씨를 찾을 수 없습니다."),
 
+  // Notification
+  NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001","해당 알림을 찾을 수 없습니다.");
 
   private final HttpStatus status;
   private final String code;

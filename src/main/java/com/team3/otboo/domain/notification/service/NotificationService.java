@@ -9,12 +9,15 @@ import com.team3.otboo.domain.notification.repository.NotificationRepository;
 import com.team3.otboo.domain.notification.service.strategy.NotificationStrategy;
 import com.team3.otboo.domain.user.entity.User;
 import com.team3.otboo.domain.user.repository.UserRepository;
+import com.team3.otboo.global.exception.notification.NotificationNotFoundException;
+import com.team3.otboo.global.exception.user.UserNotFoundException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,7 +75,7 @@ public class NotificationService {
 		}
 
 		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new RuntimeException("User not found")); // 예외처리 필요
+			.orElseThrow(UserNotFoundException::new);
 
 		List<Notification> notifications = notificationRepository.findByReceiverWithCursor(
 			user,
@@ -107,4 +110,15 @@ public class NotificationService {
 			condition.sortDirection()
 		);
 	}
+
+	@Transactional
+  public void readNotification(UUID notificationId, UUID userId) {
+		Notification notification = notificationRepository.findById(notificationId).orElseThrow(NotificationNotFoundException::new);
+
+		if (!notification.getReceiver().getId().equals(userId)) {
+			throw new AccessDeniedException("알림을 처리할 권한이 없습니다.");
+		}
+
+		notification.read();
+  }
 }
