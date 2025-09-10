@@ -33,7 +33,7 @@
 [SB02-team3 시연 영상](https://drive.google.com/file/d/16Rl1J8x3K6qMmDdAeg7EfeUL-W6oSGXP/view?usp=sharing)
 
 ## 시스템 아키텍처
-#### 프론트엔드 서버 시스템 아키텍처
+#### 프론트엔드 정적 리소스 시스템 아키텍처
 <img width="688" height="305" alt="image" src="https://github.com/user-attachments/assets/b663b01d-21ad-4f6d-9768-154452f43144" />
 
 
