@@ -5,7 +5,7 @@
 
 > 개발기간: 2025.07.28 ~ 2025.08.30
 
-🔗 [시연영상](https://drive.google.com/file/d/16Rl1J8x3K6qMmDdAeg7EfeUL-W6oSGXP/view?usp=sharing)
+🔗 [옷장을부탁해_시연영상](https://drive.google.com/file/d/16Rl1J8x3K6qMmDdAeg7EfeUL-W6oSGXP/view?usp=sharing)
 
 
 ### 팀원 구성
@@ -99,13 +99,13 @@
 </details>
 
 <details>
-<summary>Outbox Pattern (Outbox + Polling)</summary>
+<summary>Transactional-Outbox Pattern </summary>
 <img width="720" height="318" alt="image" src="https://github.com/user-attachments/assets/490ef8db-e0f6-4468-9766-0af2ce1a509d" />
 <img width="720" height="306" alt="image" src="https://github.com/user-attachments/assets/a69ea5f4-ad87-438e-aa92-b62533fd349c" />
 </details>
 
 <details>
-<summary>Elasticsearch 색인 전략(전체색인 + 부분색인을 통한 데이터 동기화)</summary>
+<summary>Elasticsearch 색인 전략</summary>
   
 #### 전체 색인 아키텍처 (Spring Batch)
 <img width="433" height="300" alt="image" src="https://github.com/user-attachments/assets/c0cd2b55-ce04-46b7-ab72-319246a08279" />
