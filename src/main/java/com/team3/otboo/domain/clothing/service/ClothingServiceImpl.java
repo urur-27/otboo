@@ -66,18 +66,36 @@ public class ClothingServiceImpl implements ClothingService {
 
     Clothing clothing = clothingMapper.toEntity(request);
     clothing.setOwner(user);
-    if (image != null && !image.isEmpty()) {
 
+    if (image != null && !image.isEmpty()) {
       BinaryContent bin = binaryContentUploader.upload(image);
-      clothing.changeImage(bin); // ← FK + url 동시 세팅
+      clothing.changeImage(bin);
     }
 
     // attributeValues 직접 생성 및 연관관계 연결
     for (ClothesAttributeDto attrReq : request.attributes()) {
       Attribute attribute = attributeRepository.findById(attrReq.definitionId())
               .orElseThrow(AttributeNotFoundException::new);
-      AttributeOption option = attributeOptionRepository.findByAttributeIdAndValue(attribute.getId(), attrReq.value())
-              .orElseThrow(AttributeOptionNotFoundException::new);
+
+      String rawValue = attrReq.value();
+
+      if (rawValue == null || rawValue.isBlank()) {
+        //  미확정 값은 스킵 or null 저장
+        log.warn("[ATTR] 속성 값 없음 → 미선택 처리 (defId={}, defName={})",
+                attribute.getId(), attribute.getName());
+        continue; // 또는 ClothingAttributeValue.of(clothing, attribute, null);
+      }
+
+      AttributeOption option = attributeOptionRepository
+              .findByAttributeIdAndValue(attribute.getId(), rawValue)
+              .orElse(null);
+
+      if (option == null) {
+        // 강제 예외 대신 미선택 처리
+        log.warn("[ATTR] 옵션 매칭 실패 → 미선택 처리 (defId={}, defName={}, value='{}')",
+                attribute.getId(), attribute.getName(), rawValue);
+        continue;
+      }
 
       ClothingAttributeValue.of(clothing, attribute, option);
     }
@@ -166,8 +184,22 @@ public class ClothingServiceImpl implements ClothingService {
       for (ClothesAttributeDto attrDto : req.attributes()) {
         Attribute attribute = attributeRepository.findById(attrDto.definitionId())
                 .orElseThrow(AttributeNotFoundException::new);
-        AttributeOption option = attributeOptionRepository.findByAttributeAndValue(attribute, attrDto.value())
-                .orElseThrow(AttributeOptionNotFoundException::new);
+
+        String rawValue = attrDto.value();
+        if (rawValue == null || rawValue.isBlank()) {
+          log.warn("[ATTR] 업데이트 시 속성 값 없음 → 미선택 처리 (defId={}, defName={})",
+                  attribute.getId(), attribute.getName());
+          continue;
+        }
+
+        AttributeOption option = attributeOptionRepository.findByAttributeAndValue(attribute, rawValue)
+                .orElse(null);
+
+        if (option == null) {
+          log.warn("[ATTR] 업데이트 시 옵션 매칭 실패 → 미선택 처리 (defId={}, defName={}, value='{}')",
+                  attribute.getId(), attribute.getName(), rawValue);
+          continue;
+        }
 
         ClothingAttributeValue.of(clothing, attribute, option);
       }

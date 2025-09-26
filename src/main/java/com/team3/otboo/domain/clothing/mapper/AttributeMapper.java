@@ -2,9 +2,6 @@ package com.team3.otboo.domain.clothing.mapper;
 
 import com.team3.otboo.domain.clothing.dto.ClothesAttributeWithDefDto;
 import com.team3.otboo.domain.clothing.dto.response.VisionAnalysisResult;
-import com.team3.otboo.domain.clothing.dto.response.VisionAttributeItem;
-import com.team3.otboo.domain.clothing.entity.Attribute;
-import com.team3.otboo.domain.clothing.entity.AttributeOption;
 import com.team3.otboo.domain.clothing.repository.AttributeRepository;
 import com.team3.otboo.common.util.StringSimilarityUtils;
 import com.team3.otboo.domain.clothing.service.AttributeReadService.AttributeDefSnap;
@@ -13,8 +10,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,129 +21,129 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class AttributeMapper {
-
-    private final AttributeRepository attributeRepository;
-
     // 정의명 유사 매칭 임계치 (0~1)
     private static final double DEF_SIM_THRESH = 0.75;
     // 옵션값 유사 매칭 임계치
     private static final double OPT_SIM_THRESH = 0.65;
 
     /**
-     * Vision 모델이 반환한 속성 리스트를, 미리 스냅샷(defs)으로 전달받은 속성 정의(AttributeDefSnap)들과 매핑한다.
-     *
-     * 동작 흐름:
-     *  1. Vision 결과(VisionAnalysisResult)의 각 attribute item(definitionName, value)을 순회한다.
-     *  2. definitionName을 기준으로 AttributeDefSnap을 찾는다:
-     *     - 정확 일치 → 정규화(normalize) 일치 → 유사도 매칭 순으로 탐색
-     *  3. 해당 정의(def)가 존재할 경우:
-     *     - def에 사전 정의된 옵션이 있으면 valueRaw를 가장 근접한 단일 옵션으로 매핑
-     *       (chooseSingleOption → fallback: best similarity)
-     *     - 옵션이 없으면 자유 입력형으로 valueRaw 그대로 사용
-     *  4. 매핑 결과를 ClothesAttributeWithDefDto(defId, defName, options, finalValue)로 만들어 반환 리스트에 추가
-     *
-     * 결과적으로 Vision 결과의 raw definitionName/value를
-     *  - DB/스냅샷 정의에 정규화·유사도 기반으로 매핑하고
-     *  - 선택 가능한 옵션이 있다면 단일 선택값으로 정리하여
-     * UI 드롭다운/속성 관리에 적합한 형태의 DTO 리스트를 반환한다.
-     *
-     * @param vision Vision 모델이 분석해 반환한 속성 결과
-     * @param defs   Attribute 정의 스냅샷 목록 (id, name, options)
-     * @return Vision 결과를 정의/옵션과 매핑한 ClothesAttributeWithDefDto 리스트
+     * 변경점:
+     * - 반환 리스트를 "defs 순회"로 빌드한다. (항목 누락 X)
+     * - vision 값이 없거나 옵션 미일치면 value=null을 세팅하되, 항목은 남긴다.
      */
     public List<ClothesAttributeWithDefDto> mapFromVision(
             VisionAnalysisResult vision,
             List<AttributeDefSnap> defs
     ) {
-        if (vision == null || vision.attributes() == null) return List.of();
-
-        Map<String, AttributeDefSnap> exactMap = defs.stream()
-                .collect(Collectors.toMap(AttributeDefSnap::name, Function.identity(), (a,b)->a));
-
-        Map<String, AttributeDefSnap> normalizedMap = defs.stream()
+        // LLM 결과를 맵으로 준비 (definitionName → value)
+        Map<String, String> vmap = Optional.ofNullable(vision)
+                .map(VisionAnalysisResult::attributes)
+                .orElseGet(List::of)
+                .stream()
+                .filter(Objects::nonNull)
                 .collect(Collectors.toMap(
-                        d -> StringSimilarityUtils.normalize(d.name()),
-                        Function.identity(),
-                        (a,b)->a
+                        it -> safe(it.definitionName()),
+                        it -> safe(it.value()),
+                        (a, b) -> a
                 ));
 
-        List<ClothesAttributeWithDefDto> result = new ArrayList<>();
-        for (VisionAttributeItem item : vision.attributes()) {
-            if (item == null) continue;
+        // 결과는 반드시 defs 크기와 동일
+        List<ClothesAttributeWithDefDto> result = new ArrayList<>(defs.size());
 
-            String defNameRaw = Optional.ofNullable(item.definitionName()).orElse("").trim();
-            String valueRaw   = Optional.ofNullable(item.value()).orElse("").trim();
-            if (defNameRaw.isBlank() || valueRaw.isBlank()) continue;
+        for (AttributeDefSnap def : defs) {
+            String defName = def.name();
 
-            AttributeDefSnap def = exactMap.get(defNameRaw);
-            if (def == null) def = normalizedMap.get(StringSimilarityUtils.normalize(defNameRaw));
-            if (def == null) def = findBySimilarity(defNameRaw, defs);
-            if (def == null) continue;
+            // LLM에서 같은 정의명(또는 유사명)으로 온 raw 값 찾기
+            String raw = null;
 
-            List<String> options = def.options();
+            // 우선 정확히 맞는지
+            raw = vmap.get(defName);
 
-            String finalValue;
-            if (!options.isEmpty()) {
-                finalValue = chooseSingleOption(valueRaw, options);
-                if (finalValue == null) {
-                    finalValue = StringSimilarityUtils.findBestBySimilarity(valueRaw, options);
+            if (isBlank(raw)) {
+                // 정규화 키 매칭 (예: 공백/기호 차이)
+                String normKey = StringSimilarityUtils.normalize(defName);
+                // vmap의 키들을 순회하며 가장 유사한 정의명을 찾는다.
+                String bestKey = vmap.keySet().stream()
+                        .filter(k -> !isBlank(k))
+                        .max(Comparator.comparingDouble(k ->
+                                StringSimilarityUtils.similarity(
+                                        StringSimilarityUtils.normalize(k), normKey)))
+                        .orElse(null);
+
+                if (bestKey != null) {
+                    double sim = StringSimilarityUtils.similarity(
+                            StringSimilarityUtils.normalize(bestKey), normKey);
+                    if (sim >= DEF_SIM_THRESH) {
+                        raw = vmap.get(bestKey);
+                    }
                 }
-            } else {
-                finalValue = valueRaw;
             }
 
+            // 옵션 검증/정규화
+            String finalValue = null;
+            List<String> options = def.options();
+
+            if (!isBlank(raw)) {
+                if (options != null && !options.isEmpty()) {
+                    // 옵션형: 가장 근접한 단일 옵션으로 스냅
+                    finalValue = chooseSingleOption(raw, options);
+                    if (finalValue == null) {
+                        // 토큰 분해로도 못 고르면 전체 문자열 유사치 기반으로 1개 고르되
+                        // 너무 엉뚱하면 null 유지 (옵션 오매핑 방지)
+                        String best = StringSimilarityUtils.findBestBySimilarity(raw, options);
+                        double sim = StringSimilarityUtils.similarity(
+                                StringSimilarityUtils.normalize(raw),
+                                StringSimilarityUtils.normalize(best));
+                        finalValue = (sim >= OPT_SIM_THRESH) ? best : null;
+                    }
+                } else {
+                    // 자유입력형: raw 그대로 (공백이면 null)
+                    finalValue = raw.trim();
+                    if (finalValue.isEmpty()) finalValue = null;
+                }
+            }
+
+            // 항목은 항상 추가 (finalValue가 null이어도)
             result.add(new ClothesAttributeWithDefDto(
-                    def.id(), def.name(), options, finalValue
+                    def.id(), defName, options, finalValue
             ));
         }
+
         return result;
     }
 
-    private String chooseSingleOption(String valueRaw, List<String> options) {
-        if (valueRaw == null || valueRaw.isBlank() || options == null || options.isEmpty()) return null;
+    private static String safe(String s) { return s == null ? "" : s.trim(); }
+    private static boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
 
-        // 토큰 분리: 공백, /, , 등 구분자 + 숫자/퍼센트 제거
-        // 예: "면 55% 린넨 45%" -> ["면", "린넨"]
+    private String chooseSingleOption(String valueRaw, List<String> options) {
+        if (isBlank(valueRaw) || options == null || options.isEmpty()) return null;
+
         String normalized = valueRaw
-                .replaceAll("\\d+\\s*%"," ")   // "55%" 제거
-                .replaceAll("[\\/|,&·+]+"," ") // 구분자 -> 공백
+                .replaceAll("\\d+\\s*%"," ")
+                .replaceAll("[\\/|,&·+]+"," ")
                 .replaceAll("\\s+"," ")
                 .trim();
 
         String[] tokens = normalized.split(" ");
-
-        // 토큰별로 가장 유사한 옵션에 표를 누적
         Map<String, Double> score = new HashMap<>();
-        for (String token : tokens) {
-            if (token.isBlank()) continue;
 
+        for (String token : tokens) {
+            if (isBlank(token)) continue;
             String best = StringSimilarityUtils.findBestBySimilarity(token, options);
             double sim  = StringSimilarityUtils.similarity(token, best);
-
-            // 너무 낮은 유사도는 무시
             if (sim < OPT_SIM_THRESH) continue;
-
-            score.merge(best, sim, Double::sum); // 유사도 합산(간단 가중치)
+            score.merge(best, sim, Double::sum);
         }
 
-        // 표가 하나도 없으면 전체 문자열 기준으로 최고 유사 옵션 선택
         if (score.isEmpty()) {
             String best = StringSimilarityUtils.findBestBySimilarity(valueRaw, options);
-            return best; // 어쨌든 1개 반환
+            double sim  = StringSimilarityUtils.similarity(
+                    StringSimilarityUtils.normalize(valueRaw),
+                    StringSimilarityUtils.normalize(best));
+            return (sim >= OPT_SIM_THRESH) ? best : null;
         }
 
-        // 가장 점수가 높은 옵션 1개 선택
         return score.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse(null);
-    }
-
-    private AttributeDefSnap findBySimilarity(String target, List<AttributeDefSnap> defs) {
-        String n = StringSimilarityUtils.normalize(target);
-        return defs.stream()
-                .map(d -> Map.entry(d, StringSimilarityUtils.similarity(n, StringSimilarityUtils.normalize(d.name()))))
-                .filter(e -> e.getValue() >= DEF_SIM_THRESH)
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElse(null);
