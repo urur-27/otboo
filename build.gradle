@@ -94,6 +94,8 @@ dependencies {
 
     // AWS IAM
     implementation 'software.amazon.msk:aws-msk-iam-auth:2.0.2'
+
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 }
 
 tasks.named('test') {

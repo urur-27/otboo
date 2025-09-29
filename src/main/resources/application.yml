@@ -20,6 +20,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        ddl-auto: update
   messages:
     basename: messages
   # SMTP = Simple Mail Transfer Protocol
@@ -118,7 +119,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true   # ← p95 같은 quantile을 위해 bucket 발행
+    tags:
+      app: s1 # 버전 라벨
 
 llm:
   base-url: ${LLM_BASE_URL:http://localhost:8000}

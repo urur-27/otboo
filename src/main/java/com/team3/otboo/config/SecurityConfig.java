@@ -16,6 +16,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -59,24 +60,26 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
                         //.requestMatchers(HttpMethod.PATCH, "/api/auth/change-password").hasRole("TEMP_USER") // 임시 비밀번호를 발급받은 사용자만 접근 가능
                         .requestMatchers("/uploads/**").permitAll() // 로컬 이미지 찾기 위한 url 경로 허용
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll() // 헬스체크 허용
-                        .requestMatchers(HttpMethod.GET, "/api/clothes/extractions").permitAll() // 임시 허용.
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus").permitAll() // 헬스체크 허용
+//                        .requestMatchers("/api/**").authenticated()
 
                         .requestMatchers("/", "/assets/**", "/**.html", "/**.css", "/**.js", "/favicon.ico").permitAll()
-                        .anyRequest().authenticated()
+//                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
-                .csrf(csrf ->
-                        csrf
-                                // 로그아웃 요청에 대해 CSRF 보호를 비활성화 -> 빠른 처리를 위해
-                                .ignoringRequestMatchers("/api/auth/sign-out")
-                                // 서버에서 생성한 CSRF 토큰을 쿠키에 저장하여 사용자에게 전달, JS에서 접근할 수 있게 함
-                                // XSRF-TOKEN, X-XSRF-TOKEN 자동 지정해줌
-                                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                                // CSRF 토큰을 요청(request) 속성에서도 사용할 수 있도록 설정
-                                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                                // CSRF 보호 기능이 불필요하게 세션을 생성하는 것을 방지
-                                .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
+                .csrf(AbstractHttpConfigurer::disable
+//                        csrf
+//                                // 로그아웃 요청에 대해 CSRF 보호를 비활성화 -> 빠른 처리를 위해
+//                                .ignoringRequestMatchers("/api/auth/sign-out")
+//                                .ignoringRequestMatchers("/actuator/**")
+//                                // 서버에서 생성한 CSRF 토큰을 쿠키에 저장하여 사용자에게 전달, JS에서 접근할 수 있게 함
+//                                // XSRF-TOKEN, X-XSRF-TOKEN 자동 지정해줌
+//                                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+//                                // CSRF 토큰을 요청(request) 속성에서도 사용할 수 있도록 설정
+//                                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+//                                // CSRF 보호 기능이 불필요하게 세션을 생성하는 것을 방지
+//                                .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
+
                 )
                 .with(
                         new JsonUsernamePasswordAuthenticationFilter.Configurer(objectMapper),
