@@ -6,3 +6,9 @@ scrape_configs:
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['host.docker.internal:8080']
+
+  - job_name: 'otboo-s3'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8083']   # s3 포트
+        labels: { app: 's3' }

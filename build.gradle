@@ -96,6 +96,12 @@ dependencies {
     implementation 'software.amazon.msk:aws-msk-iam-auth:2.0.2'
 
     implementation 'io.micrometer:micrometer-registry-prometheus'
+
+
+    // 비동기 처리를 위한 webflux
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    implementation 'org.jetbrains:annotations:24.0.1'
 }
 
 tasks.named('test') {

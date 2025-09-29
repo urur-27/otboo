@@ -38,9 +38,6 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    security:
-      protocol: PLAINTEXT
-      properties: { }   # 불필요한 SASL/SSL 항목 제거
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -49,8 +46,19 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: false
+    admin: # admin
+      properties:
+        security.protocol: SASL_SSL
+        sasl.mechanism: AWS_MSK_IAM
+        sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+        sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+    properties: # 전체 공통 설정
+      security.protocol: SASL_SSL
+      sasl.mechanism: AWS_MSK_IAM
+      sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+      sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
 server:
-  port: 8080
+  port: 8083 # s3 전용 포트
 
 logging:
   level:
@@ -127,7 +135,7 @@ management:
           server:
             requests: true   # ← p95 같은 quantile을 위해 bucket 발행
     tags:
-      app: s1 # 버전 라벨
+      app: s3 # 버전 라벨
 
 llm:
   base-url: ${LLM_BASE_URL:http://localhost:8000}
