@@ -8,10 +8,10 @@ scrape_configs:
       - targets: ['host.docker.internal:8080']
 
   - job_name: 'otboo-s2'
-      metrics_path: '/actuator/prometheus'
-      static_configs:
-        - targets: ['host.docker.internal:8082']
-          labels: { app: 's2' }
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8082']
+        labels: { app: 's2' }
 
   - job_name: 'otboo-s3'
     metrics_path: '/actuator/prometheus'
