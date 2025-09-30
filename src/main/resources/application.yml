@@ -58,7 +58,7 @@ spring:
       sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
       sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
 server:
-  port: 8083 # s3 전용 포트
+  port: 8082 # 8080, 8082, 8083
 
 logging:
   level:
@@ -135,7 +135,7 @@ management:
           server:
             requests: true   # ← p95 같은 quantile을 위해 bucket 발행
     tags:
-      app: s3 # 버전 라벨
+      app: s2 # 버전 라벨
 
 llm:
   base-url: ${LLM_BASE_URL:http://localhost:8000}

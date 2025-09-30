@@ -38,52 +38,6 @@ public class ClothingExtractionServiceImpl implements ClothingExtractionService 
 
     private final com.team3.otboo.domain.clothing.service.AttributeReadService attributeReadService;
 
-//    @Override
-//    public Mono<ClothesDto> extractFromUrlReactive(String url) {
-//        // html 정보 추출
-//        Mono<HtmlExtractionResult> htmlMono =
-//                Mono.fromCallable(() -> htmlExtractor.extract(url)) // blocking
-//                        .subscribeOn(Schedulers.boundedElastic());
-//
-//        // DB에서 속성/값 가져오기
-//        Mono<com.team3.otboo.domain.clothing.service.AttributeReadService.AttributeSnapshot> snapMono =
-//                Mono.fromCallable(attributeReadService::loadAllForExtraction) // blocking
-//                        .subscribeOn(Schedulers.boundedElastic());
-//
-//        return Mono.zip(htmlMono, snapMono)
-//                .flatMap(tuple -> {
-//                    var html = tuple.getT1();
-//                    var snap = tuple.getT2();
-//
-//                    // LLM 입력 준비
-//                    List<String> defNames = snap.defs().stream()
-//                            .map(com.team3.otboo.domain.clothing.service.AttributeReadService.AttributeDefSnap::name)
-//                            .toList();
-//                    Map<String, List<String>> opts = snap.optionsByDef();
-//
-//                    LlmRoute route = routingPolicy.choose(currentTenantOrDefault()); // 사용할 LLM 서비스, 모델을 고르는 기능. 구현 x
-//                    String idem = UUID.randomUUID().toString(); // 멱등성 처리를 위한 키 생성
-//
-//                    return llmGateway.analyzeVision(
-//                                    html.imageUrl(),
-//                                    html.title(),
-//                                    html.description(),
-//                                    defNames,
-//                                    opts,
-//                                    "ko-KR",
-//                                    route.provider(),
-//                                    route.model(),
-//                                    idem
-//                            )
-//                            .timeout(Duration.ofSeconds(35))
-//                            .retryWhen(Retry.backoff(1, Duration.ofMillis(250))
-//                                    .filter(this::isRetryable))
-//                            .map((VisionAnalysisResult vision) -> {
-//                                var mapped = attributeMapper.mapFromVision(vision, snap.defs()); // 스냅샷 사용(DB 재조회 X)
-//                                return clothingDtoMerger.merge(html, vision, mapped);
-//                            });
-//                });
-//    }
 
     @Override
     public Mono<ClothesDto> extractFromUrlReactive(String url) {
