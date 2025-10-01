@@ -1,4 +1,10 @@
 spring:
+  mvc:
+    async:
+      request-timeout: 90s
+  http:
+    client:
+      factory: jdk
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
   config:

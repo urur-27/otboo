@@ -63,11 +63,15 @@ import reactor.core.scheduler.Schedulers;
 //}
 
 
-@Component
-//@Profile("s2")  // s2 실행시만 이 구현 사용
+@Component // s2 실행시만 이 구현 사용
 public class LlmGateway {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+//    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public LlmGateway(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     @Value("${llm.base-url:http://localhost:8000}")
     private String baseUrl;

@@ -75,7 +75,7 @@ public class ClothingExtractionServiceImpl implements ClothingExtractionService 
                                     html.imageUrl(), html.title(), html.description(),
                                     defNames, opts, "ko-KR",
                                     route.provider(), route.model(), idem)
-                            .timeout(Duration.ofSeconds(35))
+//                            .timeout(Duration.ofSeconds(35))
                             .retryWhen(Retry.backoff(1, Duration.ofMillis(250)).filter(this::isRetryable))
                             .map(vision -> {
                                 var mapped = attributeMapper.mapFromVision(vision, snap.defs());
