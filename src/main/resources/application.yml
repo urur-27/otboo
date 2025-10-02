@@ -130,12 +130,19 @@ admin:
   password: ${ADMIN_PASSWORD}
 
 management:
+  export:
+    prometheus:
+      enabled: true
   endpoints:
     web:
       exposure:
         include: health,info,prometheus
   metrics:
     distribution:
+      sla:
+        http:
+          server:
+            requests: 100ms,500ms,1s,3s,5s,10s
       percentiles-histogram:
         http:
           server:
