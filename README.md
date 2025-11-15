@@ -3,7 +3,7 @@
 
 > 개발기간: 2025.07.28 ~ 2025.08.30
 
-🔗 [옷장을부탁해_시연영상](https://drive.google.com/file/d/16VTYwTc_xkiAhPv2dNbLEp4qz-TYwm1V/view?usp=sharing)
+🔗 [옷장을부탁해_시연영상](https://youtube.com/shorts/S-PGwFNVWL0?feature=share)
 
 
 ### 팀원 구성
